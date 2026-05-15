@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import supabase from "./supabase.js";
+import { exportDocx, exportPdf, exportZip } from "./exportUtils.js";
 
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
 
@@ -30,6 +31,7 @@ const MM_TYPES = [
   { id:"video_script",        label:"Guión de Video",           icon:"🎬", desc:"Con descripción visual" },
   { id:"imagen_prompt",       label:"Prompts para Imágenes IA", icon:"🖼️", desc:"Para DALL·E / Midjourney" },
   { id:"presentacion_visual", label:"Presentación Visual",      icon:"✨", desc:"Slide por slide" },
+  { id:"imagen_ia",           label:"Generador de Imágenes IA", icon:"🖼️", desc:"Imágenes con DALL·E 3" },
 ];
 
 const LEVELS = [
@@ -225,7 +227,7 @@ function MDView({ text, maxH=560 }) {
     .replace(/\n\n+/g,"</p><p>").replace(/\n/g,"<br/>");
 
   return (
-    <div style={{ background:"#0c1220", borderRadius:8, padding:"15px 19px", maxHeight:maxH, overflow:"auto", lineHeight:1.75, fontSize:14, fontFamily:"Georgia,serif" }}>
+    <div style={{ background:"#0c1220", borderRadius:8, padding:"15px 19px", maxHeight:maxH, overflow:"auto", lineHeight:1.75, fontSize:14, fontFamily:"Arial,sans-serif" }}>
       <style>{css}</style>
       <div className="md"><p dangerouslySetInnerHTML={{ __html:h }}/></div>
     </div>
@@ -341,6 +343,9 @@ export default function EduAIPro() {
   const [mmExtra,   setMmExtra]   = useState("");
   const [mmResult,  setMmResult]  = useState("");
   const [mmLoading, setMmLoading] = useState(false);
+  const [imgUrl,    setImgUrl]    = useState(null);
+  const [imgLoading,setImgLoading]= useState(false);
+  const [imgError,  setImgError]  = useState("");
 
   // Chat
   const [chatSid,     setChatSid]     = useState(null);
@@ -443,7 +448,27 @@ export default function EduAIPro() {
     } catch(e) { setMmResult("❌ " + e.message); }
     setMmLoading(false);
   }
-
+async function generateImage() {
+    if (!mmTopic.trim() || !curSubj) return;
+    setImgLoading(true); setImgUrl(null); setImgError("");
+    try {
+      const res = await fetch("/api/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: mmTopic,
+          subject: curSubj.name,
+          level: curSubj.level,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setImgUrl(data.url);
+    } catch(e) {
+      setImgError("❌ " + e.message);
+    }
+    setImgLoading(false);
+  }
   async function saveLib(content, type, typeName, topic) {
     if (!authUser) return;
     await dbAddLibraryItem(authUser.id, { type, type_name:typeName, topic, subject_name:curSubj?.name||"", content });
@@ -524,7 +549,7 @@ export default function EduAIPro() {
   const userName = authUser.user_metadata?.name || authUser.email?.split("@")[0] || "Docente";
 
   return (
-    <div style={{ display:"flex", height:"100vh", background:C.bg, color:C.text, fontFamily:"'Segoe UI',system-ui,sans-serif", overflow:"hidden" }}>
+    <div style={{ display:"flex", height:"100vh", background:C.bg, color:C.text, fontFamily:"Arial,sans-serif", overflow:"hidden" }}>
 
       {/* SIDEBAR */}
       <div style={{ width:bar?218:56, minWidth:bar?218:56, background:C.surf, borderRight:`1px solid ${C.border}`, display:"flex", flexDirection:"column", transition:"all .22s", overflow:"hidden" }}>
@@ -705,6 +730,9 @@ export default function EduAIPro() {
                               <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>saveLib(genResult,genType,gt?.label,genTopic)}>💾 Biblioteca</Btn>
                               {(genType==="evaluacion"||genType==="rubrica") && <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>saveBank(genResult,genTopic)}>🏦 Banco</Btn>}
                             </>}
+                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>exportDocx(genTopic, gt?.label, curSubj?.name, genResult)}>📄 Word</Btn>
+                        {(genType==="evaluacion"||genType==="rubrica"||genType==="planclase") &&
+                          <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>exportPdf(genTopic, gt?.label, curSubj?.name, genResult)}>📋 PDF</Btn>}
                       </div>
                     </div>
                     <MDView text={genResult}/>
@@ -715,13 +743,14 @@ export default function EduAIPro() {
           )}
 
           {/* MULTIMEDIA */}
+          {!dataLoading && {/* MULTIMEDIA */}
           {!dataLoading && view==="multimedia" && (
             <div style={{ display:"grid", gridTemplateColumns:"248px 1fr", gap:18 }}>
               <div style={card}>
                 <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8, marginBottom:12 }}>TIPO</div>
                 {MM_TYPES.map(m=>(
                   <button key={m.id} style={{ display:"flex", alignItems:"flex-start", gap:10, width:"100%", padding:"8px 10px", borderRadius:7, border:"none", cursor:"pointer", marginBottom:4, background:mmType===m.id?"#1d3d7a":"transparent", textAlign:"left", fontFamily:"inherit" }}
-                    onClick={()=>{setMmType(m.id);setMmResult("");}}>
+                    onClick={()=>{setMmType(m.id);setMmResult("");setImgUrl(null);setImgError("");}}>
                     <span style={{ fontSize:17, minWidth:24 }}>{m.icon}</span>
                     <div>
                       <div style={{ fontWeight:mmType===m.id?700:400, fontSize:13, color:mmType===m.id?"#93c5fd":C.textMuted }}>{m.label}</div>
@@ -738,22 +767,55 @@ export default function EduAIPro() {
                   </div>
                   {!curSubj ? <div style={{ textAlign:"center", padding:"22px 0", color:C.textDim }}>Seleccioná una materia primero.</div>
                   : <>
-                    <label style={lbl}>TEMA</label>
-                    <input style={{ ...inp, marginBottom:12 }} value={mmTopic} onChange={e=>setMmTopic(e.target.value)} placeholder="Ej: La fotosíntesis para 5to año"/>
-                    <label style={lbl}>INSTRUCCIONES ADICIONALES</label>
-                    <textarea style={{ ...inp, height:62, resize:"vertical", marginBottom:16 }} value={mmExtra} onChange={e=>setMmExtra(e.target.value)} placeholder="Duración, tono, audiencia..."/>
-                    <Btn onClick={generateMM} disabled={mmLoading||!mmTopic.trim()}>{mmLoading?"Generando...":"🎨 Generar Contenido"}</Btn>
+                    <label style={lbl}>{mmType==="imagen_ia" ? "DESCRIPCIÓN DE LA IMAGEN" : "TEMA DEL CONTENIDO"}</label>
+                    <input style={{ ...inp, marginBottom:12 }} value={mmTopic} onChange={e=>setMmTopic(e.target.value)}
+                      placeholder={mmType==="imagen_ia" ? "Ej: Ciclo del agua con nubes, lluvia y ríos" : "Ej: La fotosíntesis para 5to año"}/>
+                    {mmType!=="imagen_ia" && <>
+                      <label style={lbl}>INSTRUCCIONES ADICIONALES</label>
+                      <textarea style={{ ...inp, height:62, resize:"vertical", marginBottom:16 }} value={mmExtra} onChange={e=>setMmExtra(e.target.value)} placeholder="Duración, tono, audiencia..."/>
+                    </>}
+                    <div style={{ display:"flex", gap:10, marginTop:mmType==="imagen_ia"?16:0 }}>
+                      {mmType==="imagen_ia"
+                        ? <Btn onClick={generateImage} disabled={imgLoading||!mmTopic.trim()}>{imgLoading?"Generando imagen...":"🖼️ Generar Imagen"}</Btn>
+                        : <Btn onClick={generateMM} disabled={mmLoading||!mmTopic.trim()}>{mmLoading?"Generando...":"🎨 Generar Contenido"}</Btn>}
+                    </div>
                   </>}
                 </div>
-                {mmLoading && <div style={card}><Spin/></div>}
-                {mmResult && !mmLoading && (
-                  <div style={card}>
-                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14 }}>
-                      <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8 }}>CONTENIDO GENERADO</div>
-                      <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>saveLib(mmResult,mmType,mt?.label,mmTopic)}>💾 Biblioteca</Btn>
-                    </div>
-                    <MDView text={mmResult}/>
-                  </div>
+                {mmType==="imagen_ia" && (
+                  <>
+                    {imgLoading && <div style={card}><Spin/></div>}
+                    {imgError && <div style={{ ...card, color:"#f87171", fontSize:13 }}>{imgError}</div>}
+                    {imgUrl && !imgLoading && (
+                      <div style={card}>
+                        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14 }}>
+                          <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8 }}>IMAGEN GENERADA</div>
+                          <a href={imgUrl} download="imagen_educativa.png" target="_blank" rel="noopener noreferrer">
+                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }}>⬇️ Descargar PNG</Btn>
+                          </a>
+                        </div>
+                        <img src={imgUrl} alt={mmTopic} style={{ width:"100%", borderRadius:8, display:"block" }}/>
+                        <p style={{ fontSize:11, color:C.textDim, marginTop:10 }}>Las imágenes de DALL·E expiran en 1 hora. Descargala para guardarla.</p>
+                      </div>
+                    )}
+                  </>
+                )}
+                {mmType!=="imagen_ia" && (
+                  <>
+                    {mmLoading && <div style={card}><Spin/></div>}
+                    {mmResult && !mmLoading && (
+                      <div style={card}>
+                        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14, flexWrap:"wrap", gap:8 }}>
+                          <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8 }}>CONTENIDO GENERADO</div>
+                          <div style={{ display:"flex", gap:8 }}>
+                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>saveLib(mmResult,mmType,mt?.label,mmTopic)}>💾 Biblioteca</Btn>
+                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>exportDocx(mmTopic, mt?.label, curSubj?.name, mmResult)}>📄 Word</Btn>
+                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>exportPdf(mmTopic, mt?.label, curSubj?.name, mmResult)}>📋 PDF</Btn>
+                          </div>
+                        </div>
+                        <MDView text={mmResult}/>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -849,6 +911,7 @@ export default function EduAIPro() {
             <div>
               <div style={{ display:"flex", gap:12, marginBottom:18, flexWrap:"wrap", alignItems:"center" }}>
                 <h2 style={{ margin:0, fontSize:19, fontWeight:700, flex:1, color:C.text }}>📚 Biblioteca <span style={{ color:C.textDim, fontWeight:400, fontSize:15 }}>({library.length})</span></h2>
+                {library.length > 0 && <Btn v="secondary" st={{ fontSize:12, padding:"5px 14px" }} onClick={()=>exportZip(library)}>📦 Exportar todo (.zip)</Btn>}
                 <input style={{ ...inp, width:185 }} value={libSearch} onChange={e=>setLibSearch(e.target.value)} placeholder="🔍 Buscar..."/>
                 <select style={sel} value={libFilter} onChange={e=>setLibFilter(e.target.value)}>
                   <option value="all">Todos</option>
@@ -866,7 +929,11 @@ export default function EduAIPro() {
                         <div style={{ fontSize:12, color:C.textDim, marginBottom:4 }}>{libItem.type_name} · {libItem.subject_name} · {new Date(libItem.created_at).toLocaleDateString("es-AR")}</div>
                         <h2 style={{ margin:0, fontSize:19, fontWeight:700, color:C.text }}>{libItem.topic}</h2>
                       </div>
-                      <Btn v="danger" onClick={()=>delLib(libItem.id)}>🗑 Eliminar</Btn>
+<div style={{ display:"flex", gap:8 }}>
+                        <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>exportDocx(libItem.topic, libItem.type_name, libItem.subject_name, libItem.content)}>📄 Word</Btn>
+                        <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>exportPdf(libItem.topic, libItem.type_name, libItem.subject_name, libItem.content)}>📋 PDF</Btn>
+                        <Btn v="danger" onClick={()=>delLib(libItem.id)}>🗑 Eliminar</Btn>
+                      </div>
                     </div>
                     <MDView text={libItem.content} maxH={680}/>
                   </div>
