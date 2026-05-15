@@ -1,6 +1,6 @@
 {
   "name": "eduai-pro",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -9,6 +9,9 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
+    "docx": "^8.5.0",
+    "jspdf": "^2.5.1",
+    "jszip": "^3.10.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
