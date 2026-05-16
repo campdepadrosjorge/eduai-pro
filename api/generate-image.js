@@ -28,6 +28,7 @@ high quality digital art.`;
         n: 1,
         size: "1024x1024",
         quality: "standard",
+        response_format: "url",
       }),
     });
 
@@ -36,6 +37,7 @@ high quality digital art.`;
     if (!response.ok) {
       return res.status(response.status).json({
         error: data.error?.message || "Error de OpenAI API",
+        detail: JSON.stringify(data),
       });
     }
 
