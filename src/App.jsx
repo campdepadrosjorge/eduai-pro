@@ -722,7 +722,7 @@ async function generateImage() {
                 {genResult && !genLoading && (
                   <div style={card}>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-                      <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8 }}>RESULTADO GENERADO</div>
+<div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8 }}>RESULTADO GENERADO</div>
                       <div style={{ display:"flex", gap:8, alignItems:"center" }}>
                         {genSaved
                           ? <span style={{ color:C.green, fontSize:12, fontWeight:700 }}>✓ Guardado</span>
@@ -730,10 +730,9 @@ async function generateImage() {
                               <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>saveLib(genResult,genType,gt?.label,genTopic)}>💾 Biblioteca</Btn>
                               {(genType==="evaluacion"||genType==="rubrica") && <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>saveBank(genResult,genTopic)}>🏦 Banco</Btn>}
                             </>}
-                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>exportDocx(genTopic, gt?.label, curSubj?.name, genResult)}>📄 Word</Btn>
+                        <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>exportDocx(genTopic, gt?.label, curSubj?.name, genResult)}>📄 Word</Btn>
                         {(genType==="evaluacion"||genType==="rubrica"||genType==="planclase") &&
-                          <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>exportPdf(genTopic, gt?.label, curSubj?.name, genResult)}>📋 PDF</Btn>}
-                      </div>
+                          <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>exportPdf(genTopic, gt?.label, curSubj?.name, genResult)}>📋 PDF</Btn>}                      </div>
                     </div>
                     <MDView text={genResult}/>
                   </div>
@@ -743,7 +742,6 @@ async function generateImage() {
           )}
 
           {/* MULTIMEDIA */}
-          {!dataLoading && {/* MULTIMEDIA */}
           {!dataLoading && view==="multimedia" && (
             <div style={{ display:"grid", gridTemplateColumns:"248px 1fr", gap:18 }}>
               <div style={card}>
