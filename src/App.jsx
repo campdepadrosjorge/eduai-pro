@@ -335,7 +335,10 @@ export default function EduAIPro() {
   const [genResult,  setGenResult]  = useState("");
   const [genLoading, setGenLoading] = useState(false);
   const [genSaved,   setGenSaved]   = useState(false);
-  const [genErr,     setGenErr]     = useState("");
+const [genErr,     setGenErr]     = useState("");
+  const [actImgUrl,  setActImgUrl]  = useState(null);
+  const [actImgLoad, setActImgLoad] = useState(false);
+  const [actImgErr,  setActImgErr]  = useState("");
 
   // Multimedia
   const [mmType,    setMmType]    = useState("podcast");
@@ -448,7 +451,28 @@ export default function EduAIPro() {
     } catch(e) { setMmResult("❌ " + e.message); }
     setMmLoading(false);
   }
-async function generateImage() {
+async function generateActivityImage() {
+    if (!genResult || !curSubj) return;
+    setActImgLoad(true); setActImgUrl(null); setActImgErr("");
+    try {
+      const res = await fetch("/api/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: `Educational activity illustration for: ${genTopic}. Subject: ${curSubj.name}. Level: ${genLevel}. Style: ${genType === "actividad" && (genTopic.toLowerCase().includes("micro") || genTopic.toLowerCase().includes("makecode") || genTopic.toLowerCase().includes("bloque") || genTopic.toLowerCase().includes("programa")) ? "MakeCode micro:bit block-based programming interface, colorful blocks similar to Scratch, event blocks in blue, loops in green, variables in orange, clean white background, labeled in Spanish, digital illustration" : "clean educational diagram or illustration, colorful, suitable for classroom, clear and informative"}`,
+          subject: curSubj.name,
+          level: genLevel,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setActImgUrl(data.url);
+    } catch(e) {
+      setActImgErr("❌ " + e.message);
+    }
+    setActImgLoad(false);
+  }
+  async function generateImage() {
     if (!mmTopic.trim() || !curSubj) return;
     setImgLoading(true); setImgUrl(null); setImgError("");
     try {
@@ -734,7 +758,25 @@ async function generateImage() {
                         {(genType==="evaluacion"||genType==="rubrica"||genType==="planclase") &&
                           <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>exportPdf(genTopic, gt?.label, curSubj?.name, genResult)}>📋 PDF</Btn>}                      </div>
                     </div>
-                    <MDView text={genResult}/>
+<MDView text={genResult}/>
+                    <div style={{ marginTop:16, display:"flex", gap:10, alignItems:"center" }}>
+                      <Btn v="secondary" st={{ fontSize:12, padding:"5px 14px" }} onClick={generateActivityImage} disabled={actImgLoad}>
+                        {actImgLoad ? "Generando imagen..." : "🖼️ Generar imagen ilustrativa"}
+                      </Btn>
+                      {actImgErr && <span style={{ color:"#f87171", fontSize:12 }}>{actImgErr}</span>}
+                    </div>
+                    {actImgUrl && (
+                      <div style={{ marginTop:14 }}>
+                        <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8, marginBottom:10 }}>IMAGEN GENERADA</div>
+                        <img src={actImgUrl} alt={genTopic} style={{ width:"100%", borderRadius:8, display:"block" }}/>
+                        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:8 }}>
+                          <p style={{ fontSize:11, color:C.textDim }}>Las imágenes expiran en 1 hora. Descargala para guardarla.</p>
+                          <a href={actImgUrl} download="imagen_actividad.png" target="_blank" rel="noopener noreferrer">
+                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }}>⬇️ Descargar</Btn>
+                          </a>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
