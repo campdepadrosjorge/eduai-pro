@@ -1,52 +1,53 @@
 // api/generate-image.js
-// Genera imágenes educativas con DALL-E 3 (OpenAI)
-// Requiere: OPENAI_API_KEY en las variables de entorno de Vercel
-
+// Genera imágenes educativas usando Hugging Face (gratuito)
+ 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
-
+ 
   const { description, subject, level } = req.body;
   if (!description) return res.status(400).json({ error: "Descripción requerida" });
-
-  // Prompt enriquecido para contenido educativo
-  const prompt = `Educational illustration for ${level || "school"} students about: ${description}. 
-Subject: ${subject || "general education"}.
-Style: clean, professional educational diagram or illustration, clear and informative, 
-suitable for classroom use, no text overlays, bright and engaging colors, 
-high quality digital art.`;
-
+ 
+  const prompt = `Educational illustration for ${level || "school"} students about: ${description}. Subject: ${subject || "general education"}. Style: clean, professional, colorful, suitable for classroom use, clear diagram or illustration, high quality digital art, no text.`;
+ 
   try {
-    console.log("OPENAI_API_KEY presente:", !!process.env.OPENAI_API_KEY);
-    console.log("Primeros 10 caracteres:", process.env.OPENAI_API_KEY?.slice(0, 10));
-    const response = await fetch("https://api.openai.com/v1/images/generations", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "dall-e-2",
-        prompt,
-        n: 1,
-        size: "512x512",
-        quality: "standard",
-      }),
-    });
-
-    const data = await response.json();
-
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.HF_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          inputs: prompt,
+          parameters: {
+            width: 768,
+            height: 768,
+          },
+        }),
+      }
+    );
+ 
     if (!response.ok) {
-      return res.status(response.status).json({
-        error: data.error?.message || "Error de OpenAI API",
-        detail: JSON.stringify(data),
-      });
+      const error = await response.text();
+      // Modelo cargando — pedir reintento
+      if (response.status === 503) {
+        return res.status(503).json({
+          error: "El modelo de imágenes se está iniciando. Esperá 20 segundos y volvé a intentar.",
+        });
+      }
+      return res.status(response.status).json({ error: `Error de Hugging Face: ${error}` });
     }
-
-    return res.status(200).json({
-      url: data.data[0].url,
-      revised_prompt: data.data[0].revised_prompt,
-    });
+ 
+    // La respuesta es un blob de imagen
+    const arrayBuffer = await response.arrayBuffer();
+    const base64 = Buffer.from(arrayBuffer).toString("base64");
+    const dataUrl = `data:image/jpeg;base64,${base64}`;
+ 
+    return res.status(200).json({ url: dataUrl });
+ 
   } catch (error) {
     return res.status(500).json({ error: "Error interno: " + error.message });
   }
 }
+ 
