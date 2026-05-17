@@ -457,11 +457,10 @@ async function generateActivityImage() {
     setActImgLoad(true); setActImgUrl(null); setActImgErr("");
     try {
       const res = await fetch("/api/generate-image", {
-        method: "POST",
+method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-body: JSON.stringify({
-  description: actImgDesc || `Educational activity illustration for: ${genTopic}. Subject: ${curSubj.name}. Level: ${genLevel}. Clean educational diagram, colorful, suitable for classroom.`,
+          description: actImgDesc || `Educational activity illustration for: ${genTopic}. Subject: ${curSubj.name}. Level: ${genLevel}. Clean educational diagram, colorful, suitable for classroom.`,
           subject: curSubj.name,
           level: genLevel,
         }),
