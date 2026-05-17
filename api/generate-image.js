@@ -16,6 +16,8 @@ suitable for classroom use, no text overlays, bright and engaging colors,
 high quality digital art.`;
 
   try {
+    console.log("OPENAI_API_KEY presente:", !!process.env.OPENAI_API_KEY);
+    console.log("Primeros 10 caracteres:", process.env.OPENAI_API_KEY?.slice(0, 10));
     const response = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: {
