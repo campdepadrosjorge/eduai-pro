@@ -336,9 +336,10 @@ export default function EduAIPro() {
   const [genLoading, setGenLoading] = useState(false);
   const [genSaved,   setGenSaved]   = useState(false);
 const [genErr,     setGenErr]     = useState("");
-  const [actImgUrl,  setActImgUrl]  = useState(null);
+ const [actImgUrl,  setActImgUrl]  = useState(null);
   const [actImgLoad, setActImgLoad] = useState(false);
   const [actImgErr,  setActImgErr]  = useState("");
+  const [actImgDesc, setActImgDesc] = useState("");
 
   // Multimedia
   const [mmType,    setMmType]    = useState("podcast");
@@ -459,8 +460,8 @@ async function generateActivityImage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          description: `Educational activity illustration for: ${genTopic}. Subject: ${curSubj.name}. Level: ${genLevel}. Style: ${genType === "actividad" && (genTopic.toLowerCase().includes("micro") || genTopic.toLowerCase().includes("makecode") || genTopic.toLowerCase().includes("bloque") || genTopic.toLowerCase().includes("programa")) ? "MakeCode micro:bit block-based programming interface, colorful blocks similar to Scratch, event blocks in blue, loops in green, variables in orange, clean white background, labeled in Spanish, digital illustration" : "clean educational diagram or illustration, colorful, suitable for classroom, clear and informative"}`,
-          subject: curSubj.name,
+body: JSON.stringify({
+          description: actImgDesc || `Educational activity illustration for: ${genTopic}. Subject: ${curSubj.name}. Level: ${genLevel}. Clean educational diagram, colorful, suitable for classroom.`,          subject: curSubj.name,
           level: genLevel,
         }),
       });
@@ -759,7 +760,11 @@ async function generateActivityImage() {
                           <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>exportPdf(genTopic, gt?.label, curSubj?.name, genResult)}>📋 PDF</Btn>}                      </div>
                     </div>
 <MDView text={genResult}/>
-                    <div style={{ marginTop:16, display:"flex", gap:10, alignItems:"center" }}>
+                   <div style={{ marginTop:16 }}>
+                      <label style={lbl}>DESCRIPCIÓN DE LA IMAGEN (opcional)</label>
+                      <input style={{ ...inp, marginBottom:10 }} value={actImgDesc} onChange={e=>setActImgDesc(e.target.value)} placeholder="Ej: bloques de MakeCode mostrando un loop con LED encendido, fondo blanco"/>
+                    </div>
+                    <div style={{ display:"flex", gap:10, alignItems:"center" }}>
                       <Btn v="secondary" st={{ fontSize:12, padding:"5px 14px" }} onClick={generateActivityImage} disabled={actImgLoad}>
                         {actImgLoad ? "Generando imagen..." : "🖼️ Generar imagen ilustrativa"}
                       </Btn>
