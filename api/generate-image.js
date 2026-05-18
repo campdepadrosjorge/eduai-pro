@@ -1,5 +1,6 @@
-// api/generate-image.js
-// Genera imágenes educativas usando Hugging Face (gratuito)
+/ api/generate-image.js
+// Paso 1: Claude genera un prompt detallado para imagen
+// Paso 2: Hugging Face FLUX.1-schnell genera la imagen
  
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
@@ -7,11 +8,53 @@ export default async function handler(req, res) {
   const { description, subject, level } = req.body;
   if (!description) return res.status(400).json({ error: "Descripción requerida" });
  
-  const prompt = `Educational illustration for ${level || "school"} students about: ${description}. Subject: ${subject || "general education"}. Style: clean, professional, colorful, suitable for classroom use, clear diagram or illustration, high quality digital art, no text.`;
- 
   try {
-    const response = await fetch(
-     "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0",
+    // ── PASO 1: Claude genera el prompt optimizado ──────────────
+    const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 300,
+        system: `You are an expert at writing precise, detailed prompts for AI image generation models. 
+Your prompts must be in English, highly specific, and optimized for educational illustrations.
+Reply with ONLY the image generation prompt, nothing else. No explanations, no quotes.`,
+        messages: [{
+          role: "user",
+          content: `Create a detailed image generation prompt for an educational illustration.
+Subject: ${subject || "general education"}
+Level: ${level || "school"}
+Content to illustrate: ${description}
+ 
+The image should be:
+- Educational and appropriate for classroom use
+- Clear, detailed and visually accurate
+- Professional quality illustration or diagram
+- No text overlays or labels in the image itself
+ 
+Write only the prompt in English, highly detailed, describing exactly what should appear in the image.`,
+        }],
+      }),
+    });
+ 
+    if (!claudeRes.ok) {
+      throw new Error("Error generando el prompt con Claude");
+    }
+ 
+    const claudeData = await claudeRes.json();
+    const optimizedPrompt = claudeData.content
+      .filter(b => b.type === "text")
+      .map(b => b.text)
+      .join("")
+      .trim();
+ 
+    // ── PASO 2: HuggingFace genera la imagen ────────────────────
+    const hfRes = await fetch(
+      "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell",
       {
         method: "POST",
         headers: {
@@ -19,35 +62,33 @@ export default async function handler(req, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          inputs: prompt,
-          parameters: {
-            width: 768,
-            height: 768,
-          },
+          inputs: optimizedPrompt,
+          parameters: { width: 768, height: 768 },
         }),
       }
     );
  
-    if (!response.ok) {
-      const error = await response.text();
-      // Modelo cargando — pedir reintento
-      if (response.status === 503) {
+    if (!hfRes.ok) {
+      const errorText = await hfRes.text();
+      if (hfRes.status === 503) {
         return res.status(503).json({
-          error: "El modelo de imágenes se está iniciando. Esperá 20 segundos y volvé a intentar.",
+          error: "El generador de imágenes se está iniciando. Esperá 20 segundos y volvé a intentar.",
         });
       }
-      return res.status(response.status).json({ error: `Error de Hugging Face: ${error}` });
+      throw new Error(`Error de Hugging Face: ${errorText}`);
     }
  
-    // La respuesta es un blob de imagen
-    const arrayBuffer = await response.arrayBuffer();
+    const arrayBuffer = await hfRes.arrayBuffer();
     const base64 = Buffer.from(arrayBuffer).toString("base64");
     const dataUrl = `data:image/jpeg;base64,${base64}`;
  
-    return res.status(200).json({ url: dataUrl });
+    return res.status(200).json({
+      url: dataUrl,
+      prompt_used: optimizedPrompt, // para debug si es necesario
+    });
  
   } catch (error) {
-    return res.status(500).json({ error: "Error interno: " + error.message });
+    return res.status(500).json({ error: error.message });
   }
 }
  
