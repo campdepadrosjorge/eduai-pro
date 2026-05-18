@@ -460,7 +460,7 @@ async function generateActivityImage() {
 method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          description: actImgDesc || `Educational activity illustration for: ${genTopic}. Subject: ${curSubj.name}. Level: ${genLevel}. Clean educational diagram, colorful, suitable for classroom.`,
+          description: actImgDesc || `High quality educational illustration for ${curSubj.name} class (${genLevel}) about: ${genTopic}. ${curSubj.name.toLowerCase().includes("geograf") ? "Detailed map or geographic illustration, cartographic style, clear labels" : curSubj.name.toLowerCase().includes("histor") ? "Historical scene or portrait, realistic illustration, detailed" : curSubj.name.toLowerCase().includes("ciencia") || curSubj.name.toLowerCase().includes("biolog") ? "Scientific diagram or nature illustration, detailed and accurate, labeled" : curSubj.name.toLowerCase().includes("matem") ? "Mathematical diagram or visual representation, clean and clear" : "Clean educational illustration, colorful, detailed, suitable for classroom"}. Professional quality, no text overlays.`,
           subject: curSubj.name,
           level: genLevel,
         }),
