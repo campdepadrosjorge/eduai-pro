@@ -53,7 +53,7 @@ Write only the prompt in English, highly detailed, describing exactly what shoul
       .trim();
  
     // ── PASO 2: HuggingFace genera la imagen ────────────────────
-    const hfRes = await fetch(
+  const hfRes = await fetch(
       "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell",
       {
         method: "POST",
@@ -67,25 +67,29 @@ Write only the prompt in English, highly detailed, describing exactly what shoul
         }),
       }
     );
- 
+
     if (!hfRes.ok) {
-      const errorText = await hfRes.text();
       if (hfRes.status === 503) {
-        return res.status(503).json({
-          error: "El generador de imágenes se está iniciando. Esperá 20 segundos y volvé a intentar.",
-        });
+        return res.status(503).json({ error: "El generador de imágenes se está iniciando. Esperá 20 segundos y volvé a intentar." });
       }
-      throw new Error(`Error de Hugging Face: ${errorText}`);
+      return res.status(500).json({ error: `Error de Hugging Face (${hfRes.status}). Intentá de nuevo.` });
     }
- 
+
+    const contentType = hfRes.headers.get("content-type") || "";
+    if (!contentType.includes("image")) {
+      return res.status(500).json({ error: "Hugging Face no devolvió una imagen. Intentá de nuevo." });
+    }
+
     const arrayBuffer = await hfRes.arrayBuffer();
     const base64 = Buffer.from(arrayBuffer).toString("base64");
     const dataUrl = `data:image/jpeg;base64,${base64}`;
- 
-    return res.status(200).json({
-      url: dataUrl,
-      prompt_used: optimizedPrompt, // para debug si es necesario
-    });
+
+    return res.status(200).json({ url: dataUrl, prompt_used: optimizedPrompt });
+
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+}
  
   } catch (error) {
     return res.status(500).json({ error: error.message });
