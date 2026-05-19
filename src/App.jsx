@@ -1116,7 +1116,7 @@ method: "POST",
                   {publicLib.map(item => {
                     const g = GEN_TYPES.find(g=>g.id===item.type)||MM_TYPES.find(m=>m.id===item.type);
                     return (
-                      <div key={item.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:16 }}>
+                      <div key={item.id} style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:16 }}>
                         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:10 }}>
                           <span style={{ fontSize:22 }}>{g?.icon||"📄"}</span>
                           {item.user_id === authUser?.id && (
