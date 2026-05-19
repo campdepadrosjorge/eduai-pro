@@ -465,8 +465,9 @@ method: "POST",
           level: genLevel,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      let data;
+      try { data = await res.json(); } catch { throw new Error("Error del servidor. Intentá de nuevo."); }
+      if (!res.ok) throw new Error(data.error || "Error al generar imagen.");
       setActImgUrl(data.url);
     } catch(e) {
       setActImgErr("❌ " + e.message);
