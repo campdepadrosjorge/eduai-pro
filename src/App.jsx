@@ -801,12 +801,15 @@ method: "POST",
 <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8 }}>RESULTADO GENERADO</div>
                       <div style={{ display:"flex", gap:8, alignItems:"center" }}>
 <div style={{ display:"flex", alignItems:"center", gap:8, marginRight:8 }}>
-                          <span style={{ fontSize:12, color:C.textMuted }}>Público</span>
-                          <div style={{ width:36, height:20, borderRadius:10, background:genPublic?"#10b981":"#334155", cursor:"pointer", position:"relative", transition:"background .2s" }} onClick={()=>setGenPublic(!genPublic)}>
-                            <div style={{ width:16, height:16, borderRadius:"50%", background:"#fff", position:"absolute", top:2, left:genPublic?18:2, transition:"left .2s" }}/>
-                          </div>
-                          <span style={{ fontSize:12, color:genPublic?C.green:C.textMuted }}>{genPublic?"Compartir en biblioteca pública":"Solo yo"}</span>
-                        </div>
+                {genSaved && (
+                          <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px", border:`1px solid ${C.green}`, color:C.green }} onClick={async()=>{
+                            const userName = authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "Docente";
+                            await dbAddPublicItem(authUser.id, userName, { type:genType, type_name:gt?.label, topic:genTopic, subject_name:curSubj?.name||"", level:genLevel, content:genResult });
+                            const pub = await dbLoadPublicLib();
+                            setPublicLib(pub);
+                            alert("Compartido en la biblioteca publica!");
+                          }}>🌐 Compartir</Btn>
+                        )}
                         {genSaved
                           ? <span style={{ color:C.green, fontSize:12, fontWeight:700 }}>✓ Guardado</span>
                           : <>
