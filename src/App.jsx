@@ -807,7 +807,7 @@ method: "POST",
                             await dbAddPublicItem(authUser.id, userName, { type:genType, type_name:gt?.label, topic:genTopic, subject_name:curSubj?.name||"", level:genLevel, content:genResult });
                             const pub = await dbLoadPublicLib();
                             setPublicLib(pub);
-                            alert("Compartido en la biblioteca publica!");
+                            alert("Compartido!");
                           }}>🌐 Compartir</Btn>
                         )}
                         {genSaved
