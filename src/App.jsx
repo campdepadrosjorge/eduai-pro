@@ -464,7 +464,7 @@ Promise.all([
     if (!genTopic.trim() || !curSubj) return;
     setGenLoading(true); setGenResult(""); setGenSaved(false); setGenErr("");
     try {
-      const sys = sysGen(genType, curSubj.name, genLevel || curSubj.level, curSubj.materials);
+      const sys = sysGen(genType, curSubj?.name, genLevel || curSubj.level, curSubj.materials);
       const usr = userGen(genType, genTopic, genDiff, genExtra);
       const r = await callClaude(sys, [{ role:"user", content:usr }]);
       setGenResult(r);
@@ -477,7 +477,7 @@ Promise.all([
     if (!mmTopic.trim() || !curSubj) return;
     setMmLoading(true); setMmResult("");
     try {
-      const sys = `Sos experto en contenido educativo digital para ${curSubj.name} (${curSubj.level}). Respondé en español rioplatense con Markdown.`;
+      const sys = `Sos experto en contenido educativo digital para ${curSubj?.name} (${curSubj.level}). Respondé en español rioplatense con Markdown.`;
       const r = await callClaude(sys, [{ role:"user", content:userMM(mmType, mmTopic, mmExtra) }]);
       setMmResult(r);
     } catch(e) { setMmResult("❌ " + e.message); }
@@ -504,8 +504,8 @@ function generateMakeCodeUrl(content) {
 method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          description: actImgDesc || `High quality educational illustration for ${curSubj.name} class (${genLevel}) about: ${genTopic}. ${curSubj.name.toLowerCase().includes("geograf") ? "Detailed map or geographic illustration, cartographic style, clear labels" : curSubj.name.toLowerCase().includes("histor") ? "Historical scene or portrait, realistic illustration, detailed" : curSubj.name.toLowerCase().includes("ciencia") || curSubj.name.toLowerCase().includes("biolog") ? "Scientific diagram or nature illustration, detailed and accurate, labeled" : curSubj.name.toLowerCase().includes("matem") ? "Mathematical diagram or visual representation, clean and clear" : "Clean educational illustration, colorful, detailed, suitable for classroom"}. Professional quality, no text overlays.`,
-          subject: curSubj.name,
+          description: actImgDesc || `High quality educational illustration for ${curSubj?.name} class (${genLevel}) about: ${genTopic}. ${curSubj?.name.toLowerCase().includes("geograf") ? "Detailed map or geographic illustration, cartographic style, clear labels" : curSubj?.name.toLowerCase().includes("histor") ? "Historical scene or portrait, realistic illustration, detailed" : curSubj?.name.toLowerCase().includes("ciencia") || curSubj?.name.toLowerCase().includes("biolog") ? "Scientific diagram or nature illustration, detailed and accurate, labeled" : curSubj?.name.toLowerCase().includes("matem") ? "Mathematical diagram or visual representation, clean and clear" : "Clean educational illustration, colorful, detailed, suitable for classroom"}. Professional quality, no text overlays.`,
+          subject: curSubj?.name,
           level: genLevel,
         }),
       });
@@ -527,7 +527,7 @@ method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           description: mmTopic,
-          subject: curSubj.name,
+          subject: curSubj?.name,
           level: curSubj.level,
         }),
       });
@@ -667,7 +667,7 @@ method: "POST",
           <h1 style={{ margin:0, fontSize:16, fontWeight:700, flex:1, color:C.text }}>
             {NAV.find(n=>n.id===view)?.icon} {NAV.find(n=>n.id===view)?.label}
           </h1>
-          {curSubj && <div style={{ fontSize:12, color:C.textMuted, background:C.bg, padding:"4px 12px", borderRadius:20, border:`1px solid ${C.border}` }}>📖 {curSubj.name}</div>}
+          {curSubj && <div style={{ fontSize:12, color:C.textMuted, background:C.bg, padding:"4px 12px", borderRadius:20, border:`1px solid ${C.border}` }}>📖 {curSubj?.name}</div>}
           <Btn v="accent" st={{ padding:"5px 13px", fontSize:12 }} onClick={()=>setSubjModal(true)}>+ Materia</Btn>
         </div>
 
