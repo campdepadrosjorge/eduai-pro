@@ -802,7 +802,7 @@ method: "POST",
                       <div style={{ display:"flex", gap:8, alignItems:"center" }}>
 <div style={{ display:"flex", alignItems:"center", gap:8, marginRight:8 }}>
                 {genSaved && (
-                          <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px", border:`1px solid ${C.green}`, color:C.green }} onClick={async()=>{
+                          <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px", border:"1px solid #10b981", color:"#10b981" }} onClick={async()=>{
                             const userName = authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "Docente";
                             await dbAddPublicItem(authUser.id, userName, { type:genType, type_name:gt?.label, topic:genTopic, subject_name:curSubj?.name||"", level:genLevel, content:genResult });
                             const pub = await dbLoadPublicLib();
