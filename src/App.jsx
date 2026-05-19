@@ -11,7 +11,8 @@ const NAV = [
   { id:"chat",       label:"Chat Docente",       icon:"💬" },
   { id:"corrector",  label:"Corrector de TPs",   icon:"✅" },
   { id:"library",    label:"Biblioteca",         icon:"📚" },
-  { id:"bank",       label:"Banco de Preguntas", icon:"🏦" },
+{ id:"bank",       label:"Banco de Preguntas", icon:"🏦" },
+  { id:"publiclib",  label:"Biblioteca Pública",  icon:"🌐" },
 ];
 
 const GEN_TYPES = [
@@ -102,6 +103,30 @@ async function callClaude(system, messages, maxTokens = 4000) {
 
 // ── SUPABASE DATA LAYER ───────────────────────────────────────────────────────
 
+async function dbLoadPublicLib() {
+    const { data, error } = await supabase.from("public_library").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  }
+
+  async function dbAddPublicItem(userId, userName, item) {
+    const { error } = await supabase.from("public_library").insert({
+      user_id: userId,
+      user_name: userName,
+      type: item.type,
+      type_name: item.type_name,
+      topic: item.topic,
+      subject_name: item.subject_name || "",
+      level: item.level || "",
+      content: item.content,
+    });
+    if (error) throw error;
+  }
+
+  async function dbDelPublicItem(id) {
+    const { error } = await supabase.from("public_library").delete().eq("id", id);
+    if (error) throw error;
+  }
 async function dbLoadSubjects(userId) {
   const { data, error } = await supabase.from("subjects").select("*").eq("user_id", userId).order("created_at");
   if (error) throw error;
@@ -334,9 +359,11 @@ export default function EduAIPro() {
   const [genExtra,   setGenExtra]   = useState("");
   const [genResult,  setGenResult]  = useState("");
   const [genLoading, setGenLoading] = useState(false);
-  const [genSaved,   setGenSaved]   = useState(false);
-const [genErr,     setGenErr]     = useState("");
- const [actImgUrl,  setActImgUrl]  = useState(null);
+const [genSaved,   setGenSaved]   = useState(false);
+  const [genErr,     setGenErr]     = useState("");
+  const [genPublic,  setGenPublic]  = useState(false);
+  const [publicLib,  setPublicLib]  = useState([]);
+  const [pubLoading, setPubLoading] = useState(false); const [actImgUrl,  setActImgUrl]  = useState(null);
   const [actImgLoad, setActImgLoad] = useState(false);
   const [actImgErr,  setActImgErr]  = useState("");
   const [actImgDesc, setActImgDesc] = useState("");
@@ -390,18 +417,20 @@ const [genErr,     setGenErr]     = useState("");
   useEffect(() => {
     if (!authUser) return;
     setDataLoading(true);
-    Promise.all([
+Promise.all([
       dbLoadSubjects(authUser.id),
       dbLoadLibrary(authUser.id),
       dbLoadBank(authUser.id),
-    ]).then(([subs, lib, bk]) => {
+      dbLoadPublicLib(),
+    ]).then(([subs, lib, bk, pub]) => {
       setSubjects(subs);
       setLibrary(lib);
       setBank(bk);
+      setPublicLib(pub);
       if (subs.length) setCurSid(subs[0].id);
       setDataLoading(false);
     }).catch(() => setDataLoading(false));
-  }, [authUser]);
+    }, [authUser]);
 
   useEffect(() => { chatRef.current?.scrollIntoView({ behavior:"smooth" }); }, [chatMsgs]);
 
@@ -510,11 +539,17 @@ method: "POST",
     }
     setImgLoading(false);
   }
-  async function saveLib(content, type, typeName, topic) {
+ async function saveLib(content, type, typeName, topic) {
     if (!authUser) return;
     await dbAddLibraryItem(authUser.id, { type, type_name:typeName, topic, subject_name:curSubj?.name||"", content });
     const upd = await dbLoadLibrary(authUser.id);
     setLibrary(upd); setGenSaved(true);
+    if (genPublic) {
+      const userName = authUser.user_metadata?.name || authUser.email?.split("@")[0] || "Docente";
+      await dbAddPublicItem(authUser.id, userName, { type, type_name:typeName, topic, subject_name:curSubj?.name||"", level:genLevel, content });
+      const pub = await dbLoadPublicLib();
+      setPublicLib(pub);
+    }
   }
 
   async function saveBank(content, topic) {
@@ -765,6 +800,13 @@ method: "POST",
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
 <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8 }}>RESULTADO GENERADO</div>
                       <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+<div style={{ display:"flex", alignItems:"center", gap:8, marginRight:8 }}>
+                          <span style={{ fontSize:12, color:C.textMuted }}>Público</span>
+                          <div style={{ width:36, height:20, borderRadius:10, background:genPublic?"#10b981":"#334155", cursor:"pointer", position:"relative", transition:"background .2s" }} onClick={()=>setGenPublic(!genPublic)}>
+                            <div style={{ width:16, height:16, borderRadius:"50%", background:"#fff", position:"absolute", top:2, left:genPublic?18:2, transition:"left .2s" }}/>
+                          </div>
+                          <span style={{ fontSize:12, color:genPublic?C.green:C.textMuted }}>{genPublic?"Compartir en biblioteca pública":"Solo yo"}</span>
+                        </div>
                         {genSaved
                           ? <span style={{ color:C.green, fontSize:12, fontWeight:700 }}>✓ Guardado</span>
                           : <>
@@ -1057,6 +1099,46 @@ method: "POST",
                   <MDView text={item.content.slice(0,900)+(item.content.length>900?"...":"")} maxH={280}/>
                 </div>
               ))}
+            </div>
+          )}
+{/* PUBLIC LIBRARY */}
+          {!dataLoading && view==="publiclib" && (
+            <div>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
+                <h2 style={{ fontSize:19, fontWeight:700, color:C.text, margin:0 }}>🌐 Biblioteca Pública <span style={{ color:C.textDim, fontWeight:400, fontSize:15 }}>({publicLib.length})</span></h2>
+                <span style={{ fontSize:13, color:C.textMuted }}>Contenido compartido por docentes de la plataforma</span>
+              </div>
+              {!publicLib.length ? (
+                <div style={{ ...card, textAlign:"center", padding:"52px 24px", color:C.textDim }}>
+                  <div style={{ fontSize:36, marginBottom:10 }}>🌐</div>
+                  <p>La biblioteca pública está vacía. Sé el primero en compartir contenido.</p>
+                  <p style={{ fontSize:12, marginTop:8 }}>Al guardar en el Generador activá el toggle "Público" para compartir.</p>
+                </div>
+              ) : (
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))", gap:14 }}>
+                  {publicLib.map(item => {
+                    const g = GEN_TYPES.find(g=>g.id===item.type)||MM_TYPES.find(m=>m.id===item.type);
+                    return (
+                      <div key={item.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:16 }}>
+                        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:10 }}>
+                          <span style={{ fontSize:22 }}>{g?.icon||"📄"}</span>
+                          {item.user_id === authUser?.id && (
+                            <button style={{ background:"transparent", border:"none", cursor:"pointer", color:C.red, fontSize:14 }} onClick={async()=>{ await dbDelPublicItem(item.id); const pub=await dbLoadPublicLib(); setPublicLib(pub); }}>🗑</button>
+                          )}
+                        </div>
+                        <Tag color={g?.color||C.textMuted}>{item.type_name}</Tag>
+                        <div style={{ fontWeight:600, color:C.text, fontSize:14, marginTop:8, marginBottom:4 }}>{item.topic}</div>
+                        <div style={{ fontSize:12, color:C.textDim, marginBottom:10 }}>{item.subject_name} · {item.level} · Por {item.user_name}</div>
+                        <div style={{ fontSize:12, color:C.textDim, marginBottom:12 }}>{new Date(item.created_at).toLocaleDateString("es-AR")}</div>
+                        <div style={{ display:"flex", gap:8 }}>
+                          <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px", flex:1 }} onClick={()=>{ saveLib(item.content, item.type, item.type_name, item.topic); }}>💾 Guardar en mi biblioteca</Btn>
+                          <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>exportDocx(item.topic, item.type_name, item.subject_name, item.content)}>📄</Btn>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
