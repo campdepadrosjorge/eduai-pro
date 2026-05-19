@@ -177,17 +177,17 @@ const C = {
   blue:"#3b82f6", green:"#10b981", purple:"#a78bfa", red:"#f87171",
 };
 
-const inp  = { background:C.bg, border:`1px solid ${C.border}`, borderRadius:8, padding:"9px 13px", color:C.text, fontSize:14, width:"100%", outline:"none", fontFamily:"inherit" };
-const sel  = { background:C.bg, border:`1px solid ${C.border}`, borderRadius:8, padding:"9px 13px", color:C.text, fontSize:13, outline:"none", fontFamily:"inherit" };
+const inp  = { background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:14, width:"100%", outline:"none", fontFamily:"inherit" };
+const sel  = { background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:13, outline:"none", fontFamily:"inherit" };
 const lbl  = { fontSize:11, color:C.textMuted, marginBottom:5, display:"block", fontWeight:700, letterSpacing:.6 };
-const card = { background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"18px 20px", marginBottom:16 };
+const card = { background:C.card, border:"1px solid #243350", borderRadius:12, padding:"18px 20px", marginBottom:16 };
 
 function Btn({ children, onClick, v="primary", disabled=false, st={} }) {
   const base = { padding:v==="sm"?"5px 11px":"9px 18px", borderRadius:8, cursor:disabled?"not-allowed":"pointer", fontWeight:600, fontSize:v==="sm"?12:13, fontFamily:"inherit", opacity:disabled?.45:1, transition:"opacity .15s", ...st };
   const vs = {
     primary:   { background:C.accent, color:"#000", border:"none" },
-    secondary: { background:C.card, color:C.text, border:`1px solid ${C.border}` },
-    ghost:     { background:"transparent", color:C.text, border:`1px solid ${C.border}` },
+    secondary: { background:C.card, color:C.text, border:"1px solid #243350" },
+    ghost:     { background:"transparent", color:C.text, border:"1px solid #243350" },
     danger:    { background:"#7f1d1d", color:"#fca5a5", border:"none" },
     accent:    { background:"transparent", color:C.accent, border:`1px solid ${C.accent}` },
   };
@@ -667,7 +667,7 @@ method: "POST",
           <h1 style={{ margin:0, fontSize:16, fontWeight:700, flex:1, color:C.text }}>
             {NAV.find(n=>n.id===view)?.icon} {NAV.find(n=>n.id===view)?.label}
           </h1>
-          {curSubj && <div style={{ fontSize:12, color:C.textMuted, background:C.bg, padding:"4px 12px", borderRadius:20, border:`1px solid ${C.border}` }}>📖 {curSubj?.name}</div>}
+          {curSubj && <div style={{ fontSize:12, color:C.textMuted, background:C.bg, padding:"4px 12px", borderRadius:20, border:"1px solid #243350" }}>📖 {curSubj?.name}</div>}
           <Btn v="accent" st={{ padding:"5px 13px", fontSize:12 }} onClick={()=>setSubjModal(true)}>+ Materia</Btn>
         </div>
 
@@ -691,7 +691,7 @@ method: "POST",
               </div>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:20 }}>
                 {[{l:"Materias",v:subjects.length,i:"📚",c:C.blue},{l:"Biblioteca",v:library.length,i:"💾",c:C.green},{l:"Banco",v:bank.length,i:"🏦",c:C.accent},{l:"Herramientas",v:13,i:"⚡",c:C.purple}].map(x=>(
-                  <div key={x.l} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"15px 18px" }}>
+                  <div key={x.l} style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"15px 18px" }}>
                     <div style={{ fontSize:24, marginBottom:8 }}>{x.i}</div>
                     <div style={{ fontSize:28, fontWeight:700, color:x.c }}>{x.v}</div>
                     <div style={{ fontSize:12, color:C.textDim, marginTop:2 }}>{x.l}</div>
@@ -727,7 +727,7 @@ method: "POST",
                 <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8, marginBottom:14 }}>ACCESO RÁPIDO</div>
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10 }}>
                   {[{v:"generator",i:"⚡",l:"Generador IA",c:C.accent},{v:"chat",i:"💬",l:"Chat Docente",c:C.blue},{v:"multimedia",i:"🎨",l:"Multimedia",c:C.green},{v:"corrector",i:"✅",l:"Corrector TPs",c:C.purple}].map(x=>(
-                    <button key={x.v} style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:10, padding:"13px 8px", cursor:"pointer", textAlign:"center", fontFamily:"inherit" }} onClick={()=>setView(x.v)}>
+                    <button key={x.v} style={{ background:C.bg, border:"1px solid #243350", borderRadius:10, padding:"13px 8px", cursor:"pointer", textAlign:"center", fontFamily:"inherit" }} onClick={()=>setView(x.v)}>
                       <div style={{ fontSize:24, marginBottom:5 }}>{x.i}</div>
                       <div style={{ fontSize:12, fontWeight:600, color:x.c }}>{x.l}</div>
                     </button>
@@ -954,7 +954,7 @@ method: "POST",
                       <div style={{ fontSize:36, marginBottom:10 }}>💬</div>
                       <p style={{ fontSize:14, marginBottom:18 }}>Chat contextualizado a tu materia</p>
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, maxWidth:500, margin:"0 auto" }}>
-                        {SUGS.map(s=><button key={s} style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:8, padding:"9px 11px", color:C.textMuted, cursor:"pointer", textAlign:"left", fontSize:12, fontFamily:"inherit" }} onClick={()=>setChatIn(s)}>{s}</button>)}
+                        {SUGS.map(s=><button key={s} style={{ background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 11px", color:C.textMuted, cursor:"pointer", textAlign:"left", fontSize:12, fontFamily:"inherit" }} onClick={()=>setChatIn(s)}>{s}</button>)}
                       </div>
                     </div>
                   ) : chatMsgs.map((m,i)=>(
@@ -1059,7 +1059,7 @@ method: "POST",
                   {filtLib.map(item=>{
                     const g = GEN_TYPES.find(g=>g.id===item.type)||MM_TYPES.find(m=>m.id===item.type);
                     return (
-                      <div key={item.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:16, cursor:"pointer" }} onClick={()=>setLibItem(item)}>
+                      <div key={item.id} style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:16, cursor:"pointer" }} onClick={()=>setLibItem(item)}>
                         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:10 }}>
                           <span style={{ fontSize:22 }}>{g?.icon||"📄"}</span>
                           <button style={{ background:"transparent", border:"none", cursor:"pointer", color:C.red, fontSize:15 }} onClick={e=>{e.stopPropagation();delLib(item.id);}}>🗑</button>
@@ -1145,7 +1145,7 @@ method: "POST",
       {/* SUBJECT MODAL */}
       {subjModal && (
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.8)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999 }}>
-          <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:26, width:488, maxWidth:"92vw" }}>
+          <div style={{ background:C.card, border:"1px solid #243350", borderRadius:16, padding:26, width:488, maxWidth:"92vw" }}>
             <h2 style={{ margin:"0 0 18px", fontSize:19, fontWeight:700, color:C.text }}>➕ Nueva Materia</h2>
             <label style={lbl}>NOMBRE *</label>
             <input style={{ ...inp, marginBottom:13 }} value={sf.name} onChange={e=>setSf({...sf,name:e.target.value})} placeholder="Ej: Biología, Historia, Matemática II..." autoFocus/>
