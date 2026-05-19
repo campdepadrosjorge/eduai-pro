@@ -797,11 +797,10 @@ method: "POST",
                 {genLoading && <div style={card}><Spin/></div>}
                 {genResult && !genLoading && (
                   <div style={card}>
-                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-<div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8 }}>RESULTADO GENERADO</div>
-                      <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-<div style={{ display:"flex", alignItems:"center", gap:8, marginRight:8 }}>
-                {genSaved && (
+   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+                      <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8 }}>RESULTADO GENERADO</div>
+                      <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
+                        {genSaved && (
                           <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px", border:"1px solid #10b981", color:"#10b981" }} onClick={async()=>{
                             const userName = authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "Docente";
                             await dbAddPublicItem(authUser.id, userName, { type:genType, type_name:gt?.label, topic:genTopic, subject_name:curSubj?.name||"", level:genLevel, content:genResult });
@@ -818,48 +817,12 @@ method: "POST",
                             </>}
                         <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>exportDocx(genTopic, gt?.label, curSubj?.name, genResult)}>📄 Word</Btn>
                         {(genType==="evaluacion"||genType==="rubrica"||genType==="planclase") &&
-                          <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>exportPdf(genTopic, gt?.label, curSubj?.name, genResult)}>📋 PDF</Btn>}                      </div>
-                    </div>
-<MDView text={genResult}/>
-{makeCodeUrl && (
-                      <div style={{ marginTop:16, padding:"12px 16px", background:"#0f2027", border:"1px solid #00b4d8", borderRadius:8, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                        <div>
-                          <div style={{ fontSize:13, fontWeight:700, color:"#00b4d8", marginBottom:3 }}>🔧 Código MakeCode detectado</div>
-                          <div style={{ fontSize:12, color:C.textMuted }}>Abrí el proyecto directamente en el editor con los bloques listos</div>
-                        </div>
-                        <a href={makeCodeUrl} target="_blank" rel="noopener noreferrer">
-                          <Btn v="primary" st={{ fontSize:13, padding:"8px 18px" }}>Abrir en MakeCode →</Btn>
-                        </a>
+                          <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>exportPdf(genTopic, gt?.label, curSubj?.name, genResult)}>📋 PDF</Btn>}
                       </div>
-                    )}
-                   <div style={{ marginTop:16 }}>
-                      <label style={lbl}>DESCRIPCIÓN DE LA IMAGEN (opcional)</label>
-                      <input style={{ ...inp, marginBottom:10 }} value={actImgDesc} onChange={e=>setActImgDesc(e.target.value)} placeholder="Ej: bloques de MakeCode mostrando un loop con LED encendido, fondo blanco"/>
                     </div>
-                    <div style={{ display:"flex", gap:10, alignItems:"center" }}>
-                      <Btn v="secondary" st={{ fontSize:12, padding:"5px 14px" }} onClick={generateActivityImage} disabled={actImgLoad}>
-                        {actImgLoad ? "Generando imagen..." : "🖼️ Generar imagen ilustrativa"}
-                      </Btn>
-                      {actImgErr && <span style={{ color:"#f87171", fontSize:12 }}>{actImgErr}</span>}
-                    </div>
-                    {actImgUrl && (
-                      <div style={{ marginTop:14 }}>
-                        <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8, marginBottom:10 }}>IMAGEN GENERADA</div>
-                        <img src={actImgUrl} alt={genTopic} style={{ width:"100%", borderRadius:8, display:"block" }}/>
-                        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:8 }}>
-                          <p style={{ fontSize:11, color:C.textDim }}>Las imágenes expiran en 1 hora. Descargala para guardarla.</p>
-                          <a href={actImgUrl} download="imagen_actividad.png" target="_blank" rel="noopener noreferrer">
-                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }}>⬇️ Descargar</Btn>
-                          </a>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
+                    <MDView text={genResult}/>
+                    {makeCodeUrl && (
+                      <div style={{ marginTop:16, padding:"12px 16px", background:"#0f2027", border:"1
           {/* MULTIMEDIA */}
           {!dataLoading && view==="multimedia" && (
             <div style={{ display:"grid", gridTemplateColumns:"248px 1fr", gap:18 }}>
