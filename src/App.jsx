@@ -822,7 +822,38 @@ method: "POST",
                     </div>
                     <MDView text={genResult}/>
                     {makeCodeUrl && (
-                      <div style={{ marginTop:16, padding:"12px 16px", background:"#0f2027", border:"1
+   <div style={{ marginTop:16, padding:"12px 16px", background:"#0f2027", borderRadius:8, border:"1px solid #00b4d8", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                        <div>
+                          <div style={{ fontSize:13, fontWeight:700, color:"#00b4d8", marginBottom:3 }}>Codigo MakeCode detectado</div>
+                          <div style={{ fontSize:12, color:C.textMuted }}>Abri el proyecto en el editor con los bloques listos</div>
+                        </div>
+                        <a href={makeCodeUrl} target="_blank" rel="noopener noreferrer">
+                          <Btn v="primary" st={{ fontSize:13, padding:"8px 18px" }}>Abrir en MakeCode</Btn>
+                        </a>
+                      </div>
+                    )}
+                    <div style={{ marginTop:16 }}>
+                      <label style={lbl}>DESCRIPCION DE LA IMAGEN (opcional)</label>
+                      <input style={{ ...inp, marginBottom:10 }} value={actImgDesc} onChange={e=>setActImgDesc(e.target.value)} placeholder="Ej: bloques de MakeCode mostrando un loop con LED encendido"/>
+                    </div>
+                    <div style={{ display:"flex", gap:10, alignItems:"center" }}>
+                      <Btn v="secondary" st={{ fontSize:12, padding:"5px 14px" }} onClick={generateActivityImage} disabled={actImgLoad}>
+                        {actImgLoad ? "Generando imagen..." : "Generar imagen ilustrativa"}
+                      </Btn>
+                      {actImgErr && <span style={{ color:"#f87171", fontSize:12 }}>{actImgErr}</span>}
+                    </div>
+                    {actImgUrl && (
+                      <div style={{ marginTop:14 }}>
+                        <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8, marginBottom:10 }}>IMAGEN GENERADA</div>
+                        <img src={actImgUrl} alt={genTopic} style={{ width:"100%", borderRadius:8, display:"block" }}/>
+                        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:8 }}>
+                          <p style={{ fontSize:11, color:C.textDim }}>Las imagenes expiran en 1 hora. Descargala para guardarla.</p>
+                          <a href={actImgUrl} download="imagen_actividad.png" target="_blank" rel="noopener noreferrer">
+                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }}>Descargar</Btn>
+                          </a>
+                        </div>
+                      </div>
+                    )}
           {/* MULTIMEDIA */}
           {!dataLoading && view==="multimedia" && (
             <div style={{ display:"grid", gridTemplateColumns:"248px 1fr", gap:18 }}>
