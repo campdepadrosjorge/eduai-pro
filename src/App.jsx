@@ -61,7 +61,7 @@ function userGen(type, topic, diff, extra) {
   const e = extra ? `\n\nInstrucciones adicionales: ${extra}` : "";
   const m = {
     planclase:   `Plan de clase completo sobre: "${topic}" | Dificultad: ${diff}\n\nIncluí: datos del plan, 3-4 objetivos (verbos Bloom), contenidos conceptuales/procedimentales/actitudinales, recursos, secuencia didáctica detallada (inicio/desarrollo/cierre con tiempos y roles), evaluación formativa, tarea opcional, adaptaciones.${e}`,
-    actividad:   `Actividad didáctica sobre: "${topic}" | Dificultad: ${diff}\n\nIncluí: título, objetivos, duración, materiales, desarrollo completo (inicio/desarrollo/cierre), consignas exactas para alumnos, criterios de evaluación, variantes.${e}`,
+    actividad:   `Actividad didáctica sobre: "${topic}" | Dificultad: ${diff}\n\nIncluí: título, objetivos, duración, materiales, desarrollo completo (inicio/desarrollo/cierre), consignas exactas para alumnos, criterios de evaluación, variantes.${topic.toLowerCase().includes("micro") || topic.toLowerCase().includes("makecode") || topic.toLowerCase().includes("bloque") || topic.toLowerCase().includes("programa") ? "\n\nIMPORTANTE: Al final de la actividad incluí una sección '## Código MakeCode' con el código JavaScript completo para micro:bit que los alumnos deben programar. El código debe estar en un bloque de código con triple backtick javascript y ser funcional en MakeCode." : ""}${e}`,
     rubrica:     `Rúbrica analítica para evaluar: "${topic}" | Dificultad: ${diff}\n\nIncluí: objetivo, tabla con 5-6 criterios, 4 niveles (Excelente/Satisfactorio/En proceso/Inicial), descriptores específicos y observables, puntaje, escala final, notas para el docente.${e}`,
     evaluacion:  `Evaluación completa sobre: "${topic}" | Dificultad: ${diff}\n\nIncluí: encabezado formal, Sección 1 (5 opción múltiple), Sección 2 (4 V/F con justificación), Sección 3 (3 respuesta breve), Sección 4 (1 desarrollo integrador), puntaje por sección, clave de respuestas.${e}`,
     material:    `Material didáctico sobre: "${topic}" | Dificultad: ${diff}\n\nIncluí: título, introducción motivadora, desarrollo por subtemas, definiciones clave, ejemplos reales, actividades integradas, síntesis, glosario (8-10 términos), recursos adicionales.${e}`,
@@ -340,6 +340,7 @@ const [genErr,     setGenErr]     = useState("");
   const [actImgLoad, setActImgLoad] = useState(false);
   const [actImgErr,  setActImgErr]  = useState("");
   const [actImgDesc, setActImgDesc] = useState("");
+  const [makeCodeUrl, setMakeCodeUrl] = useState(null);
 
   // Multimedia
   const [mmType,    setMmType]    = useState("podcast");
@@ -438,6 +439,7 @@ const [genErr,     setGenErr]     = useState("");
       const usr = userGen(genType, genTopic, genDiff, genExtra);
       const r = await callClaude(sys, [{ role:"user", content:usr }]);
       setGenResult(r);
+      setMakeCodeUrl(generateMakeCodeUrl(r));
     } catch(e) { setGenErr("❌ " + e.message); }
     setGenLoading(false);
   }
@@ -452,7 +454,20 @@ const [genErr,     setGenErr]     = useState("");
     } catch(e) { setMmResult("❌ " + e.message); }
     setMmLoading(false);
   }
-async function generateActivityImage() {
+function generateMakeCodeUrl(content) {
+    const match = content.match(/```javascript\n([\s\S]*?)```/);
+    if (!match) return null;
+    const code = match[1].trim();
+    const snippet = {
+      name: genTopic,
+      description: "Generado con EduAI Pro",
+      editor: "microbit",
+      code: { "main.ts": code },
+    };
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(snippet))));
+    return "https://makecode.microbit.org/#pub:" + encoded;
+  }
+  async function generateActivityImage() {
     if (!genResult || !curSubj) return;
     setActImgLoad(true); setActImgUrl(null); setActImgErr("");
     try {
@@ -761,6 +776,17 @@ method: "POST",
                           <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={()=>exportPdf(genTopic, gt?.label, curSubj?.name, genResult)}>📋 PDF</Btn>}                      </div>
                     </div>
 <MDView text={genResult}/>
+{makeCodeUrl && (
+                      <div style={{ marginTop:16, padding:"12px 16px", background:"#0f2027", border:"1px solid #00b4d8", borderRadius:8, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                        <div>
+                          <div style={{ fontSize:13, fontWeight:700, color:"#00b4d8", marginBottom:3 }}>🔧 Código MakeCode detectado</div>
+                          <div style={{ fontSize:12, color:C.textMuted }}>Abrí el proyecto directamente en el editor con los bloques listos</div>
+                        </div>
+                        <a href={makeCodeUrl} target="_blank" rel="noopener noreferrer">
+                          <Btn v="primary" st={{ fontSize:13, padding:"8px 18px" }}>Abrir en MakeCode →</Btn>
+                        </a>
+                      </div>
+                    )}
                    <div style={{ marginTop:16 }}>
                       <label style={lbl}>DESCRIPCIÓN DE LA IMAGEN (opcional)</label>
                       <input style={{ ...inp, marginBottom:10 }} value={actImgDesc} onChange={e=>setActImgDesc(e.target.value)} placeholder="Ej: bloques de MakeCode mostrando un loop con LED encendido, fondo blanco"/>
