@@ -29,7 +29,28 @@ export default async function handler(req, res) {
     const optimizedPrompt = claudeData.content.filter(function(b) { return b.type === "text"; }).map(function(b) { return b.text; }).join("").trim();
 
     const hfRes = await fetch(
-      "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell",
+      const hfRes = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + process.env.OPENAI_API_KEY,
+      },
+      body: JSON.stringify({
+        model: "dall-e-3",
+        prompt: optimizedPrompt,
+        n: 1,
+        size: "1024x1024",
+        quality: "standard",
+      }),
+    });
+
+    if (!hfRes.ok) {
+      var errData = await hfRes.json().catch(function() { return {}; });
+      return res.status(hfRes.status).json({ error: errData.error ? errData.error.message : "Error de OpenAI" });
+    }
+
+    var imgData = await hfRes.json();
+    return res.status(200).json({ url: imgData.data[0].url, prompt_used: optimizedPrompt });
       {
         method: "POST",
         headers: {
