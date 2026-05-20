@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import supabase from "./supabase.js";
 import { exportDocx, exportPdf, exportZip } from "./exportUtils.js";
+import { generatePptx } from "./pptxUtils.js";
 
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
 
@@ -839,6 +840,9 @@ export default function EduAIPro() {
                         <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportDocx(genTopic, gt ? gt.label : "", curSubj ? curSubj.name : "", genResult); }}>📄 Word</Btn>
                         {(genType==="evaluacion"||genType==="rubrica"||genType==="planclase") && (
                           <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportPdf(genTopic, gt ? gt.label : "", curSubj ? curSubj.name : "", genResult); }}>📋 PDF</Btn>
+                        )}
+                        {genType==="presentacion" && (
+                          <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { generatePptx(genTopic, curSubj ? curSubj.name : "", genResult); }}>📊 PowerPoint</Btn>
                         )}
                       </div>
                     </div>
