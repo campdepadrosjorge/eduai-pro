@@ -1,251 +1,160 @@
 // src/pptxUtils.js
-// Genera presentaciones PowerPoint desde el contenido generado por Claude
- 
 import PptxGenJS from "pptxgenjs";
  
 const COLORS = {
   bg: "1a2640",
   bgLight: "243350",
   accent: "f59e0b",
-  accentDark: "b45309",
   text: "e8edf5",
   textMuted: "94a3b8",
   white: "FFFFFF",
 };
  
-// Parsea el texto markdown generado por Claude y extrae slides
-function parseSlides(content) {
-  var slides = [];
-  var lines = content.split("\n");
-  var currentSlide = null;
-  var currentContent = [];
-  var currentNotes = [];
-  var inNotes = false;
- 
-  for (var i = 0; i < lines.length; i++) {
-    var line = lines[i].trim();
- 
-    // Nueva slide cuando encuentra ## o "Slide" o "Diapositiva"
-    if (line.match(/^##\s+/) || line.match(/^(Slide|Diapositiva)\s+\d+/i) || line.match(/^\d+\.\s+(Slide|Diapositiva|Titulo)/i)) {
-      if (currentSlide) {
-        currentSlide.content = currentContent.join("\n").trim();
-        currentSlide.notes = currentNotes.join("\n").trim();
-        slides.push(currentSlide);
-      }
-      var title = line.replace(/^##\s+/, "").replace(/^(Slide|Diapositiva)\s+\d+[:\.\-\s]*/i, "").replace(/^\d+\.\s+/, "").trim();
-      currentSlide = { title: title, content: "", notes: "" };
-      currentContent = [];
-      currentNotes = [];
-      inNotes = false;
-    } else if (currentSlide) {
-      // Detectar sección de notas del orador
-      if (line.match(/^(Notas|Nota del orador|Notes|Speaker|Lo que dice)/i)) {
-        inNotes = true;
-      } else if (line.startsWith("###")) {
-        // Subtitulo dentro de slide
-        if (!inNotes) currentContent.push(line.replace(/^###\s*/, ""));
-      } else if (line.startsWith("- ") || line.startsWith("* ")) {
-        if (!inNotes) currentContent.push(line);
-        else currentNotes.push(line);
-      } else if (line && !line.startsWith("#")) {
-        if (!inNotes) currentContent.push(line);
-        else currentNotes.push(line);
-      }
-    }
-  }
- 
-  // Última slide
-  if (currentSlide) {
-    currentSlide.content = currentContent.join("\n").trim();
-    currentSlide.notes = currentNotes.join("\n").trim();
-    slides.push(currentSlide);
-  }
- 
-  return slides;
-}
- 
-// Limpia markdown del texto
 function cleanText(text) {
   if (!text) return "";
-  return text
-    .replace(/\*\*/g, "")
-    .replace(/\*/g, "")
-    .replace(/^[-\*]\s+/gm, "• ")
-    .replace(/^#+\s+/gm, "")
-    .trim();
+  return text.replace(/\*\*/g, "").replace(/\*/g, "").replace(/^[-•]\s+/gm, "").replace(/^#+\s+/gm, "").trim();
 }
  
-// Extrae bullets de un bloque de texto
 function extractBullets(text) {
   if (!text) return [];
   var lines = text.split("\n");
   var bullets = [];
   for (var i = 0; i < lines.length; i++) {
     var line = lines[i].trim();
-    if (line.startsWith("- ") || line.startsWith("* ") || line.startsWith("• ")) {
-      bullets.push(cleanText(line.replace(/^[-\*•]\s+/, "")));
-    } else if (line && !line.match(/^#+/) && !line.match(/^(Notas|Nota|Notes|Speaker)/i)) {
-      bullets.push(cleanText(line));
-    }
+    if (!line || line.match(/^NOTAS?:/i) || line.match(/^---+$/)) break;
+    var clean = line.replace(/^[-•*]\s+/, "").replace(/\*\*/g, "").trim();
+    if (clean.length > 2) bullets.push(clean);
   }
-  return bullets.filter(function(b) { return b.length > 0; }).slice(0, 7);
+  return bullets.slice(0, 7);
+}
+ 
+function extractNotes(text) {
+  if (!text) return "";
+  var match = text.match(/NOTAS?:\s*([\s\S]*?)(?=\n---|\n##|$)/i);
+  return match ? match[1].replace(/\*\*/g, "").trim() : "";
+}
+ 
+function parseSlides(content) {
+  // Dividir por ## SLIDE o ## seguido de número o título
+  var slideBlocks = content.split(/(?=^##\s+(?:SLIDE\s*\[?\d+\]?[:.\-\s]|DIAPOSITIVA\s*\d+|SLIDE\s*\d+|\d+[:.]\s))/im);
+ 
+  // Filtrar bloques vacíos y los que no son slides
+  slideBlocks = slideBlocks.filter(function(block) {
+    return block.trim().length > 10 && block.match(/^##/im);
+  });
+ 
+  // Si no encontramos con ese patrón, intentar con cualquier ##
+  if (slideBlocks.length < 2) {
+    slideBlocks = content.split(/(?=^##\s+)/m).filter(function(b) { return b.trim().startsWith("##"); });
+  }
+ 
+  var slides = [];
+ 
+  for (var i = 0; i < slideBlocks.length; i++) {
+    var block = slideBlocks[i].trim();
+    var lines = block.split("\n");
+ 
+    // Extraer título de la primera línea
+    var titleLine = lines[0].replace(/^##\s+/, "").replace(/^SLIDE\s*\[?\d+\]?\s*[:.\-]\s*/i, "").replace(/^DIAPOSITIVA\s*\d+\s*[:.\-]\s*/i, "").replace(/^\d+\s*[:.\-]\s*/, "").trim();
+    var title = cleanText(titleLine).slice(0, 80) || ("Slide " + (i + 1));
+ 
+    // Extraer contenido (líneas después del título hasta NOTAS:)
+    var contentLines = lines.slice(1).join("\n");
+    var bullets = extractBullets(contentLines);
+    var notes = extractNotes(contentLines);
+ 
+    slides.push({ title: title, bullets: bullets, notes: notes });
+  }
+ 
+  return slides;
 }
  
 export async function generatePptx(topic, subject, content) {
   var pptx = new PptxGenJS();
- 
   pptx.layout = "LAYOUT_16x9";
   pptx.title = topic;
-  pptx.subject = subject || "";
   pptx.author = "EduAI Pro";
  
-  // Slide de titulo
+  // ── SLIDE DE TÍTULO ──────────────────────────────────────────
   var titleSlide = pptx.addSlide();
   titleSlide.background = { color: COLORS.bg };
- 
-  // Rectangulo decorativo lateral
-  titleSlide.addShape(pptx.ShapeType.rect, {
-    x: 0, y: 0, w: 0.18, h: "100%",
-    fill: { color: COLORS.accent },
-  });
- 
+  titleSlide.addShape(pptx.ShapeType.rect, { x:0, y:0, w:0.18, h:"100%", fill:{ color:COLORS.accent } });
   titleSlide.addText(topic, {
-    x: 0.5, y: 1.8, w: 8.5, h: 1.2,
-    fontSize: 36,
-    bold: true,
-    color: COLORS.white,
-    fontFace: "Arial",
-    align: "left",
-    wrap: true,
+    x:0.5, y:1.6, w:8.8, h:1.4,
+    fontSize:36, bold:true, color:COLORS.white, fontFace:"Arial", align:"left", wrap:true,
   });
- 
   if (subject) {
     titleSlide.addText(subject, {
-      x: 0.5, y: 3.2, w: 8.5, h: 0.5,
-      fontSize: 18,
-      color: COLORS.accent,
-      fontFace: "Arial",
-      align: "left",
+      x:0.5, y:3.1, w:8.8, h:0.5,
+      fontSize:18, color:COLORS.accent, fontFace:"Arial", align:"left",
     });
   }
- 
-  titleSlide.addText("Generado con EduAI Pro", {
-    x: 0.5, y: 4.5, w: 8.5, h: 0.3,
-    fontSize: 11,
-    color: COLORS.textMuted,
-    fontFace: "Arial",
-    align: "left",
+  titleSlide.addText("EduAI Pro · Claude AI", {
+    x:0.5, y:4.5, w:8.8, h:0.3,
+    fontSize:11, color:COLORS.textMuted, fontFace:"Arial", align:"left",
   });
  
-  // Parsear slides del contenido
+  // ── SLIDES DE CONTENIDO ──────────────────────────────────────
   var slides = parseSlides(content);
  
-  // Si no se pudieron parsear slides, crear slides genéricas desde el contenido
-  if (slides.length === 0) {
-    var paragraphs = content.split("\n\n").filter(function(p) { return p.trim().length > 20; });
-    for (var i = 0; i < Math.min(paragraphs.length, 10); i++) {
-      var lines2 = paragraphs[i].split("\n");
-      slides.push({
-        title: cleanText(lines2[0]) || ("Slide " + (i + 1)),
-        content: lines2.slice(1).join("\n"),
-        notes: "",
-      });
-    }
-  }
- 
-  // Generar cada slide
-  for (var idx = 0; idx < slides.length; idx++) {
-    var slideData = slides[idx];
+  for (var i = 0; i < slides.length; i++) {
+    var sd = slides[i];
     var slide = pptx.addSlide();
     slide.background = { color: COLORS.bg };
  
-    // Barra superior decorativa
-    slide.addShape(pptx.ShapeType.rect, {
-      x: 0, y: 0, w: "100%", h: 0.08,
-      fill: { color: COLORS.accent },
+    // Barra superior
+    slide.addShape(pptx.ShapeType.rect, { x:0, y:0, w:"100%", h:0.07, fill:{ color:COLORS.accent } });
+ 
+    // Número
+    slide.addText((i + 1).toString(), {
+      x:9.0, y:0.12, w:0.6, h:0.35,
+      fontSize:11, color:COLORS.textMuted, fontFace:"Arial", align:"right",
     });
  
-    // Numero de slide
-    slide.addText((idx + 1).toString(), {
-      x: 9.0, y: 0.15, w: 0.6, h: 0.35,
-      fontSize: 11,
-      color: COLORS.textMuted,
-      fontFace: "Arial",
-      align: "right",
+    // Título de slide
+    slide.addText(sd.title, {
+      x:0.4, y:0.12, w:8.4, h:0.55,
+      fontSize:22, bold:true, color:COLORS.accent, fontFace:"Arial", align:"left", wrap:true,
     });
  
-    // Titulo de la slide
-    var slideTitle = cleanText(slideData.title).slice(0, 80);
-    slide.addText(slideTitle, {
-      x: 0.4, y: 0.15, w: 8.4, h: 0.55,
-      fontSize: 22,
-      bold: true,
-      color: COLORS.accent,
-      fontFace: "Arial",
-      align: "left",
-      wrap: true,
-    });
- 
-    // Linea separadora
+    // Línea separadora
     slide.addShape(pptx.ShapeType.line, {
-      x: 0.4, y: 0.75, w: 9.2, h: 0,
-      line: { color: COLORS.bgLight, width: 1 },
+      x:0.4, y:0.72, w:9.2, h:0,
+      line: { color:COLORS.bgLight, width:1.5 },
     });
  
-    // Contenido - bullets
-    var bullets = extractBullets(slideData.content);
- 
-    if (bullets.length > 0) {
-      var bulletText = bullets.map(function(b) {
-        return { text: b, options: { bullet: { type: "bullet" }, paraSpaceAfter: 8 } };
+    // Bullets
+    if (sd.bullets.length > 0) {
+      var bulletRows = sd.bullets.map(function(b) {
+        return { text: b, options: { bullet: { type:"bullet", indent:15 }, paraSpaceAfter:10, color:COLORS.text, fontSize:16, fontFace:"Arial" } };
       });
- 
-      slide.addText(bulletText, {
-        x: 0.4, y: 0.9, w: 9.0, h: 4.0,
-        fontSize: 16,
-        color: COLORS.text,
-        fontFace: "Arial",
-        align: "left",
-        valign: "top",
-        wrap: true,
-        lineSpacingMultiple: 1.3,
+      slide.addText(bulletRows, {
+        x:0.4, y:0.85, w:9.1, h:4.0,
+        align:"left", valign:"top", wrap:true, lineSpacingMultiple:1.25,
       });
     }
  
-    // Notas del orador
-    if (slideData.notes) {
-      slide.addNotes(cleanText(slideData.notes));
+    // Notas
+    if (sd.notes) {
+      slide.addNotes(sd.notes);
     }
   }
  
-  // Slide de cierre
-  var closingSlide = pptx.addSlide();
-  closingSlide.background = { color: COLORS.bg };
- 
-  closingSlide.addShape(pptx.ShapeType.rect, {
-    x: 0, y: 0, w: 0.18, h: "100%",
-    fill: { color: COLORS.accent },
+  // ── SLIDE DE CIERRE ──────────────────────────────────────────
+  var closing = pptx.addSlide();
+  closing.background = { color: COLORS.bg };
+  closing.addShape(pptx.ShapeType.rect, { x:0, y:0, w:0.18, h:"100%", fill:{ color:COLORS.accent } });
+  closing.addText("Gracias", {
+    x:0.5, y:2.0, w:8.8, h:1.0,
+    fontSize:44, bold:true, color:COLORS.white, fontFace:"Arial", align:"left",
   });
- 
-  closingSlide.addText("Gracias", {
-    x: 0.5, y: 2.0, w: 8.5, h: 1.0,
-    fontSize: 40,
-    bold: true,
-    color: COLORS.white,
-    fontFace: "Arial",
-    align: "left",
-  });
- 
-  closingSlide.addText("Generado con EduAI Pro · Claude AI", {
-    x: 0.5, y: 3.2, w: 8.5, h: 0.4,
-    fontSize: 13,
-    color: COLORS.accent,
-    fontFace: "Arial",
-    align: "left",
+  closing.addText("Generado con EduAI Pro · Claude AI", {
+    x:0.5, y:3.2, w:8.8, h:0.4,
+    fontSize:13, color:COLORS.accent, fontFace:"Arial", align:"left",
   });
  
   // Descargar
-  var filename = (topic || "presentacion").replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ]/g, "").trim().slice(0, 50) || "presentacion";
+  var filename = (topic || "presentacion").replace(/[<>:"/\\|?*]/g, "").trim().slice(0, 50) || "presentacion";
   await pptx.writeFile({ fileName: filename + ".pptx" });
 }
  
