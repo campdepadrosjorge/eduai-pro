@@ -43,8 +43,10 @@ export default async function handler(req, res) {
         model: "gpt-image-1",
         prompt: optimizedPrompt,
         n: 1,
-        size: "1024x1024",
-        quality: "medium",
+       size: "1024x1024",
+        quality: "low",
+        output_format: "jpeg",
+        output_compression: 70,
       }),
     });
  
