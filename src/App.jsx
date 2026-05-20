@@ -523,9 +523,19 @@ export default function EduAIPro() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ description: mmTopic, subject: curSubj.name, level: curSubj.level }),
       });
-      var data;
-      try { data = await res.json(); } catch { throw new Error("Error del servidor. Intenta de nuevo."); }
-      if (!res.ok) throw new Error(data.error || "Error al generar imagen.");
+      if (!res.ok) {
+        var errJson; try { errJson = await res.json(); } catch { throw new Error("Error del servidor."); }
+        throw new Error(errJson.error || "Error al generar imagen.");
+      }
+      var contentType = res.headers.get("content-type") || "";
+      var imgUrl;
+      if (contentType.includes("image")) {
+        var blob = await res.blob();
+        imgUrl = URL.createObjectURL(blob);
+      } else {
+        var jsonData = await res.json();
+        imgUrl = jsonData.url;
+      }
       setImgUrl(data.url);
     } catch(e) { setImgError("Error: " + e.message); }
     setImgLoading(false);
@@ -541,9 +551,19 @@ export default function EduAIPro() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ description: description, subject: curSubj.name, level: genLevel }),
       });
-      var data;
-      try { data = await res.json(); } catch { throw new Error("Error del servidor. Intenta de nuevo."); }
-      if (!res.ok) throw new Error(data.error || "Error al generar imagen.");
+      if (!res.ok) {
+        var errJson; try { errJson = await res.json(); } catch { throw new Error("Error del servidor."); }
+        throw new Error(errJson.error || "Error al generar imagen.");
+      }
+      var contentType = res.headers.get("content-type") || "";
+      var imgUrl;
+      if (contentType.includes("image")) {
+        var blob = await res.blob();
+        imgUrl = URL.createObjectURL(blob);
+      } else {
+        var jsonData = await res.json();
+        imgUrl = jsonData.url;
+      }
       setActImgUrl(data.url);
     } catch(e) { setActImgErr("Error: " + e.message); }
     setActImgLoad(false);
