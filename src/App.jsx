@@ -536,7 +536,7 @@ export default function EduAIPro() {
         var jsonData = await res.json();
         imgUrl = jsonData.url;
       }
-      setImgUrl(data.url);
+      setImgUrl(imgUrl);
     } catch(e) { setImgError("Error: " + e.message); }
     setImgLoading(false);
   }
@@ -564,7 +564,7 @@ export default function EduAIPro() {
         var jsonData = await res.json();
         imgUrl = jsonData.url;
       }
-      setActImgUrl(data.url);
+      setActImgUrl(imgUrl);
     } catch(e) { setActImgErr("Error: " + e.message); }
     setActImgLoad(false);
   }
