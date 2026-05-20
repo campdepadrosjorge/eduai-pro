@@ -44,6 +44,7 @@ export default async function handler(req, res) {
         prompt: optimizedPrompt,
         n: 1,
         size: "1024x1024",
+        quality: "medium",
         quality: "standard",
       }),
     });
