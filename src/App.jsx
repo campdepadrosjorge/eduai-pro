@@ -14,6 +14,7 @@ const NAV = [
   { id:"library",    label:"Biblioteca",          icon:"📚" },
   { id:"bank",       label:"Banco de Preguntas",  icon:"🏦" },
   { id:"publiclib",  label:"Biblioteca Publica",  icon:"🌐" },
+  { id:"pricing",    label:"Planes y Precios",     icon:"💳" },
   { id:"admin",      label:"Panel Admin",          icon:"📊" },
 ];
 
@@ -417,7 +418,110 @@ function AdminPanel({ authUser, supabaseClient }) {
 }
 
 // ── AUTH SCREEN ───────────────────────────────────────────────────────────────
+function PricingPanel({ authUser }) {
+  var [loading, setLoading] = useState(null);
+  var [error, setError] = useState("");
 
+  var plans = [
+    {
+      id: "98238f5797f94e58b94d51aa08f63fad",
+      name: "Individual Mensual",
+      price: "$12.000",
+      period: "por mes",
+      users: 1,
+      color: "#3b82f6",
+      features: ["Generador IA (8 tipos)", "Multimedia + Imagenes", "Chat Docente", "Corrector de TPs", "Exportacion Word y PDF", "Biblioteca personal"],
+    },
+    {
+      id: "55095e9d02bb469ba4aef78826676787",
+      name: "Individual Anual",
+      price: "$102.000",
+      period: "por año",
+      badge: "Ahorra 15%",
+      users: 1,
+      color: "#f59e0b",
+      features: ["Todo Individual", "2 meses gratis", "Soporte prioritario"],
+    },
+    {
+      id: "bcdbe285413b4acbbd187fc2fe6d52dc",
+      name: "Institucional Basico",
+      price: "$100.000",
+      period: "por mes",
+      users: 10,
+      color: "#10b981",
+      features: ["Hasta 10 docentes", "Biblioteca publica compartida", "Panel de uso institucional", "Soporte dedicado"],
+    },
+    {
+      id: "e01bfd16f46c4d0db1a8aa56afc837d7",
+      name: "Institucional Pro",
+      price: "$255.000",
+      period: "por mes",
+      users: 30,
+      color: "#a78bfa",
+      features: ["Hasta 30 docentes", "Todo Institucional Basico", "Carga masiva de usuarios", "Reportes de uso detallados"],
+    },
+  ];
+
+  async function subscribe(plan) {
+    if (!authUser) { setError("Tenes que iniciar sesion para suscribirte."); return; }
+    setLoading(plan.id); setError("");
+    try {
+      var res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan_id: plan.id,
+          user_email: authUser.email,
+          user_name: (authUser.user_metadata && authUser.user_metadata.name) || "",
+          user_id: authUser.id,
+        }),
+      });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      window.open(data.init_point, "_blank");
+    } catch(e) {
+      setError("Error: " + e.message);
+    }
+    setLoading(null);
+  }
+
+  return (
+    <div>
+      <div style={{ textAlign:"center", marginBottom:32 }}>
+        <h2 style={{ fontSize:26, fontWeight:700, color:"#e8edf5", marginBottom:8 }}>Planes y Precios</h2>
+        <p style={{ color:"#7a90b0", fontSize:15 }}>Elegí el plan que mejor se adapta a tus necesidades</p>
+      </div>
+      {error && <div style={{ background:"#1a0a0a", border:"1px solid #f87171", borderRadius:8, padding:"10px 16px", marginBottom:20, color:"#f87171", fontSize:13 }}>{error}</div>}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:16 }}>
+        {plans.map(function(plan) {
+          return (
+            <div key={plan.id} style={{ background:"#1a2640", border:"2px solid " + plan.color + "40", borderRadius:14, padding:24, display:"flex", flexDirection:"column" }}>
+              {plan.badge && (
+                <div style={{ background:plan.color, color:"#000", fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:20, display:"inline-block", marginBottom:12, alignSelf:"flex-start" }}>{plan.badge}</div>
+              )}
+              <div style={{ fontSize:17, fontWeight:700, color:"#e8edf5", marginBottom:4 }}>{plan.name}</div>
+              <div style={{ fontSize:11, color:"#7a90b0", marginBottom:16 }}>{"Hasta " + plan.users + (plan.users === 1 ? " usuario" : " usuarios")}</div>
+              <div style={{ marginBottom:20 }}>
+                <span style={{ fontSize:28, fontWeight:700, color:plan.color }}>{plan.price}</span>
+                <span style={{ fontSize:13, color:"#7a90b0", marginLeft:6 }}>{plan.period}</span>
+              </div>
+              <div style={{ flex:1, marginBottom:20 }}>
+                {plan.features.map(function(f) {
+                  return (
+                    <div key={f} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+                      <span style={{ color:plan.color, fontSize:14 }}>✓</span>
+                      <span style={{ fontSize:13, color:"#cbd5e1" }}>{f}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <button style={{ width:"100%", padding:"11px 0", borderRadius:8, border:"none", cursor:loading===plan.id?"not-allowed":"pointer", fontWeight:700, fontSize:14, fontFamily:"inherit", background:plan.color, color:"#000", opacity:loading===plan.id?.7:1 }}
+                onClick={function() { subscribe(plan); }} disabled={loading===plan.id}>
+                {loading===plan.id ? "Procesando..." : "Suscribirme"}
+              </button>
+            </div>
+          );
+        })}
 function AuthScreen({ onAuth }) {
   var [mode, setMode]         = useState("login");
   var [email, setEmail]       = useState("");
@@ -1312,6 +1416,10 @@ export default function EduAIPro() {
                 );
               })}
             </div>
+          )}
+{/* PRICING */}
+          {view === "pricing" && (
+            <PricingPanel authUser={authUser} />
           )}
 {/* ADMIN PANEL */}
           {!dataLoading && view === "admin" && (
