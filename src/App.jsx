@@ -517,7 +517,7 @@ function PricingPanel({ authUser }) {
         <p style={{ color:"#7a90b0", fontSize:15 }}>Elegí el plan que mejor se adapta a tus necesidades</p>
       </div>
       {error && <div style={{ background:"#1a0a0a", border:"1px solid #f87171", borderRadius:8, padding:"10px 16px", marginBottom:20, color:"#f87171", fontSize:13 }}>{error}</div>}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:16 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(2, 1fr)", gap:16 }}>
         {plans.map(function(plan) {
           return (
             <div key={plan.id} style={{ background:"#1a2640", border:"2px solid " + plan.color + "40", borderRadius:14, padding:24, display:"flex", flexDirection:"column" }}>
@@ -1057,7 +1057,7 @@ export default function EduAIPro() {
                     <Btn onClick={function() { setSubjModal(true); }}>Crear mi primera materia</Btn>
                   </div>
                 ) : (
-                  <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:12 }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(2, 1fr)", gap:12 }}>
                     {subjects.map(function(sub) {
                       return (
                         <div key={sub.id} style={{ background:C.bg, border:"2px solid " + (curSid === sub.id ? C.accent : C.border), borderRadius:10, padding:14, cursor:"pointer" }}
