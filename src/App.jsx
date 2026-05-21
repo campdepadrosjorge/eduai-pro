@@ -367,7 +367,7 @@ function AdminPanel({ authUser, supabaseClient }) {
     if (!instFile || !instName) return;
     setInstLoading(true); setInstResult(null);
     try {
-      var XLSX = (await import("xlsx")).default;
+      var XLSX = await import("xlsx");
       var buffer = await instFile.arrayBuffer();
       var workbook = XLSX.read(buffer, { type: "array" });
       var sheet = workbook.Sheets[workbook.SheetNames[0]];
