@@ -198,6 +198,20 @@ async function dbLogUsage(userId, userEmail, type, typeName, subjectName, tokens
     });
   } catch {}
 }
+async function dbCreateTrial(userId) {
+  var endDate = new Date();
+  endDate.setDate(endDate.getDate() + 7);
+  var result = await supabase.from("subscriptions").insert({
+    user_id: userId,
+    type: "individual",
+    status: "active",
+    is_trial: true,
+    max_users: 1,
+    current_period_start: new Date().toISOString(),
+    current_period_end: endDate.toISOString(),
+  });
+  return result;
+}
 async function dbCheckSubscription(userId) {
   var result = await supabase.from("subscriptions")
     .select("id, status, current_period_end, plan_id")
@@ -503,7 +517,7 @@ function PricingPanel({ authUser }) {
         <p style={{ color:"#7a90b0", fontSize:15 }}>Elegí el plan que mejor se adapta a tus necesidades</p>
       </div>
       {error && <div style={{ background:"#1a0a0a", border:"1px solid #f87171", borderRadius:8, padding:"10px 16px", marginBottom:20, color:"#f87171", fontSize:13 }}>{error}</div>}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:16 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:16 }}>
         {plans.map(function(plan) {
           return (
             <div key={plan.id} style={{ background:"#1a2640", border:"2px solid " + plan.color + "40", borderRadius:14, padding:24, display:"flex", flexDirection:"column" }}>
@@ -714,8 +728,17 @@ export default function EduAIPro() {
       if (subs.length) setCurSid(subs[0].id);
       setDataLoading(false);
       dbCheckSubscription(authUser.id).then(function(sub) {
-        setSubscription(sub);
-        setSubChecked(true);
+        if (!sub) {
+          dbCreateTrial(authUser.id).then(function() {
+            dbCheckSubscription(authUser.id).then(function(newSub) {
+              setSubscription(newSub);
+              setSubChecked(true);
+            });
+          });
+        } else {
+          setSubscription(sub);
+          setSubChecked(true);
+        }
       });
     }).catch(function() { setDataLoading(false); });
   }, [authUser]);
@@ -987,7 +1010,19 @@ export default function EduAIPro() {
         </div>
 
         <div style={{ flex:1, overflow:"auto", padding:"20px 26px" }}>
-
+{subscription && subscription.is_trial && (function() {
+            var daysLeft = Math.ceil((new Date(subscription.current_period_end) - new Date()) / (1000 * 60 * 60 * 24));
+            if (daysLeft <= 0) return null;
+            return (
+              <div style={{ background:"#1c1408", border:"1px solid #f59e0b", borderRadius:8, padding:"10px 16px", marginBottom:16, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <span style={{ fontSize:13, color:"#f59e0b" }}>{"Periodo de prueba: " + daysLeft + " dia" + (daysLeft === 1 ? "" : "s") + " restante" + (daysLeft === 1 ? "" : "s")}</span>
+                <button style={{ background:"#f59e0b", border:"none", borderRadius:6, padding:"5px 14px", cursor:"pointer", fontWeight:700, fontSize:12, fontFamily:"inherit", color:"#000" }}
+                  onClick={function() { setView("pricing"); }}>
+                  Ver planes
+                </button>
+              </div>
+            );
+          })()}
           {dataLoading && (
             <div style={{ textAlign:"center", padding:"60px 0" }}><Spin /></div>
           )}
