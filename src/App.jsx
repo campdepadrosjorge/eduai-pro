@@ -357,6 +357,40 @@ function AdminPanel({ authUser, supabaseClient }) {
   });
   var types = Object.entries(typeMap).sort(function(a, b) { return b[1] - a[1]; });
 
+  var [instName, setInstName] = useState("");
+  var [instPlanId, setInstPlanId] = useState("bcdbe285413b4acbbd187fc2fe6d52dc");
+  var [instMaxUsers, setInstMaxUsers] = useState(10);
+  var [instFile, setInstFile] = useState(null);
+  var [instLoading, setInstLoading] = useState(false);
+  var [instResult, setInstResult] = useState(null);
+
+  async function processExcel() {
+    if (!instFile || !instName) return;
+    setInstLoading(true); setInstResult(null);
+    try {
+      var XLSX = (await import("xlsx")).default;
+      var buffer = await instFile.arrayBuffer();
+      var workbook = XLSX.read(buffer, { type: "array" });
+      var sheet = workbook.Sheets[workbook.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      var users = [];
+      for (var i = 1; i < rows.length; i++) {
+        var row = rows[i];
+        if (row[0]) users.push({ email: String(row[0]).trim(), name: row[1] ? String(row[1]).trim() : "" });
+      }
+      var res = await fetch("/api/invite-users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ users, institution_name: instName, plan_id: instPlanId, max_users: instMaxUsers }),
+      });
+      var data = await res.json();
+      setInstResult(data);
+    } catch(e) {
+      setInstResult({ error: e.message });
+    }
+    setInstLoading(false);
+  }
+
   return (
     <div>
       <h2 style={{ fontSize:19, fontWeight:700, color:"#e8edf5", marginBottom:20 }}>📊 Panel de Administrador</h2>
@@ -375,6 +409,43 @@ function AdminPanel({ authUser, supabaseClient }) {
             </div>
           );
         })}
+      </div>
+      <div style={{ background:"#1a2640", border:"1px solid #243350", borderRadius:12, padding:"18px 20px", marginBottom:16 }}>
+        <div style={{ fontSize:15, fontWeight:700, color:"#e8edf5", marginBottom:4 }}>🏫 Carga Institucional</div>
+        <p style={{ fontSize:13, color:"#7a90b0", marginBottom:16 }}>Subí un Excel con columna A = Email y columna B = Nombre. El sistema crea las cuentas y activa las suscripciones automaticamente.</p>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
+          <div>
+            <label style={{ fontSize:11, color:"#7a90b0", marginBottom:5, display:"block", fontWeight:700 }}>NOMBRE DEL COLEGIO *</label>
+            <input style={{ background:"#0c1220", border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:"#e8edf5", fontSize:14, width:"100%", outline:"none", fontFamily:"inherit" }}
+              value={instName} onChange={function(e) { setInstName(e.target.value); }} placeholder="Ej: Colegio San Martin" />
+          </div>
+          <div>
+            <label style={{ fontSize:11, color:"#7a90b0", marginBottom:5, display:"block", fontWeight:700 }}>MAX USUARIOS</label>
+            <input style={{ background:"#0c1220", border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:"#e8edf5", fontSize:14, width:"100%", outline:"none", fontFamily:"inherit" }}
+              type="number" value={instMaxUsers} onChange={function(e) { setInstMaxUsers(parseInt(e.target.value)); }} />
+          </div>
+        </div>
+        <div style={{ marginBottom:12 }}>
+          <label style={{ fontSize:11, color:"#7a90b0", marginBottom:5, display:"block", fontWeight:700 }}>ARCHIVO EXCEL (.xlsx)</label>
+          <input type="file" accept=".xlsx,.xls,.csv" style={{ color:"#e8edf5", fontSize:13 }}
+            onChange={function(e) { setInstFile(e.target.files[0]); }} />
+        </div>
+        <button style={{ background:"#f59e0b", border:"none", borderRadius:8, padding:"9px 18px", cursor:instLoading||!instFile||!instName?"not-allowed":"pointer", fontWeight:600, fontSize:13, fontFamily:"inherit", opacity:instLoading||!instFile||!instName?.5:1 }}
+          onClick={processExcel} disabled={instLoading||!instFile||!instName}>
+          {instLoading ? "Procesando..." : "Cargar usuarios y activar suscripciones"}
+        </button>
+        {instResult && (
+          <div style={{ marginTop:14, padding:"12px 16px", background:"#0c1220", borderRadius:8, fontSize:13 }}>
+            {instResult.error
+              ? <span style={{ color:"#f87171" }}>Error: {instResult.error}</span>
+              : <div>
+                  <div style={{ color:"#10b981", marginBottom:4 }}>Creados: {instResult.created}</div>
+                  <div style={{ color:"#7a90b0", marginBottom:4 }}>Ya existian: {instResult.already_exists}</div>
+                  {instResult.failed > 0 && <div style={{ color:"#f87171" }}>Fallidos: {instResult.failed}</div>}
+                </div>
+            }
+          </div>
+        )}
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
         <div style={{ background:"#1a2640", border:"1px solid #243350", borderRadius:12, padding:"18px 20px" }}>
