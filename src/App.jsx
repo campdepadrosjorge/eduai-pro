@@ -522,6 +522,11 @@ function PricingPanel({ authUser }) {
             </div>
           );
         })}
+</div>
+      <p style={{ textAlign:"center", color:"#4a5a75", fontSize:12, marginTop:24 }}>Pagos procesados de forma segura por MercadoPago · Podes cancelar en cualquier momento</p>
+    </div>
+  );
+}
 function AuthScreen({ onAuth }) {
   var [mode, setMode]         = useState("login");
   var [email, setEmail]       = useState("");
