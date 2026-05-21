@@ -375,20 +375,6 @@ function AdminPanel({ authUser, supabaseClient }) {
   });
   var types = Object.entries(typeMap).sort(function(a, b) { return b[1] - a[1]; });
 
-
-  useEffect(function() {
-    if (!isAdmin) return;
-    supabaseClient.from("subscriptions")
-      .select("institution_name")
-      .eq("type", "institutional")
-      .neq("institution_name", "")
-      .then(function(result) {
-        if (result.data) {
-          var unique = [...new Set(result.data.map(function(s) { return s.institution_name; }))];
-          setInstitutions(unique);
-        }
-      });
-  }, [isAdmin]);
   async function loadInstUsers(institutionName) {
     setInstUsersLoading(true);
     var result = await supabaseClient.from("subscriptions")
