@@ -1,6 +1,4 @@
 // api/invite-users.js
-// Crea usuarios institucionales y les envia invitaciones por email
- 
 import { createClient } from "@supabase/supabase-js";
  
 var supabase = createClient(
@@ -31,57 +29,42 @@ export default async function handler(req, res) {
     if (!user.email) continue;
  
     try {
-      // Crear usuario con password temporal
-      var tempPassword = Math.random().toString(36).slice(-10) + "A1!";
- 
-      var createResult = await supabase.auth.admin.createUser({
-        email: user.email,
-        password: tempPassword,
-        email_confirm: true,
-        user_metadata: { name: user.name || "", institution: institutionName || "" },
+      // Intentar invitar al usuario (crea cuenta + manda email)
+      var inviteResult = await supabase.auth.admin.inviteUserByEmail(user.email, {
+        data: { name: user.name || "", institution: institutionName || "" },
+        redirectTo: "https://eduai-pro-nine.vercel.app/",
       });
  
-      if (createResult.error) {
-        if (createResult.error.message.includes("already been registered")) {
-          results.already_exists.push(user.email);
-        } else {
-          results.failed.push({ email: user.email, error: createResult.error.message });
+      if (inviteResult.error) {
+        // Si ya existe, buscar el usuario y crear/actualizar suscripcion
+        if (inviteResult.error.message.includes("already been registered") ||
+            inviteResult.error.message.includes("already exists")) {
+ 
+          var listResult = await supabase.auth.admin.listUsers();
+          var existingUser = listResult.data && listResult.data.users
+            ? listResult.data.users.find(function(u) { return u.email === user.email; })
+            : null;
+ 
+          if (existingUser) {
+            await createSubscription(existingUser.id, planId, institutionName);
+            results.already_exists.push(user.email);
+          } else {
+            results.failed.push({ email: user.email, error: inviteResult.error.message });
+          }
+          continue;
         }
+        results.failed.push({ email: user.email, error: inviteResult.error.message });
         continue;
       }
  
-      var newUser = createResult.data.user;
- 
-      // Crear suscripcion institucional (6 meses)
-      var endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + 6);
- 
-      await supabase.from("subscriptions").insert({
-        user_id: newUser.id,
-        plan_id: planId || null,
-        type: "institutional",
-        status: "active",
-        institution_name: institutionName || "",
-        max_users: 1,
-        current_period_start: new Date().toISOString(),
-        current_period_end: endDate.toISOString(),
-        is_trial: false,
-      });
- 
-      // Registrar en tabla institutional_users
+      var newUser = inviteResult.data.user;
+      await createSubscription(newUser.id, planId, institutionName);
       await supabase.from("institutional_users").upsert({
         email: user.email,
         name: user.name || "",
-        status: "active",
-        activated_at: new Date().toISOString(),
+        status: "invited",
+        invited_at: new Date().toISOString(),
       }, { onConflict: "email" });
- 
-      // Enviar magic link para que el usuario pueda entrar
-      await supabase.auth.admin.generateLink({
-        type: "magiclink",
-        email: user.email,
-        options: { redirect_to: "https://eduai-pro-nine.vercel.app/" },
-      });
  
       results.created.push(user.email);
  
@@ -97,5 +80,22 @@ export default async function handler(req, res) {
     failed: results.failed.length,
     details: results,
   });
+}
+ 
+async function createSubscription(userId, planId, institutionName) {
+  var endDate = new Date();
+  endDate.setMonth(endDate.getMonth() + 6);
+ 
+  await supabase.from("subscriptions").upsert({
+    user_id: userId,
+    plan_id: planId || null,
+    type: "institutional",
+    status: "active",
+    institution_name: institutionName || "",
+    max_users: 1,
+    current_period_start: new Date().toISOString(),
+    current_period_end: endDate.toISOString(),
+    is_trial: false,
+  }, { onConflict: "user_id" });
 }
  
