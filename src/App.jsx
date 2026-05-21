@@ -214,12 +214,12 @@ async function dbCreateTrial(userId) {
 }
 async function dbCheckSubscription(userId) {
   var result = await supabase.from("subscriptions")
-    .select("id, status, current_period_end, plan_id")
+    .select("id, status, current_period_end, plan_id, is_trial")
     .eq("user_id", userId)
     .eq("status", "active")
-    .single();
-  if (result.error || !result.data) return null;
-  var sub = result.data;
+    .limit(1);
+  if (result.error || !result.data || result.data.length === 0) return null;
+  var sub = result.data[0];
   if (sub.current_period_end && new Date(sub.current_period_end) < new Date()) return null;
   return sub;
 }
