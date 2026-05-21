@@ -327,14 +327,23 @@ function AdminPanel({ authUser, supabaseClient }) {
   var [instFile, setInstFile] = useState(null);
   var [instLoading, setInstLoading] = useState(false);
   var [instResult, setInstResult] = useState(null);
+ var [institutions, setInstitutions] = useState([]);
   var [instUsers, setInstUsers] = useState([]);
   var [instUsersLoading, setInstUsersLoading] = useState(false);
   var [selectedInst, setSelectedInst] = useState("");
 
   useEffect(function() {
     if (!isAdmin) return;
-    supabaseClient.from("usage_log").select("*").order("created_at", { ascending: false }).limit(500)
+ supabaseClient.from("usage_log").select("*").order("created_at", { ascending: false }).limit(500)
       .then(function(result) { setStats(result.data || []); setStatsLoading(false); });
+    supabaseClient.from("subscriptions").select("institution_name").eq("type", "institutional").neq("institution_name", "")
+      .then(function(result) {
+        if (result.data) {
+          var unique = [];
+          result.data.forEach(function(s) { if (s.institution_name && !unique.includes(s.institution_name)) unique.push(s.institution_name); });
+          setInstitutions(unique);
+        }
+      });
   }, [isAdmin]);
 
   if (!isAdmin) return (
@@ -366,7 +375,6 @@ function AdminPanel({ authUser, supabaseClient }) {
   });
   var types = Object.entries(typeMap).sort(function(a, b) { return b[1] - a[1]; });
 
-  var [institutions, setInstitutions] = useState([]);
 
   useEffect(function() {
     if (!isAdmin) return;
