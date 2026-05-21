@@ -321,6 +321,12 @@ function AdminPanel({ authUser, supabaseClient }) {
   var isAdmin = authUser && authUser.email === import.meta.env.VITE_ADMIN_EMAIL;
   var [stats, setStats] = useState(null);
   var [statsLoading, setStatsLoading] = useState(true);
+    var [instName, setInstName] = useState("");
+  var [instPlanId, setInstPlanId] = useState("bcdbe285413b4acbbd187fc2fe6d52dc");
+  var [instMaxUsers, setInstMaxUsers] = useState(10);
+  var [instFile, setInstFile] = useState(null);
+  var [instLoading, setInstLoading] = useState(false);
+  var [instResult, setInstResult] = useState(null);
 
   useEffect(function() {
     if (!isAdmin) return;
@@ -356,13 +362,6 @@ function AdminPanel({ authUser, supabaseClient }) {
     typeMap[s.type_name] = (typeMap[s.type_name] || 0) + 1;
   });
   var types = Object.entries(typeMap).sort(function(a, b) { return b[1] - a[1]; });
-
-  var [instName, setInstName] = useState("");
-  var [instPlanId, setInstPlanId] = useState("bcdbe285413b4acbbd187fc2fe6d52dc");
-  var [instMaxUsers, setInstMaxUsers] = useState(10);
-  var [instFile, setInstFile] = useState(null);
-  var [instLoading, setInstLoading] = useState(false);
-  var [instResult, setInstResult] = useState(null);
 
   async function processExcel() {
     if (!instFile || !instName) return;
