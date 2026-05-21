@@ -713,9 +713,10 @@ export default function EduAIPro() {
       setPublicLib(pub);
       if (subs.length) setCurSid(subs[0].id);
       setDataLoading(false);
-      var sub = await dbCheckSubscription(authUser.id);
-      setSubscription(sub);
-      setSubChecked(true);
+      dbCheckSubscription(authUser.id).then(function(sub) {
+        setSubscription(sub);
+        setSubChecked(true);
+      });
     }).catch(function() { setDataLoading(false); });
   }, [authUser]);
 
