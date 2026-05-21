@@ -198,6 +198,17 @@ async function dbLogUsage(userId, userEmail, type, typeName, subjectName, tokens
     });
   } catch {}
 }
+async function dbCheckSubscription(userId) {
+  var result = await supabase.from("subscriptions")
+    .select("id, status, current_period_end, plan_id")
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .single();
+  if (result.error || !result.data) return null;
+  var sub = result.data;
+  if (sub.current_period_end && new Date(sub.current_period_end) < new Date()) return null;
+  return sub;
+}
 async function dbDelBankItem(id) {
   const result = await supabase.from("question_bank").delete().eq("id", id);
   if (result.error) throw result.error;
@@ -631,6 +642,8 @@ export default function EduAIPro() {
   var [bank, setBank]           = useState([]);
   var [publicLib, setPublicLib] = useState([]);
   var [dataLoading, setDataLoading] = useState(false);
+  var [subscription, setSubscription] = useState(null);
+  var [subChecked, setSubChecked] = useState(false);
 
   var [genType,    setGenType]    = useState("planclase");
   var [genTopic,   setGenTopic]   = useState("");
@@ -700,6 +713,9 @@ export default function EduAIPro() {
       setPublicLib(pub);
       if (subs.length) setCurSid(subs[0].id);
       setDataLoading(false);
+      var sub = await dbCheckSubscription(authUser.id);
+      setSubscription(sub);
+      setSubChecked(true);
     }).catch(function() { setDataLoading(false); });
   }, [authUser]);
 
@@ -894,6 +910,22 @@ export default function EduAIPro() {
   );
 
   if (!authUser) return <AuthScreen onAuth={setAuthUser} />;
+
+  if (subChecked && !subscription && authUser.email !== import.meta.env.VITE_ADMIN_EMAIL) return (
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:"#0c1220" }}>
+      <div style={{ width:480, textAlign:"center" }}>
+        <div style={{ fontSize:52, marginBottom:12 }}>🎓</div>
+        <h1 style={{ color:"#f59e0b", fontSize:28, fontWeight:700, margin:"0 0 8px" }}>EduAI Pro</h1>
+        <p style={{ color:"#7a90b0", fontSize:15, marginBottom:32 }}>Necesitas una suscripcion activa para acceder.</p>
+        <div style={{ background:"#1a2640", border:"1px solid #243350", borderRadius:16, padding:28 }}>
+          <PricingPanel authUser={authUser} />
+        </div>
+        <button style={{ marginTop:20, background:"transparent", border:"none", cursor:"pointer", color:"#4a5a75", fontSize:13, fontFamily:"inherit" }} onClick={signOut}>
+          Cerrar sesion
+        </button>
+      </div>
+    </div>
+  );
 
   var filtLib = library.filter(function(i) {
     var mf = libFilter === "all" || i.type === libFilter;
