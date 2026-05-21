@@ -366,6 +366,21 @@ function AdminPanel({ authUser, supabaseClient }) {
   });
   var types = Object.entries(typeMap).sort(function(a, b) { return b[1] - a[1]; });
 
+  var [institutions, setInstitutions] = useState([]);
+
+  useEffect(function() {
+    if (!isAdmin) return;
+    supabaseClient.from("subscriptions")
+      .select("institution_name")
+      .eq("type", "institutional")
+      .neq("institution_name", "")
+      .then(function(result) {
+        if (result.data) {
+          var unique = [...new Set(result.data.map(function(s) { return s.institution_name; }))];
+          setInstitutions(unique);
+        }
+      });
+  }, [isAdmin]);
   async function loadInstUsers(institutionName) {
     setInstUsersLoading(true);
     var result = await supabaseClient.from("subscriptions")
@@ -469,9 +484,13 @@ function AdminPanel({ authUser, supabaseClient }) {
       <div style={{ background:"#1a2640", border:"1px solid #243350", borderRadius:12, padding:"18px 20px", marginBottom:16 }}>
         <div style={{ fontSize:15, fontWeight:700, color:"#e8edf5", marginBottom:12 }}>👥 Gestión de Usuarios Institucionales</div>
         <div style={{ display:"flex", gap:10, marginBottom:14 }}>
-          <input style={{ background:"#0c1220", border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:"#e8edf5", fontSize:14, flex:1, outline:"none", fontFamily:"inherit" }}
-            value={selectedInst} onChange={function(e) { setSelectedInst(e.target.value); }}
-            placeholder="Nombre del colegio a buscar..." />
+          <select style={{ background:"#0c1220", border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:"#e8edf5", fontSize:14, flex:1, outline:"none", fontFamily:"inherit" }}
+            value={selectedInst} onChange={function(e) { setSelectedInst(e.target.value); }}>
+            <option value="">-- Seleccionar colegio --</option>
+            {institutions.map(function(inst) {
+              return <option key={inst} value={inst}>{inst}</option>;
+            })}
+          </select>
           <button style={{ background:"#f59e0b", border:"none", borderRadius:8, padding:"9px 18px", cursor:"pointer", fontWeight:600, fontSize:13, fontFamily:"inherit" }}
             onClick={function() { if (selectedInst) loadInstUsers(selectedInst); }}>
             Buscar
