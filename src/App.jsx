@@ -291,6 +291,131 @@ function MDView({ text, maxH }) {
   );
 }
 
+function AdminPanel({ authUser, supabaseClient }) {
+  var isAdmin = authUser && authUser.email === import.meta.env.VITE_ADMIN_EMAIL;
+  var [stats, setStats] = useState(null);
+  var [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(function() {
+    if (!isAdmin) return;
+    supabaseClient.from("usage_log").select("*").order("created_at", { ascending: false }).limit(500)
+      .then(function(result) { setStats(result.data || []); setStatsLoading(false); });
+  }, [isAdmin]);
+
+  if (!isAdmin) return (
+    <div style={{ background:"#1a2640", border:"1px solid #243350", borderRadius:12, padding:"52px 24px", textAlign:"center", color:"#4a5a75" }}>
+      <div style={{ fontSize:36, marginBottom:10 }}>🔒</div>
+      <p>Acceso restringido al administrador.</p>
+    </div>
+  );
+
+  if (statsLoading || !stats) return <div style={{ textAlign:"center", padding:"40px 0" }}><Spin /></div>;
+
+  var totalGen = stats.filter(function(s) { return !s.is_image; }).length;
+  var totalImg = stats.filter(function(s) { return s.is_image; }).length;
+  var totalTokIn = stats.reduce(function(a, s) { return a + (s.tokens_input || 0); }, 0);
+  var totalTokOut = stats.reduce(function(a, s) { return a + (s.tokens_output || 0); }, 0);
+  var costText = ((totalTokIn * 0.000003) + (totalTokOut * 0.000015) + (totalImg * 0.07)).toFixed(2);
+
+  var userMap = {};
+  stats.forEach(function(s) {
+    if (!userMap[s.user_email]) userMap[s.user_email] = { email: s.user_email, gens: 0, imgs: 0 };
+    if (s.is_image) userMap[s.user_email].imgs++;
+    else userMap[s.user_email].gens++;
+  });
+  var users = Object.values(userMap).sort(function(a, b) { return (b.gens + b.imgs) - (a.gens + a.imgs); });
+
+  var typeMap = {};
+  stats.filter(function(s) { return !s.is_image; }).forEach(function(s) {
+    typeMap[s.type_name] = (typeMap[s.type_name] || 0) + 1;
+  });
+  var types = Object.entries(typeMap).sort(function(a, b) { return b[1] - a[1]; });
+
+  return (
+    <div>
+      <h2 style={{ fontSize:19, fontWeight:700, color:"#e8edf5", marginBottom:20 }}>📊 Panel de Administrador</h2>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:20 }}>
+        {[
+          { l:"Generaciones", v:totalGen, i:"⚡", c:"#f59e0b" },
+          { l:"Imagenes", v:totalImg, i:"🖼️", c:"#a78bfa" },
+          { l:"Usuarios activos", v:users.length, i:"👤", c:"#3b82f6" },
+          { l:"Costo estimado", v:"$" + costText, i:"💰", c:"#10b981" },
+        ].map(function(x) {
+          return (
+            <div key={x.l} style={{ background:"#1a2640", border:"1px solid #243350", borderRadius:12, padding:"15px 18px" }}>
+              <div style={{ fontSize:24, marginBottom:8 }}>{x.i}</div>
+              <div style={{ fontSize:26, fontWeight:700, color:x.c }}>{x.v}</div>
+              <div style={{ fontSize:12, color:"#4a5a75", marginTop:2 }}>{x.l}</div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
+        <div style={{ background:"#1a2640", border:"1px solid #243350", borderRadius:12, padding:"18px 20px" }}>
+          <div style={{ fontSize:13, fontWeight:700, color:"#7a90b0", marginBottom:14 }}>USUARIOS MAS ACTIVOS</div>
+          {!users.length ? <p style={{ color:"#4a5a75", fontSize:13 }}>Sin datos aun.</p> : users.slice(0, 10).map(function(u) {
+            return (
+              <div key={u.email} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:"1px solid #243350" }}>
+                <div style={{ fontSize:13, color:"#e8edf5" }}>{u.email.split("@")[0]}</div>
+                <div style={{ display:"flex", gap:12 }}>
+                  <span style={{ fontSize:12, color:"#f59e0b" }}>{u.gens} gen</span>
+                  <span style={{ fontSize:12, color:"#a78bfa" }}>{u.imgs} img</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ background:"#1a2640", border:"1px solid #243350", borderRadius:12, padding:"18px 20px" }}>
+          <div style={{ fontSize:13, fontWeight:700, color:"#7a90b0", marginBottom:14 }}>CONTENIDO MAS GENERADO</div>
+          {!types.length ? <p style={{ color:"#4a5a75", fontSize:13 }}>Sin datos aun.</p> : types.slice(0, 8).map(function(t) {
+            var pct = totalGen > 0 ? Math.round((t[1] / totalGen) * 100) : 0;
+            return (
+              <div key={t[0]} style={{ marginBottom:12 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                  <span style={{ fontSize:13, color:"#e8edf5" }}>{t[0]}</span>
+                  <span style={{ fontSize:12, color:"#7a90b0" }}>{t[1]} ({pct}%)</span>
+                </div>
+                <div style={{ background:"#243350", borderRadius:4, height:6 }}>
+                  <div style={{ background:"#f59e0b", borderRadius:4, height:6, width:pct + "%" }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div style={{ background:"#1a2640", border:"1px solid #243350", borderRadius:12, padding:"18px 20px" }}>
+        <div style={{ fontSize:13, fontWeight:700, color:"#7a90b0", marginBottom:14 }}>ULTIMAS GENERACIONES</div>
+        {!stats.length ? <p style={{ color:"#4a5a75", fontSize:13 }}>Sin datos aun.</p> : (
+          <div style={{ overflowX:"auto" }}>
+            <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+              <thead>
+                <tr style={{ borderBottom:"1px solid #243350" }}>
+                  {["Usuario","Tipo","Materia","Tokens","Fecha"].map(function(h) {
+                    return <th key={h} style={{ textAlign:"left", padding:"6px 10px", color:"#7a90b0", fontWeight:600 }}>{h}</th>;
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {stats.slice(0, 20).map(function(s) {
+                  return (
+                    <tr key={s.id} style={{ borderBottom:"1px solid #1a2640" }}>
+                      <td style={{ padding:"6px 10px", color:"#7a90b0" }}>{s.user_email.split("@")[0]}</td>
+                      <td style={{ padding:"6px 10px", color:"#e8edf5" }}>{s.type_name}</td>
+                      <td style={{ padding:"6px 10px", color:"#4a5a75" }}>{s.subject_name || "—"}</td>
+                      <td style={{ padding:"6px 10px", color:"#f59e0b" }}>{s.is_image ? "imagen" : (s.tokens_input + s.tokens_output)}</td>
+                      <td style={{ padding:"6px 10px", color:"#4a5a75" }}>{new Date(s.created_at).toLocaleDateString("es-AR")}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── AUTH SCREEN ───────────────────────────────────────────────────────────────
 
 function AuthScreen({ onAuth }) {
@@ -1189,135 +1314,9 @@ export default function EduAIPro() {
             </div>
           )}
 {/* ADMIN PANEL */}
-          {!dataLoading && view === "admin" && (function() {
-            var isAdmin = authUser && authUser.email === import.meta.env.VITE_ADMIN_EMAIL;
-            if (!isAdmin) return (
-              <div style={Object.assign({}, card, { textAlign:"center", padding:"52px 24px", color:C.textDim })}>
-                <div style={{ fontSize:36, marginBottom:10 }}>🔒</div>
-                <p>Acceso restringido al administrador.</p>
-              </div>
-            );
-
-            var [stats, setStats] = useState(null);
-            var [statsLoading, setStatsLoading] = useState(false);
-
-            useEffect(function() {
-              setStatsLoading(true);
-              supabase.from("usage_log").select("*").order("created_at", { ascending: false }).limit(500)
-                .then(function(result) {
-                  setStats(result.data || []);
-                  setStatsLoading(false);
-                });
-            }, []);
-
-            if (statsLoading || !stats) return <div style={{ textAlign:"center", padding:"40px 0" }}><Spin /></div>;
-
-            var totalGen = stats.filter(function(s) { return !s.is_image; }).length;
-            var totalImg = stats.filter(function(s) { return s.is_image; }).length;
-            var totalTokIn = stats.reduce(function(a, s) { return a + (s.tokens_input || 0); }, 0);
-            var totalTokOut = stats.reduce(function(a, s) { return a + (s.tokens_output || 0); }, 0);
-            var costText = ((totalTokIn * 0.000003) + (totalTokOut * 0.000015) + (totalImg * 0.07)).toFixed(2);
-
-            var userMap = {};
-            stats.forEach(function(s) {
-              if (!userMap[s.user_email]) userMap[s.user_email] = { email: s.user_email, gens: 0, imgs: 0 };
-              if (s.is_image) userMap[s.user_email].imgs++;
-              else userMap[s.user_email].gens++;
-            });
-            var users = Object.values(userMap).sort(function(a, b) { return (b.gens + b.imgs) - (a.gens + a.imgs); });
-
-            var typeMap = {};
-            stats.filter(function(s) { return !s.is_image; }).forEach(function(s) {
-              typeMap[s.type_name] = (typeMap[s.type_name] || 0) + 1;
-            });
-            var types = Object.entries(typeMap).sort(function(a, b) { return b[1] - a[1]; });
-
-            return (
-              <div>
-                <h2 style={{ fontSize:19, fontWeight:700, color:C.text, marginBottom:20 }}>📊 Panel de Administrador</h2>
-
-                <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:20 }}>
-                  {[
-                    { l:"Generaciones totales", v:totalGen, i:"⚡", c:C.accent },
-                    { l:"Imagenes generadas", v:totalImg, i:"🖼️", c:C.purple },
-                    { l:"Usuarios activos", v:users.length, i:"👤", c:C.blue },
-                    { l:"Costo estimado API", v:"$" + costText, i:"💰", c:C.green },
-                  ].map(function(x) {
-                    return (
-                      <div key={x.l} style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"15px 18px" }}>
-                        <div style={{ fontSize:24, marginBottom:8 }}>{x.i}</div>
-                        <div style={{ fontSize:26, fontWeight:700, color:x.c }}>{x.v}</div>
-                        <div style={{ fontSize:12, color:C.textDim, marginTop:2 }}>{x.l}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
-                  <div style={card}>
-                    <div style={{ fontSize:13, fontWeight:700, color:C.textMuted, marginBottom:14 }}>USUARIOS MAS ACTIVOS</div>
-                    {users.slice(0, 10).map(function(u, i) {
-                      return (
-                        <div key={u.email} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:"1px solid #243350" }}>
-                          <div style={{ fontSize:13, color:C.text }}>{u.email}</div>
-                          <div style={{ display:"flex", gap:12 }}>
-                            <span style={{ fontSize:12, color:C.accent }}>{u.gens} gen</span>
-                            <span style={{ fontSize:12, color:C.purple }}>{u.imgs} img</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div style={card}>
-                    <div style={{ fontSize:13, fontWeight:700, color:C.textMuted, marginBottom:14 }}>CONTENIDO MAS GENERADO</div>
-                    {types.slice(0, 8).map(function(t) {
-                      var pct = Math.round((t[1] / totalGen) * 100);
-                      return (
-                        <div key={t[0]} style={{ marginBottom:12 }}>
-                          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
-                            <span style={{ fontSize:13, color:C.text }}>{t[0]}</span>
-                            <span style={{ fontSize:12, color:C.textMuted }}>{t[1]} ({pct}%)</span>
-                          </div>
-                          <div style={{ background:"#243350", borderRadius:4, height:6 }}>
-                            <div style={{ background:C.accent, borderRadius:4, height:6, width:pct + "%" }} />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div style={Object.assign({}, card, { marginTop:16 })}>
-                  <div style={{ fontSize:13, fontWeight:700, color:C.textMuted, marginBottom:14 }}>ULTIMAS GENERACIONES</div>
-                  <div style={{ overflowX:"auto" }}>
-                    <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
-                      <thead>
-                        <tr style={{ borderBottom:"1px solid #243350" }}>
-                          {["Usuario","Tipo","Materia","Tokens","Fecha"].map(function(h) {
-                            return <th key={h} style={{ textAlign:"left", padding:"6px 10px", color:C.textMuted, fontWeight:600 }}>{h}</th>;
-                          })}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {stats.slice(0, 20).map(function(s) {
-                          return (
-                            <tr key={s.id} style={{ borderBottom:"1px solid #1a2640" }}>
-                              <td style={{ padding:"6px 10px", color:C.textMuted }}>{s.user_email.split("@")[0]}</td>
-                              <td style={{ padding:"6px 10px", color:C.text }}>{s.type_name}</td>
-                              <td style={{ padding:"6px 10px", color:C.textDim }}>{s.subject_name || "—"}</td>
-                              <td style={{ padding:"6px 10px", color:C.accent }}>{s.is_image ? "imagen" : (s.tokens_input + s.tokens_output)}</td>
-                              <td style={{ padding:"6px 10px", color:C.textDim }}>{new Date(s.created_at).toLocaleDateString("es-AR")}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
+          {!dataLoading && view === "admin" && (
+            <AdminPanel authUser={authUser} supabaseClient={supabase} />
+          )}
 
           {/* PUBLIC LIBRARY */}
           {!dataLoading && view === "publiclib" && (
