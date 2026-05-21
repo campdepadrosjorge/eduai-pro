@@ -327,6 +327,9 @@ function AdminPanel({ authUser, supabaseClient }) {
   var [instFile, setInstFile] = useState(null);
   var [instLoading, setInstLoading] = useState(false);
   var [instResult, setInstResult] = useState(null);
+  var [instUsers, setInstUsers] = useState([]);
+  var [instUsersLoading, setInstUsersLoading] = useState(false);
+  var [selectedInst, setSelectedInst] = useState("");
 
   useEffect(function() {
     if (!isAdmin) return;
@@ -363,6 +366,23 @@ function AdminPanel({ authUser, supabaseClient }) {
   });
   var types = Object.entries(typeMap).sort(function(a, b) { return b[1] - a[1]; });
 
+  async function loadInstUsers(institutionName) {
+    setInstUsersLoading(true);
+    var result = await supabaseClient.from("subscriptions")
+      .select("user_id, status, institution_name, current_period_end, is_trial")
+      .eq("institution_name", institutionName)
+      .eq("type", "institutional");
+    setInstUsers(result.data || []);
+    setInstUsersLoading(false);
+  }
+
+  async function toggleUserStatus(userId, currentStatus) {
+    var newStatus = currentStatus === "active" ? "inactive" : "active";
+    await supabaseClient.from("subscriptions")
+      .update({ status: newStatus })
+      .eq("user_id", userId);
+    loadInstUsers(selectedInst);
+  }
   async function processExcel() {
     if (!instFile || !instName) return;
     setInstLoading(true); setInstResult(null);
@@ -444,6 +464,41 @@ function AdminPanel({ authUser, supabaseClient }) {
                 </div>
             }
           </div>
+        )}
+      </div>
+      <div style={{ background:"#1a2640", border:"1px solid #243350", borderRadius:12, padding:"18px 20px", marginBottom:16 }}>
+        <div style={{ fontSize:15, fontWeight:700, color:"#e8edf5", marginBottom:12 }}>👥 Gestión de Usuarios Institucionales</div>
+        <div style={{ display:"flex", gap:10, marginBottom:14 }}>
+          <input style={{ background:"#0c1220", border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:"#e8edf5", fontSize:14, flex:1, outline:"none", fontFamily:"inherit" }}
+            value={selectedInst} onChange={function(e) { setSelectedInst(e.target.value); }}
+            placeholder="Nombre del colegio a buscar..." />
+          <button style={{ background:"#f59e0b", border:"none", borderRadius:8, padding:"9px 18px", cursor:"pointer", fontWeight:600, fontSize:13, fontFamily:"inherit" }}
+            onClick={function() { if (selectedInst) loadInstUsers(selectedInst); }}>
+            Buscar
+          </button>
+        </div>
+        {instUsersLoading && <div style={{ color:"#7a90b0", fontSize:13 }}>Cargando...</div>}
+        {instUsers.length > 0 && (
+          <div>
+            <div style={{ fontSize:12, color:"#7a90b0", marginBottom:10 }}>{instUsers.length + " usuarios encontrados"}</div>
+            {instUsers.map(function(u) {
+              return (
+                <div key={u.user_id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:"1px solid #243350" }}>
+                  <div>
+                    <div style={{ fontSize:13, color:"#e8edf5" }}>{u.user_id.slice(0, 8) + "..."}</div>
+                    <div style={{ fontSize:11, color:"#7a90b0" }}>{"Vence: " + new Date(u.current_period_end).toLocaleDateString("es-AR")}</div>
+                  </div>
+                  <button style={{ padding:"5px 14px", borderRadius:6, border:"none", cursor:"pointer", fontFamily:"inherit", fontWeight:600, fontSize:12, background:u.status === "active" ? "#7f1d1d" : "#10b981", color:u.status === "active" ? "#fca5a5" : "#000" }}
+                    onClick={function() { toggleUserStatus(u.user_id, u.status); }}>
+                    {u.status === "active" ? "Desactivar" : "Activar"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {!instUsersLoading && instUsers.length === 0 && selectedInst && (
+          <div style={{ color:"#4a5a75", fontSize:13 }}>No se encontraron usuarios para ese colegio.</div>
         )}
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
