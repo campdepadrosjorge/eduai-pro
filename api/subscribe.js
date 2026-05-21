@@ -1,51 +1,63 @@
 // api/subscribe.js
-// Crea una suscripcion en MercadoPago y devuelve el link de pago
+// Obtiene el link de pago del plan de MercadoPago
  
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
  
   var planId = req.body.plan_id;
   var userEmail = req.body.user_email;
-  var userName = req.body.user_name;
-  var userId = req.body.user_id;
  
   if (!planId || !userEmail) {
     return res.status(400).json({ error: "plan_id y user_email son requeridos" });
   }
  
   try {
-    var body = {
-      preapproval_plan_id: planId,
-      payer_email: userEmail,
-      card_token_id: undefined,
-      back_url: "https://eduai-pro-nine.vercel.app/",
-      external_reference: userId || userEmail,
-    };
- 
-    // Limpiar campos undefined
-    Object.keys(body).forEach(function(k) {
-      if (body[k] === undefined) delete body[k];
-    });
- 
-    var mpRes = await fetch("https://api.mercadopago.com/preapproval", {
-      method: "POST",
+    // Obtener los detalles del plan para conseguir el init_point
+    var planRes = await fetch("https://api.mercadopago.com/preapproval_plan/" + planId, {
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer " + process.env.MP_ACCESS_TOKEN,
       },
-      body: JSON.stringify(body),
     });
  
-    var data = await mpRes.json();
+    var planData = await planRes.json();
  
-    if (!mpRes.ok) {
-      return res.status(mpRes.status).json({ error: data.message || "Error de MercadoPago" });
+    if (!planRes.ok) {
+      return res.status(planRes.status).json({ error: planData.message || "Plan no encontrado" });
     }
  
-    return res.status(200).json({
-      init_point: data.init_point,
-      subscription_id: data.id,
-    });
+    // El plan tiene su propio init_point para que el usuario se suscriba
+    var initPoint = planData.init_point || planData.sandbox_init_point;
+ 
+    if (!initPoint) {
+      // Si no tiene init_point, crear la preaprobación manualmente
+      var preapRes = await fetch("https://api.mercadopago.com/preapproval", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + process.env.MP_ACCESS_TOKEN,
+        },
+        body: JSON.stringify({
+          preapproval_plan_id: planId,
+          payer_email: userEmail,
+          back_url: "https://eduai-pro-nine.vercel.app/",
+          reason: planData.reason || "EduAI Pro",
+          auto_recurring: planData.auto_recurring,
+          status: "pending",
+        }),
+      });
+ 
+      var preapData = await preapRes.json();
+ 
+      if (!preapRes.ok) {
+        return res.status(preapRes.status).json({ error: preapData.message || "Error creando suscripcion" });
+      }
+ 
+      initPoint = preapData.init_point || preapData.sandbox_init_point;
+    }
+ 
+    return res.status(200).json({ init_point: initPoint });
  
   } catch (error) {
     return res.status(500).json({ error: error.message });
