@@ -1148,7 +1148,7 @@ export default function EduAIPro() {
         </div>
 
         <div style={{ flex:1, overflow:"auto", padding:"20px 26px" }}>
-{subscription && subscription.is_trial && (function() {
+{subscription && subscription.is_trial && authUser.email !== import.meta.env.VITE_ADMIN_EMAIL && (function() {
             var daysLeft = Math.ceil((new Date(subscription.current_period_end) - new Date()) / (1000 * 60 * 60 * 24));
             if (daysLeft <= 0) return null;
             return (
