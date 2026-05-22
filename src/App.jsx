@@ -1179,7 +1179,7 @@ export default function EduAIPro() {
                 {[{l:"Materias",v:subjects.length,i:"📚",c:C.blue},{l:"Biblioteca",v:library.length,i:"💾",c:C.green},{l:"Banco",v:bank.length,i:"🏦",c:C.accent},{l:"Biblioteca Publica",v:publicLib.length,i:"🌐",c:C.purple}].map(function(x) {
                   return (
                     <div key={x.l} style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"15px 18px" }}>
-                      <div style={{ fontSize:24, marginBottom:8 }}>{x.i}</div>
+                      <i className={"ti " + x.i} style={{ fontSize:22, marginBottom:8, color:x.c, display:"block" }} />
                       <div style={{ fontSize:28, fontWeight:700, color:x.c }}>{x.v}</div>
                       <div style={{ fontSize:12, color:C.textDim, marginTop:2 }}>{x.l}</div>
                     </div>
@@ -1217,11 +1217,11 @@ export default function EduAIPro() {
               <div style={card}>
                 <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8, marginBottom:14 }}>ACCESO RAPIDO</div>
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10 }}>
-                  {[{v:"generator",i:"⚡",l:"Generador IA",c:C.accent},{v:"chat",i:"💬",l:"Chat Docente",c:C.blue},{v:"multimedia",i:"🎨",l:"Multimedia",c:C.green},{v:"corrector",i:"✅",l:"Corrector TPs",c:C.purple}].map(function(x) {
+                  {[{v:"generator",i:"ti-bolt",l:"Generador IA",c:C.accent},{v:"chat",i:"ti-message",l:"Chat Docente",c:C.blue},{v:"multimedia",i:"ti-photo",l:"Multimedia",c:C.green},{v:"corrector",i:"ti-checklist",l:"Corrector TPs",c:C.purple}].map(function(x) {
                     return (
                       <button key={x.v} style={{ background:C.bg, border:"1px solid #243350", borderRadius:10, padding:"13px 8px", cursor:"pointer", textAlign:"center", fontFamily:"inherit" }}
                         onClick={function() { setView(x.v); }}>
-                        <div style={{ fontSize:24, marginBottom:5 }}>{x.i}</div>
+                        <i className={"ti " + x.i} style={{ fontSize:24, marginBottom:5, color:x.c, display:"block" }} />
                         <div style={{ fontSize:12, fontWeight:600, color:x.c }}>{x.l}</div>
                       </button>
                     );
