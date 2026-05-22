@@ -6,16 +6,16 @@ import { generatePptx } from "./pptxUtils.js";
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
 
 const NAV = [
-  { id:"dashboard",  label:"Inicio",             icon:"🏠" },
-  { id:"generator",  label:"Generador IA",        icon:"⚡" },
-  { id:"multimedia", label:"Multimedia",          icon:"🎨" },
-  { id:"chat",       label:"Chat Docente",        icon:"💬" },
-  { id:"corrector",  label:"Corrector de TPs",    icon:"✅" },
-  { id:"library",    label:"Biblioteca",          icon:"📚" },
-  { id:"bank",       label:"Banco de Preguntas",  icon:"🏦" },
-  { id:"publiclib",  label:"Biblioteca Publica",  icon:"🌐" },
-  { id:"pricing",    label:"Planes y Precios",     icon:"💳" },
-  { id:"admin",      label:"Panel Admin",          icon:"📊" },
+  { id:"dashboard",  label:"Inicio",             icon:"ti-layout-dashboard" },
+  { id:"generator",  label:"Generador IA",        icon:"ti-bolt" },
+  { id:"multimedia", label:"Multimedia",          icon:"ti-photo" },
+  { id:"chat",       label:"Chat Docente",        icon:"ti-message" },
+  { id:"corrector",  label:"Corrector de TPs",    icon:"ti-checklist" },
+  { id:"library",    label:"Biblioteca",          icon:"ti-books" },
+  { id:"bank",       label:"Banco de Preguntas",  icon:"ti-database" },
+  { id:"publiclib",  label:"Biblioteca Publica",  icon:"ti-world" },
+  { id:"pricing",    label:"Planes y Precios",    icon:"ti-credit-card" },
+  { id:"admin",      label:"Panel Admin",         icon:"ti-chart-bar" },
 ];
 
 const GEN_TYPES = [
@@ -1120,7 +1120,7 @@ export default function EduAIPro() {
             return (
               <div key={n.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 11px", cursor:"pointer", borderRadius:8, margin:"2px 6px", background:view===n.id?"#f0fdfa":"transparent", color:view===n.id?"#0f766e":C.textMuted, fontSize:13, whiteSpace:"nowrap", overflow:"hidden" }}
                 onClick={function() { setView(n.id); }}>
-                <span style={{ fontSize:17, minWidth:24, textAlign:"center" }}>{n.icon}</span>
+                <i className={"ti " + n.icon} style={{ fontSize:17, minWidth:24, textAlign:"center" }} />
                 {bar && <span>{n.label}</span>}
               </div>
             );
