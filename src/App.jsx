@@ -1200,13 +1200,13 @@ export default function EduAIPro() {
                       return (
                         <div key={sub.id} style={{ background:C.bg, border:"2px solid " + (curSid === sub.id ? C.accent : C.border), borderRadius:10, padding:14, cursor:"pointer" }}
                           onClick={function() { setCurSid(sub.id); }}>
-                          <div style={{ fontSize:22, marginBottom:7 }}>📖</div>
+                          <div style={{ fontSize:22, marginBottom:7 }}><i className="ti ti-book" style={{fontSize:22,color:C.accent}} /></div>
                           <div style={{ fontWeight:700, color:C.text, marginBottom:2, fontSize:14 }}>{sub.name}</div>
                           <div style={{ fontSize:12, color:C.textDim, marginBottom:sub.materials?5:10 }}>{sub.level}</div>
                           {sub.materials && <div style={{ fontSize:11, color:C.green, marginBottom:10 }}>Con programa cargado</div>}
                           <div style={{ display:"flex", gap:6 }}>
                             <Btn v="sm" onClick={function(e) { e.stopPropagation(); setCurSid(sub.id); setView("generator"); }}>Generar</Btn>
-                            <Btn v="ghost" st={{ padding:"5px 9px", fontSize:12 }} onClick={function(e) { e.stopPropagation(); delSubject(sub.id); }}>🗑</Btn>
+                            <Btn v="ghost" st={{ padding:"5px 9px", fontSize:12 }} onClick={function(e) { e.stopPropagation(); delSubject(sub.id); }}><i className="ti ti-trash" style={{fontSize:15}} /></Btn>
                           </div>
                         </div>
                       );
@@ -1311,8 +1311,8 @@ export default function EduAIPro() {
                           ? <span style={{ color:C.green, fontSize:12, fontWeight:700 }}>Guardado</span>
                           : (
                             <div style={{ display:"flex", gap:8 }}>
-                              <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { saveLib(genResult, genType, gt ? gt.label : "", genTopic); }}>💾 Biblioteca</Btn>
-                              {(genType==="evaluacion"||genType==="rubrica") && <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { saveBank(genResult, genTopic); }}>🏦 Banco</Btn>}
+                              <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { saveLib(genResult, genType, gt ? gt.label : "", genTopic); }}><i className="ti ti-device-floppy" style={{fontSize:14,marginRight:4}} /> Biblioteca</Btn>
+                              {(genType==="evaluacion"||genType==="rubrica") && <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { saveBank(genResult, genTopic); }}><i className="ti ti-database" style={{fontSize:14,marginRight:4}} /> Banco</Btn>}
                             </div>
                           )
                         }
@@ -1440,7 +1440,7 @@ export default function EduAIPro() {
                         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14, flexWrap:"wrap", gap:8 }}>
                           <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8 }}>CONTENIDO GENERADO</div>
                           <div style={{ display:"flex", gap:8 }}>
-                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { saveLib(mmResult, mmType, mt ? mt.label : "", mmTopic); }}>💾 Biblioteca</Btn>
+                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { saveLib(mmResult, mmType, mt ? mt.label : "", mmTopic); }}><i className="ti ti-device-floppy" style={{fontSize:14,marginRight:4}} /> Biblioteca</Btn>
                             <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportDocx(mmTopic, mt ? mt.label : "", curSubj ? curSubj.name : "", mmResult); }}>📄 Word</Btn>
                             <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportPdf(mmTopic, mt ? mt.label : "", curSubj ? curSubj.name : "", mmResult); }}>📋 PDF</Btn>
                           </div>
@@ -1530,13 +1530,13 @@ export default function EduAIPro() {
                   <div style={card}>
                     <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14 }}>
                       <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8 }}>CORRECCION GENERADA</div>
-                      <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { saveLib(corrResult, "correccion", "Correccion de TP", "Correccion " + new Date().toLocaleDateString("es-AR")); }}>💾 Guardar</Btn>
+                      <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { saveLib(corrResult, "correccion", "Correccion de TP", "Correccion " + new Date().toLocaleDateString("es-AR")); }}><i className="ti ti-device-floppy" style={{fontSize:14,marginRight:4}} /> Guardar</Btn>
                     </div>
                     <MDView text={corrResult} maxH={640} />
                   </div>
                 ) : !corrLoading && (
                   <div style={Object.assign({}, card, { textAlign:"center", padding:"56px 24px", color:C.textDim })}>
-                    <div style={{ fontSize:44, marginBottom:12 }}>📋</div>
+                    <div style={{ fontSize:44, marginBottom:12 }}><i className="ti ti-file-invoice" style={{fontSize:15}} /></div>
                     <h3 style={{ color:C.textMuted, marginBottom:8 }}>La correccion aparecera aqui</h3>
                     <p style={{ fontSize:13 }}>Evaluacion por criterio · Calificacion · Fortalezas · Mejoras · Devolucion al alumno</p>
                   </div>
@@ -1550,7 +1550,7 @@ export default function EduAIPro() {
             <div>
               <div style={{ display:"flex", gap:12, marginBottom:18, flexWrap:"wrap", alignItems:"center" }}>
                 <h2 style={{ margin:0, fontSize:19, fontWeight:700, flex:1, color:C.text }}>{"📚 Biblioteca (" + library.length + ")"}</h2>
-                {library.length > 0 && <Btn v="secondary" st={{ fontSize:12, padding:"5px 14px" }} onClick={function() { exportZip(library); }}>📦 Exportar todo (.zip)</Btn>}
+                {library.length > 0 && <Btn v="secondary" st={{ fontSize:12, padding:"5px 14px" }} onClick={function() { exportZip(library); }}><i className="ti ti-archive" style={{fontSize:13,marginRight:4}} /> Exportar todo (.zip)</Btn>}
                 <input style={Object.assign({}, inp, { width:185 })} value={libSearch} onChange={function(e) { setLibSearch(e.target.value); }} placeholder="Buscar..." />
                 <select style={sel} value={libFilter} onChange={function(e) { setLibFilter(e.target.value); }}>
                   <option value="all">Todos</option>
@@ -1590,7 +1590,7 @@ export default function EduAIPro() {
                       <div key={item.id} style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:16, cursor:"pointer" }} onClick={function() { setLibItem(item); }}>
                         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:10 }}>
                           <span style={{ fontSize:22 }}>{g ? g.icon : "📄"}</span>
-                          <button style={{ background:"transparent", border:"none", cursor:"pointer", color:C.red, fontSize:15 }} onClick={function(e) { e.stopPropagation(); delLib(item.id); }}>🗑</button>
+                          <button style={{ background:"transparent", border:"none", cursor:"pointer", color:C.red, fontSize:15 }} onClick={function(e) { e.stopPropagation(); delLib(item.id); }}><i className="ti ti-trash" style={{fontSize:15}} /></button>
                         </div>
                         <Tag color={g ? g.color : C.textMuted}>{item.type_name}</Tag>
                         <div style={{ fontWeight:600, color:C.text, fontSize:14, marginTop:8, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.topic}</div>
@@ -1609,7 +1609,7 @@ export default function EduAIPro() {
               <h2 style={{ fontSize:19, fontWeight:700, marginBottom:18, color:C.text }}>{"🏦 Banco de Preguntas (" + bank.length + ")"}</h2>
               {!bank.length ? (
                 <div style={Object.assign({}, card, { textAlign:"center", padding:"52px 24px", color:C.textDim })}>
-                  <div style={{ fontSize:36, marginBottom:10 }}>🏦</div>
+                  <div style={{ fontSize:36, marginBottom:10 }}><i className="ti ti-database" style={{fontSize:14,marginRight:4}} /></div>
                   <p>El banco esta vacio. Genera evaluaciones o rubricas y guardalas aqui.</p>
                 </div>
               ) : bank.map(function(item) {
@@ -1646,7 +1646,7 @@ export default function EduAIPro() {
               </div>
               {!publicLib.length ? (
                 <div style={Object.assign({}, card, { textAlign:"center", padding:"52px 24px", color:C.textDim })}>
-                  <div style={{ fontSize:36, marginBottom:10 }}>🌐</div>
+                  <div style={{ fontSize:36, marginBottom:10 }}><i className="ti ti-world" style={{fontSize:14,marginRight:4}} /> </div>
                   <p>La biblioteca publica esta vacia. Se el primero en compartir contenido.</p>
                   <p style={{ fontSize:12, marginTop:8 }}>Despues de guardar en el Generador, haz click en el boton Compartir.</p>
                 </div>
@@ -1660,7 +1660,7 @@ export default function EduAIPro() {
                           <span style={{ fontSize:22 }}>{g ? g.icon : "📄"}</span>
                           {authUser && item.user_id === authUser.id && (
                             <button style={{ background:"transparent", border:"none", cursor:"pointer", color:C.red, fontSize:14 }}
-                              onClick={async function() { await dbDelPublicItem(item.id); var pub = await dbLoadPublicLib(); setPublicLib(pub); }}>🗑</button>
+                              onClick={async function() { await dbDelPublicItem(item.id); var pub = await dbLoadPublicLib(); setPublicLib(pub); }}><i className="ti ti-trash" style={{fontSize:15}} /></button>
                           )}
                         </div>
                         <Tag color={g ? g.color : C.textMuted}>{item.type_name}</Tag>
@@ -1671,7 +1671,7 @@ export default function EduAIPro() {
                           <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px", flex:1 }} onClick={function() { saveLib(item.content, item.type, item.type_name, item.topic); }}>
                             💾 Guardar en mi biblioteca
                           </Btn>
-                          <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportDocx(item.topic, item.type_name, item.subject_name || "", item.content); }}>📄</Btn>
+                          <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportDocx(item.topic, item.type_name, item.subject_name || "", item.content); }}><i className="ti ti-file-text" style={{fontSize:15}} /></Btn>
                         </div>
                       </div>
                     );
