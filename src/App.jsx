@@ -231,16 +231,16 @@ async function dbDelBankItem(id) {
 // ── DESIGN ────────────────────────────────────────────────────────────────────
 
 const C = {
-  bg:"#0c1220", surf:"#111827", card:"#1a2640", border:"#243350",
-  accent:"#f59e0b", accentBg:"#1c1408",
-  text:"#e8edf5", textMuted:"#7a90b0", textDim:"#4a5a75",
-  blue:"#3b82f6", green:"#10b981", purple:"#a78bfa", red:"#f87171",
+  bg:"#f5f5f0", surf:"#ffffff", card:"#ffffff", border:"#e0ddd6",
+  accent:"#0d9488", accentBg:"#f0fdfa",
+  text:"#1c1917", textMuted:"#6b7280", textDim:"#9ca3af",
+  blue:"#1d4ed8", green:"#059669", purple:"#7c3aed", red:"#dc2626",
 };
 
-const inp = { background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:14, width:"100%", outline:"none", fontFamily:"inherit" };
-const sel = { background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:13, outline:"none", fontFamily:"inherit" };
-const lbl = { fontSize:11, color:C.textMuted, marginBottom:5, display:"block", fontWeight:700, letterSpacing:.6 };
-const card = { background:C.card, border:"1px solid #243350", borderRadius:12, padding:"18px 20px", marginBottom:16 };
+const inp = { background:"#ffffff", border:"1px solid #e0ddd6", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:14, width:"100%", outline:"none", fontFamily:"inherit" };
+const sel = { background:"#ffffff", border:"1px solid #e0ddd6", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:13, outline:"none", fontFamily:"inherit" };
+const lbl = { fontSize:11, color:C.textMuted, marginBottom:5, display:"block", fontWeight:600, letterSpacing:.5 };
+const card = { background:"#ffffff", border:"1px solid #e0ddd6", borderRadius:12, padding:"18px 20px", marginBottom:16 };
 
 function Btn({ children, onClick, v, disabled, st }) {
   if (!v) v = "primary";
@@ -274,21 +274,21 @@ function Tag({ children, color }) {
 
 function MDView({ text, maxH }) {
   if (!maxH) maxH = 560;
-  var css = ".md h1{color:#fbbf24;font-size:1.28em;font-weight:700;margin:1.2em 0 .4em;border-bottom:1px solid #243350;padding-bottom:.2em}" +
-    ".md h2{color:#f59e0b;font-size:1.1em;font-weight:700;margin:1.1em 0 .35em;border-bottom:1px solid #1a2640;padding-bottom:.15em}" +
-    ".md h3{color:#fcd34d;font-size:1em;font-weight:600;margin:.95em 0 .28em}" +
-    ".md h4{color:#d97706;font-size:.93em;font-weight:600;margin:.85em 0 .22em}" +
-    ".md strong{color:#fef3c7;font-weight:700}.md em{color:#bfdbfe}" +
-    ".md code{background:#0c1220;padding:2px 6px;border-radius:4px;font-size:.82em;font-family:monospace;color:#86efac}" +
+  var css = ".md h1{color:#0f766e;font-size:1.28em;font-weight:700;margin:1.2em 0 .4em;border-bottom:1px solid #e0ddd6;padding-bottom:.2em}" +
+    ".md h2{color:#0d9488;font-size:1.1em;font-weight:700;margin:1.1em 0 .35em;border-bottom:1px solid #f0fdfa;padding-bottom:.15em}" +
+    ".md h3{color:#0f766e;font-size:1em;font-weight:600;margin:.95em 0 .28em}" +
+    ".md h4{color:#374151;font-size:.93em;font-weight:600;margin:.85em 0 .22em}" +
+    ".md strong{color:#1c1917;font-weight:700}.md em{color:#0f766e}" +
+    ".md code{background:#f0fdfa;padding:2px 6px;border-radius:4px;font-size:.82em;font-family:monospace;color:#0f766e}" +
     ".md ul{margin:.35em 0 .35em 1.3em;list-style:disc}.md ol{margin:.35em 0 .35em 1.3em;list-style:decimal}" +
-    ".md li{margin:.22em 0;color:#cbd5e1;line-height:1.6}.md p{color:#cbd5e1;margin:.45em 0;line-height:1.7}" +
-    ".md hr{border:none;border-top:1px solid #243350;margin:.9em 0}" +
+    ".md li{margin:.22em 0;color:#374151;line-height:1.6}.md p{color:#374151;margin:.45em 0;line-height:1.7}" +
+    ".md hr{border:none;border-top:1px solid #e0ddd6;margin:.9em 0}" +
     ".md table{border-collapse:collapse;width:100%;margin:.7em 0;font-size:.87em}" +
-    ".md th{background:#1a2640;color:#f59e0b;padding:6px 10px;border:1px solid #334155;font-weight:600;text-align:left}" +
-    ".md td{padding:5px 10px;border:1px solid #243350;color:#cbd5e1;vertical-align:top}" +
-    ".md tr:nth-child(even) td{background:#1a2640}" +
-    ".md blockquote{border-left:3px solid #f59e0b;margin:.5em 0;padding:.35em .75em;background:#1a2640;color:#94a3b8;border-radius:0 6px 6px 0}" +
-    ".md pre{background:#0c1220;padding:11px;border-radius:7px;overflow-x:auto;font-family:monospace;font-size:.82em;color:#86efac;margin:.5em 0}";
+    ".md th{background:#f0fdfa;color:#0f766e;padding:6px 10px;border:1px solid #e0ddd6;font-weight:600;text-align:left}" +
+    ".md td{padding:5px 10px;border:1px solid #e0ddd6;color:#374151;vertical-align:top}" +
+    ".md tr:nth-child(even) td{background:#f9f9f7}" +
+    ".md blockquote{border-left:3px solid #0d9488;margin:.5em 0;padding:.35em .75em;background:#f0fdfa;color:#6b7280;border-radius:0 6px 6px 0}" +
+    ".md pre{background:#f5f5f0;padding:11px;border-radius:7px;overflow-x:auto;font-family:monospace;font-size:.82em;color:#0f766e;margin:.5em 0}";
 
   var h = text
     .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
@@ -310,7 +310,7 @@ function MDView({ text, maxH }) {
     .replace(/\n\n+/g,"</p><p>").replace(/\n/g,"<br/>");
 
   return (
-    <div style={{ background:"#0c1220", borderRadius:8, padding:"15px 19px", maxHeight:maxH, overflow:"auto", lineHeight:1.75, fontSize:14, fontFamily:"Arial,sans-serif" }}>
+    <div style={{ background:"#f9f9f7", border:"1px solid #e0ddd6", borderRadius:8, padding:"15px 19px", maxHeight:maxH, overflow:"auto", lineHeight:1.75, fontSize:14, fontFamily:"Arial,sans-serif" }}>
       <style>{css}</style>
       <div className="md"><p dangerouslySetInnerHTML={{ __html:h }}/></div>
     </div>
@@ -1102,7 +1102,7 @@ export default function EduAIPro() {
   return (
     <div style={{ display:"flex", height:"100vh", background:C.bg, color:C.text, fontFamily:"Arial,sans-serif", overflow:"hidden" }}>
 
-      <div style={{ width:bar?218:56, minWidth:bar?218:56, background:C.surf, borderRight:"1px solid #243350", display:"flex", flexDirection:"column", transition:"all .22s", overflow:"hidden" }}>
+      <div style={{ width:bar?218:56, minWidth:bar?218:56, background:"#ffffff", borderRight:"1px solid #e0ddd6", display:"flex", flexDirection:"column", transition:"all .22s", overflow:"hidden" }}>
         <div style={{ padding:"14px 10px 12px", borderBottom:"1px solid #243350", display:"flex", alignItems:"center", gap:8 }}>
           <button style={{ background:"none", border:"none", cursor:"pointer", color:C.accent, fontSize:17, minWidth:26, fontFamily:"inherit" }} onClick={function() { setBar(!bar); }}>{bar ? "◁" : "▷"}</button>
           {bar && <span style={{ fontSize:15, fontWeight:700, color:C.accent, whiteSpace:"nowrap" }}>EduAI Pro</span>}
@@ -1118,7 +1118,7 @@ export default function EduAIPro() {
         <nav style={{ flex:1, padding:"6px 0", overflowY:"auto" }}>
           {NAV.map(function(n) {
             return (
-              <div key={n.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 11px", cursor:"pointer", borderRadius:8, margin:"2px 6px", background:view===n.id?"#1d3d7a":"transparent", color:view===n.id?"#93c5fd":C.textMuted, fontSize:13, whiteSpace:"nowrap", overflow:"hidden" }}
+              <div key={n.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 11px", cursor:"pointer", borderRadius:8, margin:"2px 6px", background:view===n.id?"#f0fdfa":"transparent", color:view===n.id?"#0f766e":C.textMuted, fontSize:13, whiteSpace:"nowrap", overflow:"hidden" }}
                 onClick={function() { setView(n.id); }}>
                 <span style={{ fontSize:17, minWidth:24, textAlign:"center" }}>{n.icon}</span>
                 {bar && <span>{n.label}</span>}
@@ -1139,7 +1139,7 @@ export default function EduAIPro() {
       </div>
 
       <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", minWidth:0 }}>
-        <div style={{ background:C.surf, borderBottom:"1px solid #243350", padding:"10px 22px", display:"flex", alignItems:"center", gap:14, minHeight:54 }}>
+        <div style={{ background:"#ffffff", borderBottom:"1px solid #e0ddd6", padding:"10px 22px", display:"flex", alignItems:"center", gap:14, minHeight:54 }}>
           <h1 style={{ margin:0, fontSize:16, fontWeight:700, flex:1, color:C.text }}>
             {(NAV.find(function(n) { return n.id === view; }) || {}).icon} {(NAV.find(function(n) { return n.id === view; }) || {}).label}
           </h1>
@@ -1484,7 +1484,7 @@ export default function EduAIPro() {
                   ) : chatMsgs.map(function(m, i) {
                     return (
                       <div key={i} style={{ display:"flex", justifyContent:m.role==="user"?"flex-end":"flex-start", marginBottom:14 }}>
-                        <div style={{ maxWidth:"82%", background:m.role==="user"?"#1d3d7a":C.card, borderRadius:12, padding:"10px 14px" }}>
+                        <div style={{ maxWidth:"82%", background:m.role==="user"?"#0d9488":C.card, borderRadius:12, padding:"10px 14px", border:m.role==="user"?"none":"1px solid #e0ddd6" }}>
                           {m.role === "user" ? <span style={{ fontSize:14, color:C.text }}>{m.content}</span> : <MDView text={m.content} maxH={9999} />}
                         </div>
                       </div>
