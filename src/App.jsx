@@ -743,7 +743,7 @@ function AuthScreen({ onAuth }) {
       <div style={{ width:420 }}>
         <div style={{ textAlign:"center", marginBottom:32 }}>
           <div style={{ marginBottom:12 }}><i className="ti ti-school" style={{ fontSize:52, color:C.accent }} /></div>
-          <h1 style={{ color:C.accent, fontSize:30, fontWeight:700, margin:"0 0 6px" }}>EduAI Pro</h1>
+          <h1 style={{ color:C.accent, fontSize:30, fontWeight:700, margin:"0 0 6px" }}>AulaXpro</h1>
           <p style={{ color:C.textMuted, fontSize:15 }}>Tu asistente docente impulsado por Claude AI</p>
         </div>
         <div style={card}>
@@ -909,7 +909,7 @@ export default function EduAIPro() {
     var match = content.match(/```javascript\n([\s\S]*?)```/);
     if (!match) return null;
     var code = match[1].trim();
-    var snippet = { name: genTopic, description: "Generado con EduAI Pro", editor: "microbit", code: { "main.ts": code } };
+    var snippet = { name: genTopic, description: "Generado con AulaXpro", editor: "microbit", code: { "main.ts": code } };
     try {
       var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(snippet))));
       return "https://makecode.microbit.org/#pub:" + encoded;
@@ -1067,7 +1067,7 @@ export default function EduAIPro() {
   if (authLoading) return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:C.bg, flexDirection:"column", gap:12 }}>
       <div><i className="ti ti-school" style={{ fontSize:38, color:C.accent }} /></div>
-      <div style={{ color:C.textMuted, fontSize:14 }}>Cargando EduAI Pro...</div>
+      <div style={{ color:C.textMuted, fontSize:14 }}>Cargando AulaXpro...</div>
     </div>
   );
 
@@ -1077,7 +1077,7 @@ export default function EduAIPro() {
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:C.bg }}>
       <div style={{ width:480, textAlign:"center" }}>
         <div style={{ marginBottom:12 }}><i className="ti ti-school" style={{ fontSize:52, color:C.accent }} /></div>
-        <h1 style={{ color:"#f59e0b", fontSize:28, fontWeight:700, margin:"0 0 8px" }}>EduAI Pro</h1>
+        <h1 style={{ color:"#f59e0b", fontSize:28, fontWeight:700, margin:"0 0 8px" }}>AulaXpro</h1>
         <p style={{ color:C.textMuted, fontSize:15, marginBottom:32 }}>Necesitas una suscripcion activa para acceder.</p>
         <div style={{ background:C.card, border:"1px solid #243350", borderRadius:4, padding:28 }}>
           <PricingPanel authUser={authUser} />
@@ -1107,10 +1107,10 @@ export default function EduAIPro() {
           <button style={{ background:"none", border:"none", cursor:"pointer", color:C.accent, fontSize:17, minWidth:26, fontFamily:"Quicksand,sans-serif" }} onClick={function() { setBar(!bar); }}>
   {bar ? <i className="ti ti-chevron-left" style={{fontSize:16}} /> : <i className="ti ti-chevron-right" style={{fontSize:16}} />}
 </button>
-          {bar && <span style={{ fontSize:15, fontWeight:700, color:C.accent, whiteSpace:"nowrap" }}>EduAI Pro</span>}
+          {bar && <span style={{ fontSize:15, fontWeight:700, color:C.accent, whiteSpace:"nowrap" }}>AulaXpro</span>}
         </div>
         {bar && subjects.length > 0 && (
-          <div style={{ padding:"8px 10px 10px", borderBottom:"1px solid #243350" }}>
+          <div style={{ padding:"8px 10px 10px" }}>
             <div style={{ fontSize:10, color:C.textDim, fontWeight:700, letterSpacing:.8, marginBottom:5 }}>MATERIA ACTIVA</div>
             <select style={Object.assign({}, sel, { width:"100%", fontSize:12, padding:"5px 9px" })} value={curSid || ""} onChange={function(e) { setCurSid(e.target.value); }}>
               {subjects.map(function(s) { return <option key={s.id} value={s.id}>{s.name}</option>; })}
