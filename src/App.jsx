@@ -1716,6 +1716,34 @@ export default function EduAIPro() {
                     <p style={{ fontSize:13, color:C.textDim }}>Seleccioná una materia primero.</p>
                   ) : (
                     <div>
+                      <div style={{ marginBottom:10 }}>
+                        <label style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.5, marginBottom:5, display:"block" }}>IMPORTAR DESDE EXCEL</label>
+                        <div style={{ display:"flex", gap:8, marginBottom:8 }}>
+                          <input type="file" accept=".xlsx,.xls,.csv" style={{ fontSize:12, color:C.textMuted, flex:1 }}
+                            onChange={async function(e) {
+                              var file = e.target.files[0];
+                              if (!file) return;
+                              var XLSX = await import("xlsx");
+                              var buffer = await file.arrayBuffer();
+                              var wb = XLSX.read(buffer, { type:"array" });
+                              var sheet = wb.Sheets[wb.SheetNames[0]];
+                              var rows = XLSX.utils.sheet_to_json(sheet, { header:1 });
+                              var added = 0;
+                              for (var i = 1; i < rows.length; i++) {
+                                var name = rows[i][0] ? String(rows[i][0]).trim() : "";
+                                if (!name) continue;
+                                try {
+                                  var s = await dbAddStudent(authUser.id, curSid, name, rows[i][1] ? String(rows[i][1]).trim() : "");
+                                  setStudents(function(prev) { return prev.concat([s]); });
+                                  added++;
+                                } catch {}
+                              }
+                              alert(added + " alumnos importados correctamente.");
+                              e.target.value = "";
+                            }} />
+                        </div>
+                        <p style={{ fontSize:11, color:C.textDim, marginBottom:12 }}>Columna A: Nombre · Columna B: Notas (opcional)</p>
+                      </div>
                       <div style={{ display:"flex", gap:8, marginBottom:12 }}>
                         <input style={Object.assign({}, inp, { flex:1, fontSize:13 })} value={newStudentName} onChange={function(e) { setNewStudentName(e.target.value); }}
                           onKeyDown={function(e) { if (e.key === "Enter" && newStudentName.trim()) { dbAddStudent(authUser.id, curSid, newStudentName.trim()).then(function(s) { setStudents(function(prev) { return prev.concat([s]); }); setNewStudentName(""); }); }}}
