@@ -2077,7 +2077,7 @@ export default function EduAIPro() {
         </div>
       )}
       </div>
-      <style>{`*{box-sizing:border-box}::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:${C.border};border-radius:3px}select option{background:${C.surf}}`}</style>
+      <style>{"*{box-sizing:border-box}::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#e0ddd6;border-radius:3px}select option{background:#fff}"}</style>
     </div>
   );
 }
