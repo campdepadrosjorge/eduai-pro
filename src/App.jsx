@@ -19,22 +19,22 @@ const NAV = [
 ];
 
 const GEN_TYPES = [
-  { id:"planclase",    label:"Plan de Clase",              icon:"📅", color:"#3b82f6" },
-  { id:"actividad",   label:"Actividad Didactica",         icon:"🎯", color:"#10b981" },
-  { id:"rubrica",     label:"Rubrica de Evaluacion",       icon:"📊", color:"#f59e0b" },
-  { id:"evaluacion",  label:"Evaluacion / Examen",         icon:"📝", color:"#a78bfa" },
-  { id:"material",    label:"Material Didactico",          icon:"📖", color:"#06b6d4" },
-  { id:"presentacion",label:"Esquema de Presentacion",     icon:"🖥️", color:"#f97316" },
-  { id:"guia",        label:"Guia de Estudio",             icon:"🗺️", color:"#84cc16" },
-  { id:"adaptado",    label:"Contenido Adaptado (NEE)",    icon:"💙", color:"#ec4899" },
+  { id:"planclase",    label:"Plan de Clase",              icon:"ti-calendar", color:"#1d4ed8" },
+  { id:"actividad",   label:"Actividad Didactica",         icon:"ti-target",   color:"#059669" },
+  { id:"rubrica",     label:"Rubrica de Evaluacion",       icon:"ti-list-check",color:"#0d9488" },
+  { id:"evaluacion",  label:"Evaluacion / Examen",         icon:"ti-writing",  color:"#7c3aed" },
+  { id:"material",    label:"Material Didactico",          icon:"ti-book",     color:"#0891b2" },
+  { id:"presentacion",label:"Esquema de Presentacion",     icon:"ti-slideshow", color:"#d97706" },
+  { id:"guia",        label:"Guia de Estudio",             icon:"ti-map",      color:"#65a30d" },
+  { id:"adaptado",    label:"Contenido Adaptado (NEE)",    icon:"ti-heart",    color:"#db2777" },
 ];
 
 const MM_TYPES = [
-  { id:"podcast",             label:"Guion de Podcast",          icon:"🎙️", desc:"Episodio educativo completo" },
-  { id:"infografia",          label:"Estructura de Infografia",  icon:"📊", desc:"Layout para Canva" },
-  { id:"video_script",        label:"Guion de Video",            icon:"🎬", desc:"Con descripcion visual" },
-  { id:"presentacion_visual", label:"Presentacion Visual",       icon:"✨", desc:"Slide por slide" },
-  { id:"imagen_ia",           label:"Generador de Imagenes IA",  icon:"🖼️", desc:"Imagenes con IA" },
+  { id:"podcast",             label:"Guion de Podcast",          icon:"ti-microphone", desc:"Episodio educativo completo" },
+  { id:"infografia",          label:"Estructura de Infografia",  icon:"ti-chart-bar",  desc:"Layout para Canva" },
+  { id:"video_script",        label:"Guion de Video",            icon:"ti-video",      desc:"Con descripcion visual" },
+  { id:"presentacion_visual", label:"Presentacion Visual",       icon:"ti-presentation",desc:"Slide por slide" },
+  { id:"imagen_ia",           label:"Generador de Imagenes IA",  icon:"ti-photo-ai",   desc:"Imagenes con IA" },
 ];
 
 const LEVELS = [
@@ -347,8 +347,8 @@ function AdminPanel({ authUser, supabaseClient }) {
   }, [isAdmin]);
 
   if (!isAdmin) return (
-    <div style={{ background:"#1a2640", border:"1px solid #243350", borderRadius:12, padding:"52px 24px", textAlign:"center", color:"#4a5a75" }}>
-      <div style={{ fontSize:36, marginBottom:10 }}>🔒</div>
+    <div style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"52px 24px", textAlign:"center", color:C.textDim }}>
+      <div style={{ marginBottom:10 }}><i className="ti ti-lock" style={{ fontSize:36, color:C.textDim }} /></div>
       <p>Acceso restringido al administrador.</p>
     </div>
   );
@@ -421,64 +421,64 @@ function AdminPanel({ authUser, supabaseClient }) {
 
   return (
     <div>
-      <h2 style={{ fontSize:19, fontWeight:700, color:"#e8edf5", marginBottom:20 }}>📊 Panel de Administrador</h2>
+      <h2 style={{ fontSize:19, fontWeight:700, color:C.text, marginBottom:20, display:"flex", alignItems:"center", gap:8 }}><i className="ti ti-chart-bar" style={{fontSize:18, color:C.accent}} />Panel de Administrador</h2>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:20 }}>
         {[
-          { l:"Generaciones", v:totalGen, i:"⚡", c:"#f59e0b" },
-          { l:"Imagenes", v:totalImg, i:"🖼️", c:"#a78bfa" },
-          { l:"Usuarios activos", v:users.length, i:"👤", c:"#3b82f6" },
-          { l:"Costo estimado", v:"$" + costText, i:"💰", c:"#10b981" },
+          { l:"Generaciones", v:totalGen, i:"ti-bolt", c:"#f59e0b" },
+          { l:"Imagenes", v:totalImg, i:"ti-photo", c:"#7c3aed" },
+          { l:"Usuarios activos", v:users.length, i:"ti-users", c:"#3b82f6" },
+          { l:"Costo estimado", v:"$" + costText, i:"ti-coin", c:"#10b981" },
         ].map(function(x) {
           return (
-            <div key={x.l} style={{ background:"#1a2640", border:"1px solid #243350", borderRadius:12, padding:"15px 18px" }}>
-              <div style={{ fontSize:24, marginBottom:8 }}>{x.i}</div>
+            <div key={x.l} style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"15px 18px" }}>
+              <i className={"ti " + x.i} style={{ fontSize:22, marginBottom:8, color:x.c, display:"block" }} />
               <div style={{ fontSize:26, fontWeight:700, color:x.c }}>{x.v}</div>
-              <div style={{ fontSize:12, color:"#4a5a75", marginTop:2 }}>{x.l}</div>
+              <div style={{ fontSize:12, color:C.textDim, marginTop:2 }}>{x.l}</div>
             </div>
           );
         })}
       </div>
-      <div style={{ background:"#1a2640", border:"1px solid #243350", borderRadius:12, padding:"18px 20px", marginBottom:16 }}>
-        <div style={{ fontSize:15, fontWeight:700, color:"#e8edf5", marginBottom:4 }}>🏫 Carga Institucional</div>
-        <p style={{ fontSize:13, color:"#7a90b0", marginBottom:16 }}>Subí un Excel con columna A = Email y columna B = Nombre. El sistema crea las cuentas y activa las suscripciones automaticamente.</p>
+      <div style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"18px 20px", marginBottom:16 }}>
+        <<div style={{ fontSize:15, fontWeight:700, color:C.text, marginBottom:4, display:"flex", alignItems:"center", gap:8 }}><i className="ti ti-school" style={{fontSize:16, color:C.accent}} />Carga Institucional</div>
+        <p style={{ fontSize:13, color:C.textMuted, marginBottom:16 }}>Subí un Excel con columna A = Email y columna B = Nombre. El sistema crea las cuentas y activa las suscripciones automaticamente.</p>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
           <div>
-            <label style={{ fontSize:11, color:"#7a90b0", marginBottom:5, display:"block", fontWeight:700 }}>NOMBRE DEL COLEGIO *</label>
-            <input style={{ background:"#0c1220", border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:"#e8edf5", fontSize:14, width:"100%", outline:"none", fontFamily:"inherit" }}
+            <label style={{ fontSize:11, color:C.textMuted, marginBottom:5, display:"block", fontWeight:700 }}>NOMBRE DEL COLEGIO *</label>
+            <input style={{ background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:14, width:"100%", outline:"none", fontFamily:"inherit" }}
               value={instName} onChange={function(e) { setInstName(e.target.value); }} placeholder="Ej: Colegio San Martin" />
           </div>
           <div>
-            <label style={{ fontSize:11, color:"#7a90b0", marginBottom:5, display:"block", fontWeight:700 }}>MAX USUARIOS</label>
-            <input style={{ background:"#0c1220", border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:"#e8edf5", fontSize:14, width:"100%", outline:"none", fontFamily:"inherit" }}
+            <label style={{ fontSize:11, color:C.textMuted, marginBottom:5, display:"block", fontWeight:700 }}>MAX USUARIOS</label>
+            <input style={{ background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:14, width:"100%", outline:"none", fontFamily:"inherit" }}
               type="number" value={instMaxUsers} onChange={function(e) { setInstMaxUsers(parseInt(e.target.value)); }} />
           </div>
         </div>
         <div style={{ marginBottom:12 }}>
-          <label style={{ fontSize:11, color:"#7a90b0", marginBottom:5, display:"block", fontWeight:700 }}>ARCHIVO EXCEL (.xlsx)</label>
-          <input type="file" accept=".xlsx,.xls,.csv" style={{ color:"#e8edf5", fontSize:13 }}
+          <label style={{ fontSize:11, color:C.textMuted, marginBottom:5, display:"block", fontWeight:700 }}>ARCHIVO EXCEL (.xlsx)</label>
+          <input type="file" accept=".xlsx,.xls,.csv" style={{ color:C.text, fontSize:13 }}
             onChange={function(e) { setInstFile(e.target.files[0]); }} />
         </div>
         <button style={{ background:"#f59e0b", border:"none", borderRadius:8, padding:"9px 18px", cursor:instLoading||!instFile||!instName?"not-allowed":"pointer", fontWeight:600, fontSize:13, fontFamily:"inherit", opacity:instLoading||!instFile||!instName?.5:1 }}
           onClick={processExcel} disabled={instLoading||!instFile||!instName}>
-          {instLoading ? "Procesando..." : "Cargar usuarios y activar suscripciones"}
+          {instLoading ? "Procesando..." : <><i className="ti ti-upload" style={{fontSize:13,marginRight:4}} />Cargar usuarios y activar suscripciones</>}
         </button>
         {instResult && (
-          <div style={{ marginTop:14, padding:"12px 16px", background:"#0c1220", borderRadius:8, fontSize:13 }}>
+          <div style={{ marginTop:14, padding:"12px 16px", background:C.bg, borderRadius:8, fontSize:13 }}>
             {instResult.error
               ? <span style={{ color:"#f87171" }}>Error: {instResult.error}</span>
               : <div>
                   <div style={{ color:"#10b981", marginBottom:4 }}>Creados: {instResult.created}</div>
-                  <div style={{ color:"#7a90b0", marginBottom:4 }}>Ya existian: {instResult.already_exists}</div>
+                  <div style={{ color:C.textMuted, marginBottom:4 }}>Ya existian: {instResult.already_exists}</div>
                   {instResult.failed > 0 && <div style={{ color:"#f87171" }}>Fallidos: {instResult.failed}</div>}
                 </div>
             }
           </div>
         )}
       </div>
-      <div style={{ background:"#1a2640", border:"1px solid #243350", borderRadius:12, padding:"18px 20px", marginBottom:16 }}>
-        <div style={{ fontSize:15, fontWeight:700, color:"#e8edf5", marginBottom:12 }}>👥 Gestión de Usuarios Institucionales</div>
+      <div style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"18px 20px", marginBottom:16 }}>
+        <div style={{ fontSize:15, fontWeight:700, color:C.text, marginBottom:12, display:"flex", alignItems:"center", gap:8 }}><i className="ti ti-users" style={{fontSize:16, color:C.accent}} />Gestión de Usuarios Institucionales</div>
         <div style={{ display:"flex", gap:10, marginBottom:14 }}>
-          <select style={{ background:"#0c1220", border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:"#e8edf5", fontSize:14, flex:1, outline:"none", fontFamily:"inherit" }}
+          <select style={{ background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:14, flex:1, outline:"none", fontFamily:"inherit" }}
             value={selectedInst} onChange={function(e) { setSelectedInst(e.target.value); }}>
             <option value="">-- Seleccionar colegio --</option>
             {institutions.map(function(inst) {
@@ -490,16 +490,16 @@ function AdminPanel({ authUser, supabaseClient }) {
             Buscar
           </button>
         </div>
-        {instUsersLoading && <div style={{ color:"#7a90b0", fontSize:13 }}>Cargando...</div>}
+        {instUsersLoading && <div style={{ color:C.textMuted, fontSize:13 }}>Cargando...</div>}
         {instUsers.length > 0 && (
           <div>
-            <div style={{ fontSize:12, color:"#7a90b0", marginBottom:10 }}>{instUsers.length + " usuarios encontrados"}</div>
+            <div style={{ fontSize:12, color:C.textMuted, marginBottom:10 }}>{instUsers.length + " usuarios encontrados"}</div>
             {instUsers.map(function(u) {
               return (
                 <div key={u.user_id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:"1px solid #243350" }}>
                   <div>
-                    <div style={{ fontSize:13, color:"#e8edf5" }}>{u.user_id.slice(0, 8) + "..."}</div>
-                    <div style={{ fontSize:11, color:"#7a90b0" }}>{"Vence: " + new Date(u.current_period_end).toLocaleDateString("es-AR")}</div>
+                    <div style={{ fontSize:13, color:C.text }}>{u.user_id.slice(0, 8) + "..."}</div>
+                    <div style={{ fontSize:11, color:C.textMuted }}>{"Vence: " + new Date(u.current_period_end).toLocaleDateString("es-AR")}</div>
                   </div>
                   <button style={{ padding:"5px 14px", borderRadius:6, border:"none", cursor:"pointer", fontFamily:"inherit", fontWeight:600, fontSize:12, background:u.status === "active" ? "#7f1d1d" : "#10b981", color:u.status === "active" ? "#fca5a5" : "#000" }}
                     onClick={function() { toggleUserStatus(u.user_id, u.status); }}>
@@ -511,16 +511,16 @@ function AdminPanel({ authUser, supabaseClient }) {
           </div>
         )}
         {!instUsersLoading && instUsers.length === 0 && selectedInst && (
-          <div style={{ color:"#4a5a75", fontSize:13 }}>No se encontraron usuarios para ese colegio.</div>
+          <div style={{ color:C.textDim, fontSize:13 }}>No se encontraron usuarios para ese colegio.</div>
         )}
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
-        <div style={{ background:"#1a2640", border:"1px solid #243350", borderRadius:12, padding:"18px 20px" }}>
-          <div style={{ fontSize:13, fontWeight:700, color:"#7a90b0", marginBottom:14 }}>USUARIOS MAS ACTIVOS</div>
-          {!users.length ? <p style={{ color:"#4a5a75", fontSize:13 }}>Sin datos aun.</p> : users.slice(0, 10).map(function(u) {
+        <div style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"18px 20px" }}>
+          <div style={{ fontSize:13, fontWeight:700, color:C.textMuted, marginBottom:14 }}>USUARIOS MAS ACTIVOS</div>
+          {!users.length ? <p style={{ color:C.textDim, fontSize:13 }}>Sin datos aun.</p> : users.slice(0, 10).map(function(u) {
             return (
               <div key={u.email} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:"1px solid #243350" }}>
-                <div style={{ fontSize:13, color:"#e8edf5" }}>{u.email.split("@")[0]}</div>
+                <div style={{ fontSize:13, color:C.text }}>{u.email.split("@")[0]}</div>
                 <div style={{ display:"flex", gap:12 }}>
                   <span style={{ fontSize:12, color:"#f59e0b" }}>{u.gens} gen</span>
                   <span style={{ fontSize:12, color:"#a78bfa" }}>{u.imgs} img</span>
@@ -529,17 +529,17 @@ function AdminPanel({ authUser, supabaseClient }) {
             );
           })}
         </div>
-        <div style={{ background:"#1a2640", border:"1px solid #243350", borderRadius:12, padding:"18px 20px" }}>
-          <div style={{ fontSize:13, fontWeight:700, color:"#7a90b0", marginBottom:14 }}>CONTENIDO MAS GENERADO</div>
-          {!types.length ? <p style={{ color:"#4a5a75", fontSize:13 }}>Sin datos aun.</p> : types.slice(0, 8).map(function(t) {
+        <div style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"18px 20px" }}>
+          <div style={{ fontSize:13, fontWeight:700, color:C.textMuted, marginBottom:14 }}>CONTENIDO MAS GENERADO</div>
+          {!types.length ? <p style={{ color:C.textDim, fontSize:13 }}>Sin datos aun.</p> : types.slice(0, 8).map(function(t) {
             var pct = totalGen > 0 ? Math.round((t[1] / totalGen) * 100) : 0;
             return (
               <div key={t[0]} style={{ marginBottom:12 }}>
                 <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
-                  <span style={{ fontSize:13, color:"#e8edf5" }}>{t[0]}</span>
-                  <span style={{ fontSize:12, color:"#7a90b0" }}>{t[1]} ({pct}%)</span>
+                  <span style={{ fontSize:13, color:C.text }}>{t[0]}</span>
+                  <span style={{ fontSize:12, color:C.textMuted }}>{t[1]} ({pct}%)</span>
                 </div>
-                <div style={{ background:"#243350", borderRadius:4, height:6 }}>
+                <div style={{ background:C.border, borderRadius:4, height:6 }}>
                   <div style={{ background:"#f59e0b", borderRadius:4, height:6, width:pct + "%" }} />
                 </div>
               </div>
@@ -547,15 +547,15 @@ function AdminPanel({ authUser, supabaseClient }) {
           })}
         </div>
       </div>
-      <div style={{ background:"#1a2640", border:"1px solid #243350", borderRadius:12, padding:"18px 20px" }}>
-        <div style={{ fontSize:13, fontWeight:700, color:"#7a90b0", marginBottom:14 }}>ULTIMAS GENERACIONES</div>
-        {!stats.length ? <p style={{ color:"#4a5a75", fontSize:13 }}>Sin datos aun.</p> : (
+      <div style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"18px 20px" }}>
+        <div style={{ fontSize:13, fontWeight:700, color:C.textMuted, marginBottom:14 }}>ULTIMAS GENERACIONES</div>
+        {!stats.length ? <p style={{ color:C.textDim, fontSize:13 }}>Sin datos aun.</p> : (
           <div style={{ overflowX:"auto" }}>
             <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
               <thead>
                 <tr style={{ borderBottom:"1px solid #243350" }}>
                   {["Usuario","Tipo","Materia","Tokens","Fecha"].map(function(h) {
-                    return <th key={h} style={{ textAlign:"left", padding:"6px 10px", color:"#7a90b0", fontWeight:600 }}>{h}</th>;
+                    return <th key={h} style={{ textAlign:"left", padding:"6px 10px", color:C.textMuted, fontWeight:600 }}>{h}</th>;
                   })}
                 </tr>
               </thead>
@@ -563,11 +563,11 @@ function AdminPanel({ authUser, supabaseClient }) {
                 {stats.slice(0, 20).map(function(s) {
                   return (
                     <tr key={s.id} style={{ borderBottom:"1px solid #1a2640" }}>
-                      <td style={{ padding:"6px 10px", color:"#7a90b0" }}>{s.user_email.split("@")[0]}</td>
-                      <td style={{ padding:"6px 10px", color:"#e8edf5" }}>{s.type_name}</td>
-                      <td style={{ padding:"6px 10px", color:"#4a5a75" }}>{s.subject_name || "—"}</td>
+                      <td style={{ padding:"6px 10px", color:C.textMuted }}>{s.user_email.split("@")[0]}</td>
+                      <td style={{ padding:"6px 10px", color:C.text }}>{s.type_name}</td>
+                      <td style={{ padding:"6px 10px", color:C.textDim }}>{s.subject_name || "—"}</td>
                       <td style={{ padding:"6px 10px", color:"#f59e0b" }}>{s.is_image ? "imagen" : (s.tokens_input + s.tokens_output)}</td>
-                      <td style={{ padding:"6px 10px", color:"#4a5a75" }}>{new Date(s.created_at).toLocaleDateString("es-AR")}</td>
+                      <td style={{ padding:"6px 10px", color:C.textDim }}>{new Date(s.created_at).toLocaleDateString("es-AR")}</td>
                     </tr>
                   );
                 })}
@@ -651,28 +651,28 @@ function PricingPanel({ authUser }) {
   return (
     <div>
       <div style={{ textAlign:"center", marginBottom:32 }}>
-        <h2 style={{ fontSize:26, fontWeight:700, color:"#e8edf5", marginBottom:8 }}>Planes y Precios</h2>
-        <p style={{ color:"#7a90b0", fontSize:15 }}>Elegí el plan que mejor se adapta a tus necesidades</p>
+        <h2 style={{ fontSize:26, fontWeight:700, color:C.text, marginBottom:8 }}>Planes y Precios</h2>
+        <p style={{ color:C.textMuted, fontSize:15 }}>Elegí el plan que mejor se adapta a tus necesidades</p>
       </div>
       {error && <div style={{ background:"#1a0a0a", border:"1px solid #f87171", borderRadius:8, padding:"10px 16px", marginBottom:20, color:"#f87171", fontSize:13 }}>{error}</div>}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:16 }}>
         {plans.map(function(plan) {
           return (
-            <div key={plan.id} style={{ background:"#1a2640", border:"2px solid " + plan.color + "40", borderRadius:14, padding:24, display:"flex", flexDirection:"column" }}>
+            <div key={plan.id} style={{ background:C.card, border:"2px solid " + plan.color + "40", borderRadius:14, padding:24, display:"flex", flexDirection:"column" }}>
               {plan.badge && (
                 <div style={{ background:plan.color, color:"#000", fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:20, display:"inline-block", marginBottom:12, alignSelf:"flex-start" }}>{plan.badge}</div>
               )}
-              <div style={{ fontSize:17, fontWeight:700, color:"#e8edf5", marginBottom:4 }}>{plan.name}</div>
-              <div style={{ fontSize:11, color:"#7a90b0", marginBottom:16 }}>{"Hasta " + plan.users + (plan.users === 1 ? " usuario" : " usuarios")}</div>
+              <div style={{ fontSize:17, fontWeight:700, color:C.text, marginBottom:4 }}>{plan.name}</div>
+              <div style={{ fontSize:11, color:C.textMuted, marginBottom:16 }}>{"Hasta " + plan.users + (plan.users === 1 ? " usuario" : " usuarios")}</div>
               <div style={{ marginBottom:20 }}>
                 <span style={{ fontSize:28, fontWeight:700, color:plan.color }}>{plan.price}</span>
-                <span style={{ fontSize:13, color:"#7a90b0", marginLeft:6 }}>{plan.period}</span>
+                <span style={{ fontSize:13, color:C.textMuted, marginLeft:6 }}>{plan.period}</span>
               </div>
               <div style={{ flex:1, marginBottom:20 }}>
                 {plan.features.map(function(f) {
                   return (
                     <div key={f} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
-                      <span style={{ color:plan.color, fontSize:14 }}>✓</span>
+                      <i className="ti ti-check" style={{ color:plan.color, fontSize:14 }} />
                       <span style={{ fontSize:13, color:"#cbd5e1" }}>{f}</span>
                     </div>
                   );
@@ -680,13 +680,13 @@ function PricingPanel({ authUser }) {
               </div>
               <button style={{ width:"100%", padding:"11px 0", borderRadius:8, border:"none", cursor:loading===plan.id?"not-allowed":"pointer", fontWeight:700, fontSize:14, fontFamily:"inherit", background:plan.color, color:"#000", opacity:loading===plan.id?.7:1 }}
                 onClick={function() { subscribe(plan); }} disabled={loading===plan.id}>
-                {loading===plan.id ? "Procesando..." : "Suscribirme"}
+                {loading===plan.id ? "Procesando..." : <><i className="ti ti-credit-card" style={{fontSize:13,marginRight:4}} />Suscribirme</>}
               </button>
             </div>
           );
         })}
 </div>
-      <p style={{ textAlign:"center", color:"#4a5a75", fontSize:12, marginTop:24 }}>Pagos procesados de forma segura por MercadoPago · Podes cancelar en cualquier momento</p>
+      <p style={{ textAlign:"center", color:C.textDim, fontSize:12, marginTop:24 }}>Pagos procesados de forma segura por MercadoPago · Podes cancelar en cualquier momento</p>
     </div>
   );
 }
@@ -724,7 +724,7 @@ function AuthScreen({ onAuth }) {
   if (confirmed) return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:C.bg }}>
       <div style={{ width:420, textAlign:"center" }}>
-        <div style={{ fontSize:52, marginBottom:16 }}>📬</div>
+        <div style={{ marginBottom:16 }}><i className="ti ti-mail" style={{ fontSize:52, color:C.accent }} /></div>
         <h2 style={{ color:C.accent, fontSize:24, fontWeight:700, margin:"0 0 12px" }}>Revisa tu email</h2>
         <p style={{ color:C.textMuted, fontSize:15, marginBottom:8 }}>Te enviamos un link de confirmacion a {email}</p>
         <p style={{ color:C.textDim, fontSize:13, marginBottom:32 }}>Una vez que confirmes, volvé e iniciá sesion.</p>
@@ -742,7 +742,7 @@ function AuthScreen({ onAuth }) {
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:C.bg }}>
       <div style={{ width:420 }}>
         <div style={{ textAlign:"center", marginBottom:32 }}>
-          <div style={{ fontSize:52, marginBottom:12 }}>🎓</div>
+          <div style={{ marginBottom:12 }}><i className="ti ti-school" style={{ fontSize:52, color:C.accent }} /></div>
           <h1 style={{ color:C.accent, fontSize:30, fontWeight:700, margin:"0 0 6px" }}>EduAI Pro</h1>
           <p style={{ color:C.textMuted, fontSize:15 }}>Tu asistente docente impulsado por Claude AI</p>
         </div>
@@ -1066,7 +1066,7 @@ export default function EduAIPro() {
 
   if (authLoading) return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:C.bg, flexDirection:"column", gap:12 }}>
-      <div style={{ fontSize:38 }}>🎓</div>
+      <div><i className="ti ti-school" style={{ fontSize:38, color:C.accent }} /></div>
       <div style={{ color:C.textMuted, fontSize:14 }}>Cargando EduAI Pro...</div>
     </div>
   );
@@ -1074,15 +1074,15 @@ export default function EduAIPro() {
   if (!authUser) return <AuthScreen onAuth={setAuthUser} />;
 
   if (subChecked && !subscription && authUser.email !== import.meta.env.VITE_ADMIN_EMAIL) return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:"#0c1220" }}>
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:C.bg }}>
       <div style={{ width:480, textAlign:"center" }}>
-        <div style={{ fontSize:52, marginBottom:12 }}>🎓</div>
+        <div style={{ marginBottom:12 }}><i className="ti ti-school" style={{ fontSize:52, color:C.accent }} /></div>
         <h1 style={{ color:"#f59e0b", fontSize:28, fontWeight:700, margin:"0 0 8px" }}>EduAI Pro</h1>
-        <p style={{ color:"#7a90b0", fontSize:15, marginBottom:32 }}>Necesitas una suscripcion activa para acceder.</p>
-        <div style={{ background:"#1a2640", border:"1px solid #243350", borderRadius:16, padding:28 }}>
+        <p style={{ color:C.textMuted, fontSize:15, marginBottom:32 }}>Necesitas una suscripcion activa para acceder.</p>
+        <div style={{ background:C.card, border:"1px solid #243350", borderRadius:16, padding:28 }}>
           <PricingPanel authUser={authUser} />
         </div>
-        <button style={{ marginTop:20, background:"transparent", border:"none", cursor:"pointer", color:"#4a5a75", fontSize:13, fontFamily:"inherit" }} onClick={signOut}>
+        <button style={{ marginTop:20, background:"transparent", border:"none", cursor:"pointer", color:C.textDim, fontSize:13, fontFamily:"inherit" }} onClick={signOut}>
           Cerrar sesion
         </button>
       </div>
@@ -1104,7 +1104,9 @@ export default function EduAIPro() {
 
       <div style={{ width:bar?218:56, minWidth:bar?218:56, background:"#ffffff", borderRight:"1px solid #e0ddd6", display:"flex", flexDirection:"column", transition:"all .22s", overflow:"hidden" }}>
         <div style={{ padding:"14px 10px 12px", borderBottom:"1px solid #243350", display:"flex", alignItems:"center", gap:8 }}>
-          <button style={{ background:"none", border:"none", cursor:"pointer", color:C.accent, fontSize:17, minWidth:26, fontFamily:"inherit" }} onClick={function() { setBar(!bar); }}>{bar ? "◁" : "▷"}</button>
+          <button style={{ background:"none", border:"none", cursor:"pointer", color:C.accent, fontSize:17, minWidth:26, fontFamily:"inherit" }} onClick={function() { setBar(!bar); }}>
+  {bar ? <i className="ti ti-chevron-left" style={{fontSize:16}} /> : <i className="ti ti-chevron-right" style={{fontSize:16}} />}
+</button>
           {bar && <span style={{ fontSize:15, fontWeight:700, color:C.accent, whiteSpace:"nowrap" }}>EduAI Pro</span>}
         </div>
         {bar && subjects.length > 0 && (
@@ -1129,11 +1131,11 @@ export default function EduAIPro() {
         <div style={{ padding:"10px 12px", borderTop:"1px solid #243350" }}>
           {bar ? (
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-              <div style={{ fontSize:11, color:C.textDim, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{"👤 " + userName}</div>
+              <div style={{ fontSize:11, color:C.textDim, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:4 }}><i className="ti ti-user" style={{fontSize:12}} />{userName}</div>
               <button style={{ background:"transparent", border:"none", cursor:"pointer", color:C.textDim, fontSize:11, fontFamily:"inherit" }} onClick={signOut}>Salir</button>
             </div>
           ) : (
-            <button style={{ background:"transparent", border:"none", cursor:"pointer", fontSize:16, width:"100%", textAlign:"center" }} onClick={signOut} title="Cerrar sesion">🚪</button>
+            <button style={{ background:"transparent", border:"none", cursor:"pointer", fontSize:16, width:"100%", textAlign:"center", color:C.textDim }} onClick={signOut} title="Cerrar sesion"><i className="ti ti-logout" style={{fontSize:16}} /></button>
           )}
         </div>
       </div>
@@ -1143,8 +1145,8 @@ export default function EduAIPro() {
           <h1 style={{ margin:0, fontSize:16, fontWeight:700, flex:1, color:C.text }}>
             {(NAV.find(function(n) { return n.id === view; }) || {}).icon} {(NAV.find(function(n) { return n.id === view; }) || {}).label}
           </h1>
-          {curSubj && <div style={{ fontSize:12, color:C.textMuted, background:C.bg, padding:"4px 12px", borderRadius:20, border:"1px solid #243350" }}>{"📖 " + curSubj.name}</div>}
-          <Btn v="accent" st={{ padding:"5px 13px", fontSize:12 }} onClick={function() { setSubjModal(true); }}>+ Materia</Btn>
+          {curSubj && <div style={{ fontSize:12, color:C.textMuted, background:C.bg, padding:"4px 12px", borderRadius:20, border:"1px solid #e0ddd6", display:"flex", alignItems:"center", gap:5 }}><i className="ti ti-book" style={{fontSize:13}} />{curSubj.name}</div>}
+          <Btn v="accent" st={{ padding:"5px 13px", fontSize:12 }} onClick={function() { setSubjModal(true); }}><i className="ti ti-plus" style={{fontSize:12,marginRight:3}} />Materia</Btn>
         </div>
 
         <div style={{ flex:1, overflow:"auto", padding:"20px 26px" }}>
@@ -1156,7 +1158,7 @@ export default function EduAIPro() {
                 <span style={{ fontSize:13, color:"#f59e0b" }}>{"Periodo de prueba: " + daysLeft + " dia" + (daysLeft === 1 ? "" : "s") + " restante" + (daysLeft === 1 ? "" : "s")}</span>
                 <button style={{ background:"#f59e0b", border:"none", borderRadius:6, padding:"5px 14px", cursor:"pointer", fontWeight:700, fontSize:12, fontFamily:"inherit", color:"#000" }}
                   onClick={function() { setView("pricing"); }}>
-                  Ver planes
+                  <><i className="ti ti-credit-card" style={{fontSize:12,marginRight:4}} />Ver planes</>
                 </button>
               </div>
             );
@@ -1173,10 +1175,10 @@ export default function EduAIPro() {
                   <h2 style={{ fontSize:22, fontWeight:700, color:C.text, margin:0 }}>{"Bienvenido, " + userName + " 👋"}</h2>
                   <p style={{ color:C.textDim, fontSize:13, margin:"4px 0 0" }}>Que creamos hoy para tus alumnos?</p>
                 </div>
-                <Btn onClick={function() { setSubjModal(true); }}>+ Nueva Materia</Btn>
+                <Btn onClick={function() { setSubjModal(true); }}><i className="ti ti-plus" style={{fontSize:13,marginRight:4}} />Nueva Materia</Btn>
               </div>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:20 }}>
-                {[{l:"Materias",v:subjects.length,i:"📚",c:C.blue},{l:"Biblioteca",v:library.length,i:"💾",c:C.green},{l:"Banco",v:bank.length,i:"🏦",c:C.accent},{l:"Biblioteca Publica",v:publicLib.length,i:"🌐",c:C.purple}].map(function(x) {
+                {[{l:"Materias",v:subjects.length,i:"ti-books",c:C.blue},{l:"Biblioteca",v:library.length,i:"ti-folder",c:C.green},{l:"Banco",v:bank.length,i:"ti-database",c:C.accent},{l:"Biblioteca Publica",v:publicLib.length,i:"ti-world",c:C.purple}].map(function(x) {
                   return (
                     <div key={x.l} style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"15px 18px" }}>
                       <i className={"ti " + x.i} style={{ fontSize:22, marginBottom:8, color:x.c, display:"block" }} />
@@ -1190,9 +1192,9 @@ export default function EduAIPro() {
                 <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8, marginBottom:14 }}>MIS MATERIAS</div>
                 {!subjects.length ? (
                   <div style={{ textAlign:"center", padding:"32px 0", color:C.textDim }}>
-                    <div style={{ fontSize:34, marginBottom:10 }}>📚</div>
+                    <div style={{ marginBottom:10 }}><i className="ti ti-books" style={{ fontSize:34, color:C.textDim }} /></div>
                     <p style={{ marginBottom:14 }}>Todavia no tenes materias. Crea la primera para empezar.</p>
-                    <Btn onClick={function() { setSubjModal(true); }}>Crear mi primera materia</Btn>
+                    <Btn onClick={function() { setSubjModal(true); }}><i className="ti ti-plus" style={{fontSize:13,marginRight:4}} />Crear mi primera materia</Btn>
                   </div>
                 ) : (
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:12 }}>
@@ -1205,7 +1207,7 @@ export default function EduAIPro() {
                           <div style={{ fontSize:12, color:C.textDim, marginBottom:sub.materials?5:10 }}>{sub.level}</div>
                           {sub.materials && <div style={{ fontSize:11, color:C.green, marginBottom:10 }}>Con programa cargado</div>}
                           <div style={{ display:"flex", gap:6 }}>
-                            <Btn v="sm" onClick={function(e) { e.stopPropagation(); setCurSid(sub.id); setView("generator"); }}>Generar</Btn>
+                            <Btn v="sm" onClick={function(e) { e.stopPropagation(); setCurSid(sub.id); setView("generator"); }}><i className="ti ti-bolt" style={{fontSize:12,marginRight:3}} />Generar</Btn>
                             <Btn v="ghost" st={{ padding:"5px 9px", fontSize:12 }} onClick={function(e) { e.stopPropagation(); delSubject(sub.id); }}><i className="ti ti-trash" style={{fontSize:15}} /></Btn>
                           </div>
                         </div>
@@ -1241,7 +1243,7 @@ export default function EduAIPro() {
                     return (
                       <button key={g.id} style={{ display:"flex", alignItems:"center", gap:9, width:"100%", padding:"8px 10px", borderRadius:7, border:"none", cursor:"pointer", marginBottom:3, background:genType===g.id?"#1d3d7a":"transparent", color:genType===g.id?"#93c5fd":C.textMuted, textAlign:"left", fontFamily:"inherit", fontSize:13 }}
                         onClick={function() { setGenType(g.id); setGenResult(""); setGenSaved(false); setGenErr(""); setMakeCodeUrl(null); setActImgUrl(null); }}>
-                        <span style={{ fontSize:16 }}>{g.icon}</span>
+                        <i className={"ti " + g.icon} style={{ fontSize:16, minWidth:18 }} />
                         <span style={{ fontWeight:genType===g.id?700:400 }}>{g.label}</span>
                       </button>
                     );
@@ -1267,7 +1269,7 @@ export default function EduAIPro() {
               <div>
                 <div style={card}>
                   <div style={{ display:"flex", alignItems:"center", gap:13, marginBottom:18 }}>
-                    <span style={{ fontSize:30 }}>{gt ? gt.icon : ""}</span>
+                    <i className={"ti " + (gt ? gt.icon : "ti-bolt")} style={{ fontSize:28, color:gt ? gt.color : C.accent }} />
                     <div>
                       <h2 style={{ margin:0, fontSize:19, fontWeight:700, color:C.text }}>{gt ? gt.label : ""}</h2>
                       <div style={{ fontSize:13, color:C.textDim }}>{"Materia: " + (curSubj ? curSubj.name : "—")}</div>
@@ -1288,7 +1290,7 @@ export default function EduAIPro() {
                         placeholder="Ej: grupos de 4, enfoque por proyectos, uso de tecnologia..." />
                       <div style={{ display:"flex", gap:10, alignItems:"center" }}>
                         <Btn onClick={generate} disabled={genLoading || !genTopic.trim()}>
-                          {genLoading ? "Generando..." : "Generar " + (gt ? gt.label : "")}
+                          {genLoading ? "Generando..." : <><i className="ti ti-bolt" style={{fontSize:13,marginRight:4}} />{"Generar " + (gt ? gt.label : "")}</>}
                         </Btn>
                         {genLoading && <span style={{ color:C.textMuted, fontSize:12 }}>Puede tardar unos segundos...</span>}
                       </div>
@@ -1304,11 +1306,11 @@ export default function EduAIPro() {
                       <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
                         {genSaved && (
                           <Btn v="green" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { sharePublic(genResult, genType, gt ? gt.label : "", genTopic); }}>
-                            🌐 Compartir
+                            Compartir
                           </Btn>
                         )}
                         {genSaved
-                          ? <span style={{ color:C.green, fontSize:12, fontWeight:700 }}>Guardado</span>
+                          ? <span style={{ color:C.green, fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:4 }}><i className="ti ti-check" style={{fontSize:13}} />Guardado</span>
                           : (
                             <div style={{ display:"flex", gap:8 }}>
                               <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { saveLib(genResult, genType, gt ? gt.label : "", genTopic); }}><i className="ti ti-device-floppy" style={{fontSize:14,marginRight:4}} /> Biblioteca</Btn>
@@ -1316,12 +1318,12 @@ export default function EduAIPro() {
                             </div>
                           )
                         }
-                        <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportDocx(genTopic, gt ? gt.label : "", curSubj ? curSubj.name : "", genResult); }}>📄 Word</Btn>
+                        <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportDocx(genTopic, gt ? gt.label : "", curSubj ? curSubj.name : "", genResult); }}><i className="ti ti-file-text" style={{fontSize:13,marginRight:4}} />Word</Btn>
                         {(genType==="evaluacion"||genType==="rubrica"||genType==="planclase") && (
-                          <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportPdf(genTopic, gt ? gt.label : "", curSubj ? curSubj.name : "", genResult); }}>📋 PDF</Btn>
+                          <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportPdf(genTopic, gt ? gt.label : "", curSubj ? curSubj.name : "", genResult); }}><i className="ti ti-file-invoice" style={{fontSize:13,marginRight:4}} />PDF</Btn>
                         )}
                         {genType==="presentacion" && (
-                          <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { generatePptx(genTopic, curSubj ? curSubj.name : "", genResult); }}>📊 PowerPoint</Btn>
+                          <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { generatePptx(genTopic, curSubj ? curSubj.name : "", genResult); }}><i className="ti ti-presentation" style={{fontSize:13,marginRight:4}} />PowerPoint</Btn>
                         )}
                       </div>
                     </div>
@@ -1333,7 +1335,7 @@ export default function EduAIPro() {
                           <div style={{ fontSize:12, color:C.textMuted }}>Abri el proyecto en el editor con los bloques listos</div>
                         </div>
                         <a href={makeCodeUrl} target="_blank" rel="noopener noreferrer">
-                          <Btn v="primary" st={{ fontSize:13, padding:"8px 18px" }}>Abrir en MakeCode</Btn>
+                          <Btn v="primary" st={{ fontSize:13, padding:"8px 18px" }}><i className="ti ti-code" style={{fontSize:14,marginRight:4}} />Abrir en MakeCode</Btn>
                         </a>
                       </div>
                     )}
@@ -1343,7 +1345,7 @@ export default function EduAIPro() {
                     </div>
                     <div style={{ display:"flex", gap:10, alignItems:"center" }}>
                       <Btn v="secondary" st={{ fontSize:12, padding:"5px 14px" }} onClick={generateActivityImage} disabled={actImgLoad}>
-                        {actImgLoad ? "Generando imagen..." : "Generar imagen ilustrativa"}
+                        {actImgLoad ? "Generando..." : <><i className="ti ti-photo-ai" style={{fontSize:13,marginRight:4}} />Generar imagen</>}
                       </Btn>
                       {actImgErr && <span style={{ color:"#f87171", fontSize:12 }}>{actImgErr}</span>}
                     </div>
@@ -1354,7 +1356,7 @@ export default function EduAIPro() {
                         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:8 }}>
                           <p style={{ fontSize:11, color:C.textDim }}>Las imagenes expiran en 1 hora. Descargala para guardarla.</p>
                           <a href={actImgUrl} download="imagen_actividad.png" target="_blank" rel="noopener noreferrer">
-                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }}>Descargar</Btn>
+                            ><i className="ti ti-download" style={{fontSize:13,marginRight:4}} />Descargar</Btn>
                           </a>
                         </div>
                       </div>
@@ -1386,7 +1388,7 @@ export default function EduAIPro() {
               <div>
                 <div style={card}>
                   <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16 }}>
-                    <span style={{ fontSize:28 }}>{mt ? mt.icon : ""}</span>
+                   <i className={"ti " + (mt ? mt.icon : "ti-photo")} style={{ fontSize:26, color:C.accent }} />
                     <div>
                       <h2 style={{ margin:0, fontSize:18, fontWeight:700, color:C.text }}>{mt ? mt.label : ""}</h2>
                       <div style={{ fontSize:12, color:C.textDim }}>{mt ? mt.desc : ""}</div>
@@ -1407,8 +1409,8 @@ export default function EduAIPro() {
                       )}
                       <div style={{ display:"flex", gap:10, marginTop:mmType === "imagen_ia" ? 16 : 0 }}>
                         {mmType === "imagen_ia"
-                          ? <Btn onClick={generateImage} disabled={imgLoading || !mmTopic.trim()}>{imgLoading ? "Generando imagen..." : "Generar Imagen"}</Btn>
-                          : <Btn onClick={generateMM} disabled={mmLoading || !mmTopic.trim()}>{mmLoading ? "Generando..." : "Generar Contenido"}</Btn>
+                          ? <Btn onClick={generateImage} disabled={imgLoading || !mmTopic.trim()}>{imgLoading ? "Generando..." : <><i className="ti ti-photo-ai" style={{fontSize:13,marginRight:4}} />Generar Imagen</>}</Btn>
+                          : <Btn onClick={generateMM} disabled={mmLoading || !mmTopic.trim()}>{mmLoading ? "Generando..." : <><i className="ti ti-sparkles" style={{fontSize:13,marginRight:4}} />Generar Contenido</>}</Btn>
                         }
                       </div>
                     </div>
@@ -1423,7 +1425,7 @@ export default function EduAIPro() {
                         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14 }}>
                           <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8 }}>IMAGEN GENERADA</div>
                           <a href={imgUrl} download="imagen_educativa.png" target="_blank" rel="noopener noreferrer">
-                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }}>Descargar PNG</Btn>
+                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }}><i className="ti ti-download" style={{fontSize:13,marginRight:4}} />Descargar PNG</Btn>
                           </a>
                         </div>
                         <img src={imgUrl} alt={mmTopic} style={{ width:"100%", borderRadius:8, display:"block" }} />
@@ -1441,8 +1443,8 @@ export default function EduAIPro() {
                           <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8 }}>CONTENIDO GENERADO</div>
                           <div style={{ display:"flex", gap:8 }}>
                             <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { saveLib(mmResult, mmType, mt ? mt.label : "", mmTopic); }}><i className="ti ti-device-floppy" style={{fontSize:14,marginRight:4}} /> Biblioteca</Btn>
-                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportDocx(mmTopic, mt ? mt.label : "", curSubj ? curSubj.name : "", mmResult); }}>📄 Word</Btn>
-                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportPdf(mmTopic, mt ? mt.label : "", curSubj ? curSubj.name : "", mmResult); }}>📋 PDF</Btn>
+                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportDocx(mmTopic, mt ? mt.label : "", curSubj ? curSubj.name : "", mmResult); }}><i className="ti ti-file-text" style={{fontSize:13,marginRight:4}} />Word</Btn>
+                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportPdf(mmTopic, mt ? mt.label : "", curSubj ? curSubj.name : "", mmResult); }}><i className="ti ti-file-invoice" style={{fontSize:13,marginRight:4}} />PDF</Btn>
                           </div>
                         </div>
                         <MDView text={mmResult} />
@@ -1467,13 +1469,13 @@ export default function EduAIPro() {
                       <option value="">Sin materia especifica</option>
                       {subjects.map(function(s) { return <option key={s.id} value={s.id}>{s.name + " (" + s.level + ")"}</option>; })}
                     </select>
-                    <Btn v="ghost" st={{ padding:"5px 11px", fontSize:12 }} onClick={function() { setChatMsgs([]); }}>Limpiar</Btn>
+                    <Btn v="ghost" st={{ padding:"5px 11px", fontSize:12 }} onClick={function() { setChatMsgs([]); }}><i className="ti ti-trash" style={{fontSize:13,marginRight:4}} />Limpiar</Btn>
                   </div>
                 </div>
                 <div style={Object.assign({}, card, { flex:1, overflow:"auto", padding:"14px 18px", minHeight:0 })}>
                   {!chatMsgs.length ? (
                     <div style={{ textAlign:"center", padding:"28px 0", color:C.textDim }}>
-                      <div style={{ fontSize:36, marginBottom:10 }}>💬</div>
+                      <div style={{ marginBottom:10 }}><i className="ti ti-message" style={{ fontSize:36, color:C.textDim }} /></div>
                       <p style={{ fontSize:14, marginBottom:18 }}>Chat contextualizado a tu materia</p>
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, maxWidth:500, margin:"0 auto" }}>
                         {SUGS.map(function(s) {
@@ -1497,7 +1499,7 @@ export default function EduAIPro() {
                   <input style={Object.assign({}, inp, { flex:1, padding:"10px 14px" })} value={chatIn} onChange={function(e) { setChatIn(e.target.value); }}
                     onKeyDown={function(e) { if (e.key === "Enter" && !e.shiftKey) sendChat(); }}
                     placeholder="Escribe tu consulta... (Enter para enviar)" />
-                  <Btn onClick={sendChat} disabled={chatLoading || !chatIn.trim()} st={{ padding:"10px 22px" }}>Enviar</Btn>
+                  <Btn onClick={sendChat} disabled={chatLoading || !chatIn.trim()} st={{ padding:"10px 22px" }}><i className="ti ti-send" style={{fontSize:14,marginRight:4}} />Enviar</Btn>
                 </div>
               </div>
             );
@@ -1522,7 +1524,7 @@ export default function EduAIPro() {
                 )}
                 <label style={lbl}>TRABAJO DEL ALUMNO *</label>
                 <textarea style={Object.assign({}, inp, { height:175, resize:"vertical", marginBottom:18 })} value={corrW} onChange={function(e) { setCorrW(e.target.value); }} placeholder="Pega el texto del trabajo practico..." />
-                <Btn onClick={correctTP} disabled={corrLoading || !corrR.trim() || !corrW.trim()}>{corrLoading ? "Corrigiendo..." : "Corregir Trabajo Practico"}</Btn>
+                <Btn onClick={correctTP} disabled={corrLoading || !corrR.trim() || !corrW.trim()}>{corrLoading ? "Corrigiendo..." : <><i className="ti ti-checklist" style={{fontSize:13,marginRight:4}} />Corregir Trabajo Practico</>}</Btn>
               </div>
               <div>
                 {corrLoading && <div style={card}><Spin /></div>}
@@ -1536,7 +1538,7 @@ export default function EduAIPro() {
                   </div>
                 ) : !corrLoading && (
                   <div style={Object.assign({}, card, { textAlign:"center", padding:"56px 24px", color:C.textDim })}>
-                    <div style={{ fontSize:44, marginBottom:12 }}><i className="ti ti-file-invoice" style={{fontSize:15}} /></div>
+                    <div style={{ marginBottom:12 }}><i className="ti ti-checklist" style={{fontSize:44, color:C.textDim}} /></div>
                     <h3 style={{ color:C.textMuted, marginBottom:8 }}>La correccion aparecera aqui</h3>
                     <p style={{ fontSize:13 }}>Evaluacion por criterio · Calificacion · Fortalezas · Mejoras · Devolucion al alumno</p>
                   </div>
@@ -1549,7 +1551,7 @@ export default function EduAIPro() {
           {!dataLoading && view === "library" && (
             <div>
               <div style={{ display:"flex", gap:12, marginBottom:18, flexWrap:"wrap", alignItems:"center" }}>
-                <h2 style={{ margin:0, fontSize:19, fontWeight:700, flex:1, color:C.text }}>{"📚 Biblioteca (" + library.length + ")"}</h2>
+                <h2 style={{ margin:0, fontSize:19, fontWeight:700, flex:1, color:C.text, display:"flex", alignItems:"center", gap:8 }}><i className="ti ti-books" style={{fontSize:18, color:C.accent}} />{"Biblioteca (" + library.length + ")"}</h2>
                 {library.length > 0 && <Btn v="secondary" st={{ fontSize:12, padding:"5px 14px" }} onClick={function() { exportZip(library); }}><i className="ti ti-archive" style={{fontSize:13,marginRight:4}} /> Exportar todo (.zip)</Btn>}
                 <input style={Object.assign({}, inp, { width:185 })} value={libSearch} onChange={function(e) { setLibSearch(e.target.value); }} placeholder="Buscar..." />
                 <select style={sel} value={libFilter} onChange={function(e) { setLibFilter(e.target.value); }}>
@@ -1561,7 +1563,7 @@ export default function EduAIPro() {
               </div>
               {libItem ? (
                 <div>
-                  <Btn v="ghost" st={{ marginBottom:14, fontSize:12 }} onClick={function() { setLibItem(null); }}>Volver a la lista</Btn>
+                  <Btn v="ghost" st={{ marginBottom:14, fontSize:12 }} onClick={function() { setLibItem(null); }}><i className="ti ti-arrow-left" style={{fontSize:13,marginRight:4}} />Volver</Btn>
                   <div style={card}>
                     <div style={{ display:"flex", justifyContent:"space-between", marginBottom:16 }}>
                       <div>
@@ -1569,8 +1571,8 @@ export default function EduAIPro() {
                         <h2 style={{ margin:0, fontSize:19, fontWeight:700, color:C.text }}>{libItem.topic}</h2>
                       </div>
                       <div style={{ display:"flex", gap:8 }}>
-                        <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportDocx(libItem.topic, libItem.type_name, libItem.subject_name, libItem.content); }}>📄 Word</Btn>
-                        <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportPdf(libItem.topic, libItem.type_name, libItem.subject_name, libItem.content); }}>📋 PDF</Btn>
+                        <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportDocx(libItem.topic, libItem.type_name, libItem.subject_name, libItem.content); }}><i className="ti ti-file-text" style={{fontSize:13,marginRight:4}} />Word</Btn>
+                        <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportPdf(libItem.topic, libItem.type_name, libItem.subject_name, libItem.content); }}><i className="ti ti-file-invoice" style={{fontSize:13,marginRight:4}} />PDF</Btn>
                         <Btn v="danger" onClick={function() { delLib(libItem.id); }}>Eliminar</Btn>
                       </div>
                     </div>
@@ -1579,7 +1581,7 @@ export default function EduAIPro() {
                 </div>
               ) : !filtLib.length ? (
                 <div style={Object.assign({}, card, { textAlign:"center", padding:"52px 24px", color:C.textDim })}>
-                  <div style={{ fontSize:36, marginBottom:10 }}>📚</div>
+                  <div style={{ marginBottom:10 }}><i className="ti ti-books" style={{ fontSize:36, color:C.textDim }} /></div>
                   <p>{!library.length ? "Tu biblioteca esta vacia. Genera contenido y guardalo aqui." : "Sin resultados."}</p>
                 </div>
               ) : (
@@ -1589,7 +1591,7 @@ export default function EduAIPro() {
                     return (
                       <div key={item.id} style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:16, cursor:"pointer" }} onClick={function() { setLibItem(item); }}>
                         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:10 }}>
-                          <span style={{ fontSize:22 }}>{g ? g.icon : "📄"}</span>
+                          <i className={"ti " + (g ? g.icon : "ti-file")} style={{ fontSize:20, color:g ? g.color : C.textMuted }} />
                           <button style={{ background:"transparent", border:"none", cursor:"pointer", color:C.red, fontSize:15 }} onClick={function(e) { e.stopPropagation(); delLib(item.id); }}><i className="ti ti-trash" style={{fontSize:15}} /></button>
                         </div>
                         <Tag color={g ? g.color : C.textMuted}>{item.type_name}</Tag>
@@ -1606,7 +1608,7 @@ export default function EduAIPro() {
           {/* BANK */}
           {!dataLoading && view === "bank" && (
             <div>
-              <h2 style={{ fontSize:19, fontWeight:700, marginBottom:18, color:C.text }}>{"🏦 Banco de Preguntas (" + bank.length + ")"}</h2>
+              <h2 style={{ fontSize:19, fontWeight:700, marginBottom:18, color:C.text, display:"flex", alignItems:"center", gap:8 }}><i className="ti ti-database" style={{fontSize:18, color:C.accent}} />{"Banco de Preguntas (" + bank.length + ")"}</h2>
               {!bank.length ? (
                 <div style={Object.assign({}, card, { textAlign:"center", padding:"52px 24px", color:C.textDim })}>
                   <div style={{ fontSize:36, marginBottom:10 }}><i className="ti ti-database" style={{fontSize:14,marginRight:4}} /></div>
@@ -1641,7 +1643,7 @@ export default function EduAIPro() {
           {!dataLoading && view === "publiclib" && (
             <div>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
-                <h2 style={{ fontSize:19, fontWeight:700, color:C.text, margin:0 }}>{"🌐 Biblioteca Publica (" + publicLib.length + ")"}</h2>
+                <h2 style={{ fontSize:19, fontWeight:700, color:C.text, margin:0, display:"flex", alignItems:"center", gap:8 }}><i className="ti ti-world" style={{fontSize:18, color:C.accent}} />{"Biblioteca Publica (" + publicLib.length + ")"}</h2>
                 <span style={{ fontSize:13, color:C.textMuted }}>Contenido compartido por docentes de la plataforma</span>
               </div>
               {!publicLib.length ? (
@@ -1657,7 +1659,7 @@ export default function EduAIPro() {
                     return (
                       <div key={item.id} style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:16 }}>
                         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:10 }}>
-                          <span style={{ fontSize:22 }}>{g ? g.icon : "📄"}</span>
+                          <i className={"ti " + (g ? g.icon : "ti-file")} style={{ fontSize:20, color:g ? g.color : C.textMuted }} />
                           {authUser && item.user_id === authUser.id && (
                             <button style={{ background:"transparent", border:"none", cursor:"pointer", color:C.red, fontSize:14 }}
                               onClick={async function() { await dbDelPublicItem(item.id); var pub = await dbLoadPublicLib(); setPublicLib(pub); }}><i className="ti ti-trash" style={{fontSize:15}} /></button>
@@ -1669,7 +1671,7 @@ export default function EduAIPro() {
                         <div style={{ fontSize:12, color:C.textDim, marginBottom:12 }}>{new Date(item.created_at).toLocaleDateString("es-AR")}</div>
                         <div style={{ display:"flex", gap:8 }}>
                           <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px", flex:1 }} onClick={function() { saveLib(item.content, item.type, item.type_name, item.topic); }}>
-                            💾 Guardar en mi biblioteca
+                            <><i className="ti ti-device-floppy" style={{fontSize:13,marginRight:4}} />Guardar</>
                           </Btn>
                           <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportDocx(item.topic, item.type_name, item.subject_name || "", item.content); }}><i className="ti ti-file-text" style={{fontSize:15}} /></Btn>
                         </div>
@@ -1700,7 +1702,7 @@ export default function EduAIPro() {
             <textarea style={Object.assign({}, inp, { height:118, resize:"vertical", marginBottom:20 })} value={sf.materials} onChange={function(e) { setSf(Object.assign({}, sf, { materials:e.target.value })); }} placeholder="Pega programa, objetivos, unidades tematicas, bibliografia..." />
             <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
               <Btn v="ghost" st={{ fontSize:13 }} onClick={function() { setSubjModal(false); }}>Cancelar</Btn>
-              <Btn onClick={addSubject} disabled={!sf.name.trim()}>Crear Materia</Btn>
+              <Btn onClick={addSubject} disabled={!sf.name.trim()}><i className="ti ti-plus" style={{fontSize:13,marginRight:4}} />Crear Materia</Btn>
             </div>
           </div>
         </div>
