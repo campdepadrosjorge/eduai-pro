@@ -2011,7 +2011,6 @@ export default function EduAIPro() {
             </div>
           )}
 
-        </div>
      </div>
 
           {/* EVAL MODAL */}
