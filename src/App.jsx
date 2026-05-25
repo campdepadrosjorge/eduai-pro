@@ -13,6 +13,7 @@ const NAV = [
   { id:"corrector",  label:"Corrector de TPs",    icon:"ti-checklist" },
   { id:"library",    label:"Biblioteca",          icon:"ti-books" },
   { id:"bank",       label:"Banco de Preguntas",  icon:"ti-database" },
+  { id:"students",   label:"Mis Alumnos",          icon:"ti-users" },
   { id:"publiclib",  label:"Biblioteca Publica",  icon:"ti-world" },
   { id:"pricing",    label:"Planes y Precios",    icon:"ti-credit-card" },
   { id:"admin",      label:"Panel Admin",         icon:"ti-chart-bar" },
@@ -183,6 +184,50 @@ async function dbLoadBank(userId) {
 async function dbAddBankItem(userId, item) {
   const result = await supabase.from("question_bank").insert({ user_id: userId, ...item });
   if (result.error) throw result.error;
+}
+async function dbLoadStudents(userId, subjectId) {
+  var result = await supabase.from("students").select("*").eq("user_id", userId).eq("subject_id", subjectId).order("name");
+  if (result.error) throw result.error;
+  return result.data || [];
+}
+
+async function dbAddStudent(userId, subjectId, name, notes) {
+  var result = await supabase.from("students").insert({ user_id:userId, subject_id:subjectId, name, notes:notes||"" }).select().single();
+  if (result.error) throw result.error;
+  return result.data;
+}
+
+async function dbDelStudent(id) {
+  var result = await supabase.from("students").delete().eq("id", id);
+  if (result.error) throw result.error;
+}
+
+async function dbLoadEvaluations(userId, studentId) {
+  var result = await supabase.from("student_evaluations").select("*").eq("user_id", userId).eq("student_id", studentId).order("evaluated_at", { ascending:false });
+  if (result.error) throw result.error;
+  return result.data || [];
+}
+
+async function dbAddEvaluation(userId, studentId, evalData) {
+  var result = await supabase.from("student_evaluations").insert({ user_id:userId, student_id:studentId, ...evalData }).select().single();
+  if (result.error) throw result.error;
+  return result.data;
+}
+
+async function dbDelEvaluation(id) {
+  var result = await supabase.from("student_evaluations").delete().eq("id", id);
+  if (result.error) throw result.error;
+}
+
+async function dbLoadAllEvaluations(userId, subjectId) {
+  var result = await supabase.from("student_evaluations")
+    .select("*, students(name, subject_id)")
+    .eq("user_id", userId)
+    .order("evaluated_at", { ascending:false });
+  if (result.error) throw result.error;
+  var data = result.data || [];
+  if (subjectId) data = data.filter(function(e) { return e.students && e.students.subject_id === subjectId; });
+  return data;
 }
 async function dbLogUsage(userId, userEmail, type, typeName, subjectName, tokensInput, tokensOutput, isImage) {
   try {
@@ -793,7 +838,15 @@ export default function EduAIPro() {
   var [library, setLibrary]     = useState([]);
   var [bank, setBank]           = useState([]);
   var [publicLib, setPublicLib] = useState([]);
-  var [dataLoading, setDataLoading] = useState(false);
+ var [dataLoading, setDataLoading] = useState(false);
+  var [students, setStudents] = useState([]);
+  var [selectedStudent, setSelectedStudent] = useState(null);
+  var [studentEvals, setStudentEvals] = useState([]);
+  var [allEvals, setAllEvals] = useState([]);
+  var [studentsLoading, setStudentsLoading] = useState(false);
+  var [newStudentName, setNewStudentName] = useState("");
+  var [evalModal, setEvalModal] = useState(false);
+  var [evalForm, setEvalForm] = useState({ topic:"", score:0, max_score:10, rubric_id:"", rubric_name:"", feedback:"" });
   var [subscription, setSubscription] = useState(null);
   var [subChecked, setSubChecked] = useState(false);
 
@@ -881,6 +934,19 @@ export default function EduAIPro() {
     }).catch(function() { setDataLoading(false); });
   }, [authUser]);
 
+  useEffect(function() {
+    if (!authUser || !curSid) return;
+    setStudentsLoading(true);
+    dbLoadStudents(authUser.id, curSid).then(function(data) {
+      setStudents(data);
+      setSelectedStudent(null);
+      setStudentEvals([]);
+      setStudentsLoading(false);
+    }).catch(function() { setStudentsLoading(false); });
+    dbLoadAllEvaluations(authUser.id, curSid).then(function(data) {
+      setAllEvals(data);
+    });
+  }, [authUser, curSid]);
   useEffect(function() { if (chatRef.current) chatRef.current.scrollIntoView({ behavior:"smooth" }); }, [chatMsgs]);
 
   async function signOut() {
@@ -1640,6 +1706,119 @@ export default function EduAIPro() {
             <AdminPanel authUser={authUser} supabaseClient={supabase} />
           )}
 
+{/* STUDENTS */}
+          {!dataLoading && view === "students" && (
+            <div style={{ display:"grid", gridTemplateColumns:"260px 1fr", gap:18 }}>
+              <div>
+                <div style={card}>
+                  <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8, marginBottom:12 }}>ALUMNOS — {curSubj ? curSubj.name : "Sin materia"}</div>
+                  {!curSubj ? (
+                    <p style={{ fontSize:13, color:C.textDim }}>Seleccioná una materia primero.</p>
+                  ) : (
+                    <div>
+                      <div style={{ display:"flex", gap:8, marginBottom:12 }}>
+                        <input style={Object.assign({}, inp, { flex:1, fontSize:13 })} value={newStudentName} onChange={function(e) { setNewStudentName(e.target.value); }}
+                          onKeyDown={function(e) { if (e.key === "Enter" && newStudentName.trim()) { dbAddStudent(authUser.id, curSid, newStudentName.trim()).then(function(s) { setStudents(function(prev) { return prev.concat([s]); }); setNewStudentName(""); }); }}}
+                          placeholder="Nombre del alumno..." />
+                        <Btn onClick={function() { if (!newStudentName.trim()) return; dbAddStudent(authUser.id, curSid, newStudentName.trim()).then(function(s) { setStudents(function(prev) { return prev.concat([s]); }); setNewStudentName(""); }); }} st={{ padding:"9px 12px" }}>
+                          <i className="ti ti-plus" style={{fontSize:14}} />
+                        </Btn>
+                      </div>
+                      {studentsLoading ? <div style={{ color:C.textDim, fontSize:13 }}>Cargando...</div> : !students.length ? (
+                        <p style={{ fontSize:13, color:C.textDim }}>No hay alumnos cargados. Agregá el primero.</p>
+                      ) : students.map(function(s) {
+                        var evals = allEvals.filter(function(e) { return e.student_id === s.id; });
+                        var avg = evals.length ? (evals.reduce(function(a, e) { return a + (e.score / e.max_score * 10); }, 0) / evals.length).toFixed(1) : null;
+                        return (
+                          <div key={s.id} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 10px", borderRadius:4, marginBottom:4, cursor:"pointer", background:selectedStudent && selectedStudent.id === s.id ? "#e6f9fb" : "transparent", border:"1px solid " + (selectedStudent && selectedStudent.id === s.id ? "#26C3D4" : "transparent") }}
+                            onClick={function() {
+                              setSelectedStudent(s);
+                              dbLoadEvaluations(authUser.id, s.id).then(setStudentEvals);
+                            }}>
+                            <div>
+                              <div style={{ fontSize:13, fontWeight:600, color:C.text }}>{s.name}</div>
+                              <div style={{ fontSize:11, color:C.textDim }}>{evals.length} evaluacion{evals.length !== 1 ? "es" : ""}</div>
+                            </div>
+                            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                              {avg && <span style={{ fontSize:13, fontWeight:700, color:parseFloat(avg) >= 6 ? C.green : C.red }}>{avg}</span>}
+                              <button style={{ background:"transparent", border:"none", cursor:"pointer", color:C.textDim, fontSize:13 }} onClick={function(e) { e.stopPropagation(); dbDelStudent(s.id).then(function() { setStudents(function(prev) { return prev.filter(function(x) { return x.id !== s.id; }); }); if (selectedStudent && selectedStudent.id === s.id) { setSelectedStudent(null); setStudentEvals([]); } }); }}>
+                                <i className="ti ti-trash" style={{fontSize:14}} />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                {!selectedStudent ? (
+                  <div style={Object.assign({}, card, { textAlign:"center", padding:"52px 24px", color:C.textDim })}>
+                    <i className="ti ti-users" style={{ fontSize:44, display:"block", marginBottom:12, color:C.textDim }} />
+                    <h3 style={{ color:C.textMuted, marginBottom:8 }}>Seleccioná un alumno</h3>
+                    <p style={{ fontSize:13 }}>Hacé click en un alumno para ver su historial de evaluaciones.</p>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={card}>
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+                        <div>
+                          <h2 style={{ fontSize:18, fontWeight:700, color:C.text, margin:0 }}>{selectedStudent.name}</h2>
+                          <div style={{ fontSize:12, color:C.textDim, marginTop:3 }}>{curSubj ? curSubj.name : ""} · {studentEvals.length} evaluaciones</div>
+                        </div>
+                        <div style={{ display:"flex", gap:8 }}>
+                          {studentEvals.length > 0 && (
+                            <div style={{ textAlign:"center", background:"#e6f9fb", border:"1px solid #26C3D4", borderRadius:4, padding:"8px 16px" }}>
+                              <div style={{ fontSize:22, fontWeight:700, color:"#0D3559" }}>
+                                {(studentEvals.reduce(function(a, e) { return a + (e.score / e.max_score * 10); }, 0) / studentEvals.length).toFixed(1)}
+                              </div>
+                              <div style={{ fontSize:10, color:C.textMuted }}>Promedio</div>
+                            </div>
+                          )}
+                          <Btn onClick={function() { setEvalModal(true); setEvalForm({ topic:"", score:0, max_score:10, rubric_id:"", rubric_name:"", feedback:"" }); }}>
+                            <i className="ti ti-plus" style={{fontSize:13, marginRight:4}} />Nueva evaluación
+                          </Btn>
+                        </div>
+                      </div>
+                      {!studentEvals.length ? (
+                        <p style={{ color:C.textDim, fontSize:13 }}>Sin evaluaciones todavía.</p>
+                      ) : studentEvals.map(function(ev) {
+                        var pct = (ev.score / ev.max_score * 100).toFixed(0);
+                        var color = ev.score / ev.max_score >= .6 ? C.green : C.red;
+                        return (
+                          <div key={ev.id} style={{ borderBottom:"1px solid " + C.border, padding:"12px 0" }}>
+                            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
+                              <div>
+                                <div style={{ fontSize:14, fontWeight:600, color:C.text }}>{ev.topic}</div>
+                                <div style={{ fontSize:11, color:C.textDim, marginTop:2 }}>
+                                  {ev.rubric_name ? ev.rubric_name + " · " : ""}{new Date(ev.evaluated_at).toLocaleDateString("es-AR")}
+                                </div>
+                              </div>
+                              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                                <div style={{ textAlign:"center" }}>
+                                  <span style={{ fontSize:18, fontWeight:700, color:color }}>{ev.score}</span>
+                                  <span style={{ fontSize:12, color:C.textDim }}>/{ev.max_score}</span>
+                                </div>
+                                <button style={{ background:"transparent", border:"none", cursor:"pointer", color:C.textDim }} onClick={function() { dbDelEvaluation(ev.id).then(function() { setStudentEvals(function(prev) { return prev.filter(function(x) { return x.id !== ev.id; }); }); dbLoadAllEvaluations(authUser.id, curSid).then(setAllEvals); }); }}>
+                                  <i className="ti ti-trash" style={{fontSize:14}} />
+                                </button>
+                              </div>
+                            </div>
+                            <div style={{ background:C.bg, borderRadius:4, height:6, overflow:"hidden" }}>
+                              <div style={{ background:color, height:6, width:pct + "%" }} />
+                            </div>
+                            {ev.feedback && <p style={{ fontSize:12, color:C.textMuted, marginTop:8, fontStyle:"italic" }}>{ev.feedback}</p>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           {/* PUBLIC LIBRARY */}
           {!dataLoading && view === "publiclib" && (
             <div>
@@ -1687,6 +1866,48 @@ export default function EduAIPro() {
         </div>
       </div>
 
+{/* EVAL MODAL */}
+      {evalModal && selectedStudent && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.5)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999 }}>
+          <div style={{ background:C.surf, border:"1px solid " + C.border, borderRadius:4, padding:26, width:500, maxWidth:"92vw" }}>
+            <h2 style={{ margin:"0 0 18px", fontSize:18, fontWeight:700, color:C.text }}>Nueva evaluación — {selectedStudent.name}</h2>
+            <label style={lbl}>TEMA / ACTIVIDAD *</label>
+            <input style={Object.assign({}, inp, { marginBottom:12 })} value={evalForm.topic} onChange={function(e) { setEvalForm(Object.assign({}, evalForm, { topic:e.target.value })); }} placeholder="Ej: Trabajo práctico N°2 — La célula" />
+            <label style={lbl}>RÚBRICA (opcional)</label>
+            <select style={Object.assign({}, sel, { width:"100%", marginBottom:12 })} value={evalForm.rubric_id} onChange={function(e) {
+              var r = library.find(function(i) { return i.id === e.target.value; });
+              setEvalForm(Object.assign({}, evalForm, { rubric_id:e.target.value, rubric_name:r ? r.topic : "" }));
+            }}>
+              <option value="">Sin rúbrica</option>
+              {library.filter(function(i) { return i.type === "rubrica"; }).map(function(r) {
+                return <option key={r.id} value={r.id}>{r.topic}</option>;
+              })}
+            </select>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
+              <div>
+                <label style={lbl}>CALIFICACIÓN *</label>
+                <input style={inp} type="number" min="0" max={evalForm.max_score} value={evalForm.score} onChange={function(e) { setEvalForm(Object.assign({}, evalForm, { score:parseFloat(e.target.value)||0 })); }} />
+              </div>
+              <div>
+                <label style={lbl}>NOTA MÁXIMA</label>
+                <input style={inp} type="number" min="1" value={evalForm.max_score} onChange={function(e) { setEvalForm(Object.assign({}, evalForm, { max_score:parseFloat(e.target.value)||10 })); }} />
+              </div>
+            </div>
+            <label style={lbl}>DEVOLUCIÓN / COMENTARIOS</label>
+            <textarea style={Object.assign({}, inp, { height:80, resize:"vertical", marginBottom:20 })} value={evalForm.feedback} onChange={function(e) { setEvalForm(Object.assign({}, evalForm, { feedback:e.target.value })); }} placeholder="Comentarios para el alumno..." />
+            <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
+              <Btn v="ghost" onClick={function() { setEvalModal(false); }}>Cancelar</Btn>
+              <Btn disabled={!evalForm.topic.trim()} onClick={function() {
+                dbAddEvaluation(authUser.id, selectedStudent.id, evalForm).then(function(ev) {
+                  setStudentEvals(function(prev) { return [ev].concat(prev); });
+                  dbLoadAllEvaluations(authUser.id, curSid).then(setAllEvals);
+                  setEvalModal(false);
+                });
+              }}>Guardar evaluación</Btn>
+            </div>
+          </div>
+        </div>
+      )}
       {/* SUBJECT MODAL */}
       {subjModal && (
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.8)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999 }}>
