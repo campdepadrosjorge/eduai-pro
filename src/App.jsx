@@ -1719,28 +1719,32 @@ export default function EduAIPro() {
                       <div style={{ marginBottom:10 }}>
                         <label style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.5, marginBottom:5, display:"block" }}>IMPORTAR DESDE EXCEL</label>
                         <div style={{ display:"flex", gap:8, marginBottom:8 }}>
-                          <input type="file" accept=".xlsx,.xls,.csv" style={{ fontSize:12, color:C.textMuted, flex:1 }}
-                            onChange={async function(e) {
-                              var file = e.target.files[0];
-                              if (!file) return;
-                              var XLSX = await import("xlsx");
-                              var buffer = await file.arrayBuffer();
-                              var wb = XLSX.read(buffer, { type:"array" });
-                              var sheet = wb.Sheets[wb.SheetNames[0]];
-                              var rows = XLSX.utils.sheet_to_json(sheet, { header:1 });
-                              var added = 0;
-                              for (var i = 1; i < rows.length; i++) {
-                                var name = rows[i][0] ? String(rows[i][0]).trim() : "";
-                                if (!name) continue;
-                                try {
-                                  var s = await dbAddStudent(authUser.id, curSid, name, rows[i][1] ? String(rows[i][1]).trim() : "");
-                                  setStudents(function(prev) { return prev.concat([s]); });
-                                  added++;
-                                } catch {}
-                              }
-                              alert(added + " alumnos importados correctamente.");
-                              e.target.value = "";
-                            }} />
+                          <label style={{ display:"inline-flex", alignItems:"center", gap:6, background:C.surf, border:"1px solid " + C.border, borderRadius:4, padding:"7px 14px", cursor:"pointer", fontSize:12, fontWeight:600, color:C.text }}>
+                            <i className="ti ti-upload" style={{fontSize:14}} />
+                            Importar Excel
+                            <input type="file" accept=".xlsx,.xls,.csv" style={{ display:"none" }}
+                              onChange={async function(e) {
+                                var file = e.target.files[0];
+                                if (!file) return;
+                                var XLSX = await import("xlsx");
+                                var buffer = await file.arrayBuffer();
+                                var wb = XLSX.read(buffer, { type:"array" });
+                                var sheet = wb.Sheets[wb.SheetNames[0]];
+                                var rows = XLSX.utils.sheet_to_json(sheet, { header:1 });
+                                var added = 0;
+                                for (var i = 1; i < rows.length; i++) {
+                                  var name = rows[i][0] ? String(rows[i][0]).trim() : "";
+                                  if (!name) continue;
+                                  try {
+                                    var s = await dbAddStudent(authUser.id, curSid, name, rows[i][1] ? String(rows[i][1]).trim() : "");
+                                    setStudents(function(prev) { return prev.concat([s]); });
+                                    added++;
+                                  } catch {}
+                                }
+                                alert(added + " alumnos importados correctamente.");
+                                e.target.value = "";
+                              }} />
+                          </label>
                         </div>
                         <p style={{ fontSize:11, color:C.textDim, marginBottom:12 }}>Columna A: Nombre · Columna B: Notas (opcional)</p>
                       </div>
