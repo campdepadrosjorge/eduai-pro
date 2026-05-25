@@ -14,6 +14,7 @@ const NAV = [
   { id:"library",    label:"Biblioteca",          icon:"ti-books" },
   { id:"bank",       label:"Banco de Preguntas",  icon:"ti-database" },
   { id:"students",   label:"Mis Alumnos",          icon:"ti-users" },
+  { id:"sequences",  label:"Secuencias Didacticas", icon:"ti-list-numbers" },
   { id:"publiclib",  label:"Biblioteca Publica",  icon:"ti-world" },
   { id:"pricing",    label:"Planes y Precios",    icon:"ti-credit-card" },
   { id:"admin",      label:"Panel Admin",         icon:"ti-chart-bar" },
@@ -90,6 +91,24 @@ function userGen(type, topic, diff, extra, subject) {
   return m[type] || "Contenido educativo sobre \"" + topic + "\". Dificultad: " + diff + "." + e;
 }
 
+function userSequence(topic, nClasses, level, subject) {
+  return "Diseña una secuencia didáctica completa de " + nClasses + " clases sobre: \"" + topic + "\"" +
+    (subject ? " para la materia " + subject.name : "") +
+    (level ? " · Nivel: " + level : "") +
+    (subject && subject.materials ? "\n\nPrograma de la materia:\n" + subject.materials.slice(0, 500) : "") +
+    "\n\nPara cada clase usá EXACTAMENTE este formato:\n\n" +
+    "## CLASE [N]: [Título]\n" +
+    "**Duración:** [minutos]\n" +
+    "**Objetivos:** [2-3 objetivos específicos]\n" +
+    "**Retoma:** [qué conecta con la clase anterior, excepto clase 1]\n" +
+    "**Inicio (10min):** [actividad de apertura]\n" +
+    "**Desarrollo (25min):** [actividad principal detallada]\n" +
+    "**Cierre (10min):** [síntesis y conexión con próxima clase]\n" +
+    "**Recursos:** [materiales necesarios]\n" +
+    "**Evaluación formativa:** [cómo evaluar esta clase]\n\n" +
+    "---\n\n" +
+    "Asegurate de que cada clase retome y profundice la anterior, con progresión clara de dificultad.";
+}
 function userMM(type, topic, extra) {
   const e = extra ? "\n\nInstrucciones: " + extra : "";
   const m = {
@@ -228,6 +247,22 @@ async function dbLoadAllEvaluations(userId, subjectId) {
   var data = result.data || [];
   if (subjectId) data = data.filter(function(e) { return e.students && e.students.subject_id === subjectId; });
   return data;
+}
+async function dbLoadSequences(userId) {
+  var result = await supabase.from("sequences").select("*").eq("user_id", userId).order("created_at", { ascending:false });
+  if (result.error) throw result.error;
+  return result.data || [];
+}
+
+async function dbAddSequence(userId, data) {
+  var result = await supabase.from("sequences").insert({ user_id:userId, ...data }).select().single();
+  if (result.error) throw result.error;
+  return result.data;
+}
+
+async function dbDelSequence(id) {
+  var result = await supabase.from("sequences").delete().eq("id", id);
+  if (result.error) throw result.error;
 }
 async function dbLogUsage(userId, userEmail, type, typeName, subjectName, tokensInput, tokensOutput, isImage) {
   try {
@@ -839,7 +874,12 @@ export default function EduAIPro() {
   var [bank, setBank]           = useState([]);
   var [publicLib, setPublicLib] = useState([]);
  var [dataLoading, setDataLoading] = useState(false);
-  var [students, setStudents] = useState([]);
+  var [sequences, setSequences] = useState([]);
+  var [seqLoading, setSeqLoading] = useState(false);
+  var [seqResult, setSeqResult] = useState(null);
+  var [seqForm, setSeqForm] = useState({ topic:"", n_classes:6, level:"" });
+  var [seqView, setSeqView] = useState(null);
+ var [students, setStudents] = useState([]);
   var [selectedStudent, setSelectedStudent] = useState(null);
   var [studentEvals, setStudentEvals] = useState([]);
   var [allEvals, setAllEvals] = useState([]);
@@ -905,17 +945,19 @@ export default function EduAIPro() {
   useEffect(function() {
     if (!authUser) return;
     setDataLoading(true);
-    Promise.all([
+   Promise.all([
       dbLoadSubjects(authUser.id),
       dbLoadLibrary(authUser.id),
       dbLoadBank(authUser.id),
       dbLoadPublicLib(),
+      dbLoadSequences(authUser.id),
     ]).then(function(results) {
-      var subs = results[0], lib = results[1], bk = results[2], pub = results[3];
+      var subs = results[0], lib = results[1], bk = results[2], pub = results[3], seqs = results[4];
       setSubjects(subs);
       setLibrary(lib);
       setBank(bk);
       setPublicLib(pub);
+      setSequences(seqs);
       if (subs.length) setCurSid(subs[0].id);
       setDataLoading(false);
       dbCheckSubscription(authUser.id).then(function(sub) {
@@ -1706,6 +1748,46 @@ export default function EduAIPro() {
             <AdminPanel authUser={authUser} supabaseClient={supabase} />
           )}
 
+{/* SEQUENCES */}
+          {!dataLoading && view === "sequences" && (
+            <div style={{ display:"grid", gridTemplateColumns:"280px 1fr", gap:18 }}>
+              <div>
+                <div style={card}>
+                  <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8, marginBottom:14 }}>NUEVA SECUENCIA</div>
+                  <label style={lbl}>TEMA *</label>
+                  <input style={Object.assign({}, inp, { marginBottom:12 })} value={seqForm.topic} onChange={function(e) { setSeqForm(Object.assign({}, seqForm, { topic:e.target.value })); }} placeholder="Ej: La célula eucariota" />
+                  <label style={lbl}>NIVEL</label>
+                  <select style={Object.assign({}, sel, { width:"100%", marginBottom:12 })} value={seqForm.level || (curSubj ? curSubj.level : "")} onChange={function(e) { setSeqForm(Object.assign({}, seqForm, { level:e.target.value })); }}>
+                    {LEVELS.map(function(l) { return <option key={l}>{l}</option>; })}
+                  </select>
+                  <label style={lbl}>CANTIDAD DE CLASES</label>
+                  <div style={{ display:"flex", gap:6, marginBottom:18 }}>
+                    {[4,6,8].map(function(n) {
+                      return (
+                        <button key={n} style={{ flex:1, padding:"7px 0", borderRadius:4, border:"1px solid " + (seqForm.n_classes===n ? C.accent : C.border), background:seqForm.n_classes===n ? "#e6f9fb" : "transparent", color:seqForm.n_classes===n ? C.accent : C.textMuted, cursor:"pointer", fontWeight:600, fontSize:13, fontFamily:"Quicksand,sans-serif" }}
+                          onClick={function() { setSeqForm(Object.assign({}, seqForm, { n_classes:n })); }}>{n} clases</button>
+                      );
+                    })}
+                  </div>
+                  <Btn st={{ width:"100%" }} disabled={seqLoading || !seqForm.topic.trim() || !curSubj} onClick={async function() {
+                    setSeqLoading(true); setSeqResult(null);
+                    try {
+                      var sys = "Sos experto en planificacion curricular y didactica argentina. Responde en espanol rioplatense con Markdown.";
+                      var r = await callClaude(sys, [{ role:"user", content:userSequence(seqForm.topic, seqForm.n_classes, seqForm.level || (curSubj ? curSubj.level : ""), curSubj) }], 6000);
+                      var seq = { subject_id:curSid, subject_name:curSubj ? curSubj.name : "", topic:seqForm.topic, level:seqForm.level || (curSubj ? curSubj.level : ""), n_classes:seqForm.n_classes, content:r };
+                      var saved = await dbAddSequence(authUser.id, seq);
+                      setSequences(function(prev) { return [saved].concat(prev); });
+                      setSeqResult(saved);
+                      setSeqView(saved);
+                    } catch(e) { alert("Error: " + e.message); }
+                    setSeqLoading(false);
+                  }}>
+                    {seqLoading ? "Generando..." : <><i className="ti ti-list-numbers" style={{fontSize:13,marginRight:4}} />Generar secuencia</>}
+                  </Btn>
+                  {!curSubj && <p style={{ fontSize:12, color:C.red, marginTop:8 }}>Seleccioná una materia primero.</p>}
+                </div>
+                <div style={card}>
+                  <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8, marginBottom:12 }}>SECUENCIAS GUARDADAS ({sequences.length})</div>
 {/* STUDENTS */}
           {!dataLoading && view === "students" && (
             <div style={{ display:"grid", gridTemplateColumns:"260px 1fr", gap:18 }}>
