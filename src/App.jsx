@@ -246,7 +246,7 @@ function Btn({ children, onClick, v, disabled, st }) {
   if (!v) v = "primary";
   if (!st) st = {};
   if (!disabled) disabled = false;
-  var base = { padding: v === "sm" ? "5px 11px" : "9px 18px", borderRadius:8, cursor:disabled?"not-allowed":"pointer", fontWeight:600, fontSize: v === "sm" ? 12 : 13, fontFamily:"Quicksand,sans-serif", opacity:disabled?.45:1, transition:"opacity .15s" };
+  var base = { padding: v === "sm" ? "5px 11px" : "9px 18px", borderRadius:4, cursor:disabled?"not-allowed":"pointer", fontWeight:600, fontSize: v === "sm" ? 12 : 13, fontFamily:"Quicksand,sans-serif", opacity:disabled?.45:1, transition:"opacity .15s" };
   var vs = {
     primary:   { background:C.accent, color:"#000", border:"none" },
     secondary: { background:C.card, color:C.text, border:"1px solid #243350" },
@@ -310,7 +310,7 @@ function MDView({ text, maxH }) {
     .replace(/\n\n+/g,"</p><p>").replace(/\n/g,"<br/>");
 
   return (
-    <div style={{ background:"#f9f9f7", border:"1px solid #e0ddd6", borderRadius:8, padding:"15px 19px", maxHeight:maxH, overflow:"auto", lineHeight:1.75, fontSize:14, fontFamily:"Quicksand,sans-serif" }}>
+    <div style={{ background:"#f9f9f7", border:"1px solid #e0ddd6", borderRadius:4, padding:"15px 19px", maxHeight:maxH, overflow:"auto", lineHeight:1.75, fontSize:14, fontFamily:"Quicksand,sans-serif" }}>
       <style>{css}</style>
       <div className="md"><p dangerouslySetInnerHTML={{ __html:h }}/></div>
     </div>
@@ -347,7 +347,7 @@ function AdminPanel({ authUser, supabaseClient }) {
   }, [isAdmin]);
 
   if (!isAdmin) return (
-    <div style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"52px 24px", textAlign:"center", color:C.textDim }}>
+    <div style={{ background:C.card, border:"1px solid #243350", borderRadius:4, padding:"52px 24px", textAlign:"center", color:C.textDim }}>
       <div style={{ marginBottom:10 }}><i className="ti ti-lock" style={{ fontSize:36, color:C.textDim }} /></div>
       <p>Acceso restringido al administrador.</p>
     </div>
@@ -430,7 +430,7 @@ function AdminPanel({ authUser, supabaseClient }) {
           { l:"Costo estimado", v:"$" + costText, i:"ti-coin", c:"#10b981" },
         ].map(function(x) {
           return (
-            <div key={x.l} style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"15px 18px" }}>
+            <div key={x.l} style={{ background:C.card, border:"1px solid #243350", borderRadius:4, padding:"15px 18px" }}>
               <i className={"ti " + x.i} style={{ fontSize:22, marginBottom:8, color:x.c, display:"block" }} />
               <div style={{ fontSize:26, fontWeight:700, color:x.c }}>{x.v}</div>
               <div style={{ fontSize:12, color:C.textDim, marginTop:2 }}>{x.l}</div>
@@ -438,18 +438,18 @@ function AdminPanel({ authUser, supabaseClient }) {
           );
         })}
       </div>
-      <div style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"18px 20px", marginBottom:16 }}>
+      <div style={{ background:C.card, border:"1px solid #243350", borderRadius:4, padding:"18px 20px", marginBottom:16 }}>
         <div style={{ fontSize:15, fontWeight:700, color:C.text, marginBottom:4, display:"flex", alignItems:"center", gap:8 }}><i className="ti ti-school" style={{fontSize:16, color:C.accent}} />Carga Institucional</div>
         <p style={{ fontSize:13, color:C.textMuted, marginBottom:16 }}>Subí un Excel con columna A = Email y columna B = Nombre. El sistema crea las cuentas y activa las suscripciones automaticamente.</p>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
           <div>
             <label style={{ fontSize:11, color:C.textMuted, marginBottom:5, display:"block", fontWeight:700 }}>NOMBRE DEL COLEGIO *</label>
-            <input style={{ background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:14, width:"100%", outline:"none", fontFamily:"Quicksand,sans-serif" }}
+            <input style={{ background:C.bg, border:"1px solid #243350", borderRadius:4, padding:"9px 13px", color:C.text, fontSize:14, width:"100%", outline:"none", fontFamily:"Quicksand,sans-serif" }}
               value={instName} onChange={function(e) { setInstName(e.target.value); }} placeholder="Ej: Colegio San Martin" />
           </div>
           <div>
             <label style={{ fontSize:11, color:C.textMuted, marginBottom:5, display:"block", fontWeight:700 }}>MAX USUARIOS</label>
-            <input style={{ background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:14, width:"100%", outline:"none", fontFamily:"Quicksand,sans-serif" }}
+            <input style={{ background:C.bg, border:"1px solid #243350", borderRadius:4, padding:"9px 13px", color:C.text, fontSize:14, width:"100%", outline:"none", fontFamily:"Quicksand,sans-serif" }}
               type="number" value={instMaxUsers} onChange={function(e) { setInstMaxUsers(parseInt(e.target.value)); }} />
           </div>
         </div>
@@ -458,12 +458,12 @@ function AdminPanel({ authUser, supabaseClient }) {
           <input type="file" accept=".xlsx,.xls,.csv" style={{ color:C.text, fontSize:13 }}
             onChange={function(e) { setInstFile(e.target.files[0]); }} />
         </div>
-        <button style={{ background:"#f59e0b", border:"none", borderRadius:8, padding:"9px 18px", cursor:instLoading||!instFile||!instName?"not-allowed":"pointer", fontWeight:600, fontSize:13, fontFamily:"Quicksand,sans-serif", opacity:instLoading||!instFile||!instName?.5:1 }}
+        <button style={{ background:"#f59e0b", border:"none", borderRadius:4, padding:"9px 18px", cursor:instLoading||!instFile||!instName?"not-allowed":"pointer", fontWeight:600, fontSize:13, fontFamily:"Quicksand,sans-serif", opacity:instLoading||!instFile||!instName?.5:1 }}
           onClick={processExcel} disabled={instLoading||!instFile||!instName}>
           {instLoading ? "Procesando..." : <><i className="ti ti-upload" style={{fontSize:13,marginRight:4}} />Cargar usuarios y activar suscripciones</>}
         </button>
         {instResult && (
-          <div style={{ marginTop:14, padding:"12px 16px", background:C.bg, borderRadius:8, fontSize:13 }}>
+          <div style={{ marginTop:14, padding:"12px 16px", background:C.bg, borderRadius:4, fontSize:13 }}>
             {instResult.error
               ? <span style={{ color:"#f87171" }}>Error: {instResult.error}</span>
               : <div>
@@ -475,17 +475,17 @@ function AdminPanel({ authUser, supabaseClient }) {
           </div>
         )}
       </div>
-      <div style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"18px 20px", marginBottom:16 }}>
+      <div style={{ background:C.card, border:"1px solid #243350", borderRadius:4, padding:"18px 20px", marginBottom:16 }}>
         <div style={{ fontSize:15, fontWeight:700, color:C.text, marginBottom:12, display:"flex", alignItems:"center", gap:8 }}><i className="ti ti-users" style={{fontSize:16, color:C.accent}} />Gestión de Usuarios Institucionales</div>
         <div style={{ display:"flex", gap:10, marginBottom:14 }}>
-          <select style={{ background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:14, flex:1, outline:"none", fontFamily:"Quicksand,sans-serif" }}
+          <select style={{ background:C.bg, border:"1px solid #243350", borderRadius:4, padding:"9px 13px", color:C.text, fontSize:14, flex:1, outline:"none", fontFamily:"Quicksand,sans-serif" }}
             value={selectedInst} onChange={function(e) { setSelectedInst(e.target.value); }}>
             <option value="">-- Seleccionar colegio --</option>
             {institutions.map(function(inst) {
               return <option key={inst} value={inst}>{inst}</option>;
             })}
           </select>
-          <button style={{ background:"#f59e0b", border:"none", borderRadius:8, padding:"9px 18px", cursor:"pointer", fontWeight:600, fontSize:13, fontFamily:"Quicksand,sans-serif" }}
+          <button style={{ background:"#f59e0b", border:"none", borderRadius:4, padding:"9px 18px", cursor:"pointer", fontWeight:600, fontSize:13, fontFamily:"Quicksand,sans-serif" }}
             onClick={function() { if (selectedInst) loadInstUsers(selectedInst); }}>
             Buscar
           </button>
@@ -515,7 +515,7 @@ function AdminPanel({ authUser, supabaseClient }) {
         )}
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
-        <div style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"18px 20px" }}>
+        <div style={{ background:C.card, border:"1px solid #243350", borderRadius:4, padding:"18px 20px" }}>
           <div style={{ fontSize:13, fontWeight:700, color:C.textMuted, marginBottom:14 }}>USUARIOS MAS ACTIVOS</div>
           {!users.length ? <p style={{ color:C.textDim, fontSize:13 }}>Sin datos aun.</p> : users.slice(0, 10).map(function(u) {
             return (
@@ -529,7 +529,7 @@ function AdminPanel({ authUser, supabaseClient }) {
             );
           })}
         </div>
-        <div style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"18px 20px" }}>
+        <div style={{ background:C.card, border:"1px solid #243350", borderRadius:4, padding:"18px 20px" }}>
           <div style={{ fontSize:13, fontWeight:700, color:C.textMuted, marginBottom:14 }}>CONTENIDO MAS GENERADO</div>
           {!types.length ? <p style={{ color:C.textDim, fontSize:13 }}>Sin datos aun.</p> : types.slice(0, 8).map(function(t) {
             var pct = totalGen > 0 ? Math.round((t[1] / totalGen) * 100) : 0;
@@ -547,7 +547,7 @@ function AdminPanel({ authUser, supabaseClient }) {
           })}
         </div>
       </div>
-      <div style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"18px 20px" }}>
+      <div style={{ background:C.card, border:"1px solid #243350", borderRadius:4, padding:"18px 20px" }}>
         <div style={{ fontSize:13, fontWeight:700, color:C.textMuted, marginBottom:14 }}>ULTIMAS GENERACIONES</div>
         {!stats.length ? <p style={{ color:C.textDim, fontSize:13 }}>Sin datos aun.</p> : (
           <div style={{ overflowX:"auto" }}>
@@ -654,7 +654,7 @@ function PricingPanel({ authUser }) {
         <h2 style={{ fontSize:26, fontWeight:700, color:C.text, marginBottom:8 }}>Planes y Precios</h2>
         <p style={{ color:C.textMuted, fontSize:15 }}>Elegí el plan que mejor se adapta a tus necesidades</p>
       </div>
-      {error && <div style={{ background:"#1a0a0a", border:"1px solid #f87171", borderRadius:8, padding:"10px 16px", marginBottom:20, color:"#f87171", fontSize:13 }}>{error}</div>}
+      {error && <div style={{ background:"#1a0a0a", border:"1px solid #f87171", borderRadius:4, padding:"10px 16px", marginBottom:20, color:"#f87171", fontSize:13 }}>{error}</div>}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:16 }}>
         {plans.map(function(plan) {
           return (
@@ -678,7 +678,7 @@ function PricingPanel({ authUser }) {
                   );
                 })}
               </div>
-              <button style={{ width:"100%", padding:"11px 0", borderRadius:8, border:"none", cursor:loading===plan.id?"not-allowed":"pointer", fontWeight:700, fontSize:14, fontFamily:"Quicksand,sans-serif", background:plan.color, color:"#000", opacity:loading===plan.id?.7:1 }}
+              <button style={{ width:"100%", padding:"11px 0", borderRadius:4, border:"none", cursor:loading===plan.id?"not-allowed":"pointer", fontWeight:700, fontSize:14, fontFamily:"Quicksand,sans-serif", background:plan.color, color:"#000", opacity:loading===plan.id?.7:1 }}
                 onClick={function() { subscribe(plan); }} disabled={loading===plan.id}>
                 {loading===plan.id ? "Procesando..." : <><i className="ti ti-credit-card" style={{fontSize:13,marginRight:4}} />Suscribirme</>}
               </button>
@@ -747,7 +747,7 @@ function AuthScreen({ onAuth }) {
           <p style={{ color:C.textMuted, fontSize:15 }}>Tu asistente docente impulsado por Claude AI</p>
         </div>
         <div style={card}>
-          <div style={{ display:"flex", gap:4, marginBottom:22, background:C.bg, borderRadius:8, padding:4 }}>
+          <div style={{ display:"flex", gap:4, marginBottom:22, background:C.bg, borderRadius:4, padding:4 }}>
             {[{id:"login",label:"Iniciar sesion"},{id:"register",label:"Registrarse"}].map(function(t) {
               return (
                 <button key={t.id} style={{ flex:1, padding:"7px 0", borderRadius:6, border:"none", cursor:"pointer", fontFamily:"Quicksand,sans-serif", fontWeight:600, fontSize:13, background:mode===t.id?C.card:"transparent", color:mode===t.id?C.text:C.textDim }}
@@ -1079,7 +1079,7 @@ export default function EduAIPro() {
         <div style={{ marginBottom:12 }}><i className="ti ti-school" style={{ fontSize:52, color:C.accent }} /></div>
         <h1 style={{ color:"#f59e0b", fontSize:28, fontWeight:700, margin:"0 0 8px" }}>EduAI Pro</h1>
         <p style={{ color:C.textMuted, fontSize:15, marginBottom:32 }}>Necesitas una suscripcion activa para acceder.</p>
-        <div style={{ background:C.card, border:"1px solid #243350", borderRadius:16, padding:28 }}>
+        <div style={{ background:C.card, border:"1px solid #243350", borderRadius:4, padding:28 }}>
           <PricingPanel authUser={authUser} />
         </div>
         <button style={{ marginTop:20, background:"transparent", border:"none", cursor:"pointer", color:C.textDim, fontSize:13, fontFamily:"Quicksand,sans-serif" }} onClick={signOut}>
@@ -1120,7 +1120,7 @@ export default function EduAIPro() {
         <nav style={{ flex:1, padding:"6px 0", overflowY:"auto" }}>
           {NAV.map(function(n) {
             return (
-              <div key={n.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 11px", cursor:"pointer", borderRadius:8, margin:"2px 6px", background:view===n.id?"#f0fdfa":"transparent", color:view===n.id?"#0f766e":C.textMuted, fontSize:13, whiteSpace:"nowrap", overflow:"hidden" }}
+              <div key={n.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 11px", cursor:"pointer", borderRadius:4, margin:"2px 6px", background:view===n.id?"#f0fdfa":"transparent", color:view===n.id?"#0f766e":C.textMuted, fontSize:13, whiteSpace:"nowrap", overflow:"hidden" }}
                 onClick={function() { setView(n.id); }}>
                 <i className={"ti " + n.icon} style={{ fontSize:17, minWidth:24, textAlign:"center" }} />
                 {bar && <span>{n.label}</span>}
@@ -1155,7 +1155,7 @@ export default function EduAIPro() {
             var daysLeft = Math.ceil((new Date(subscription.current_period_end) - new Date()) / (1000 * 60 * 60 * 24));
             if (daysLeft <= 0) return null;
             return (
-              <div style={{ background:"#1c1408", border:"1px solid #f59e0b", borderRadius:8, padding:"10px 16px", marginBottom:16, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div style={{ background:"#1c1408", border:"1px solid #f59e0b", borderRadius:4, padding:"10px 16px", marginBottom:16, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                 <span style={{ fontSize:13, color:"#f59e0b" }}>{"Periodo de prueba: " + daysLeft + " dia" + (daysLeft === 1 ? "" : "s") + " restante" + (daysLeft === 1 ? "" : "s")}</span>
                 <button style={{ background:"#f59e0b", border:"none", borderRadius:6, padding:"5px 14px", cursor:"pointer", fontWeight:700, fontSize:12, fontFamily:"Quicksand,sans-serif", color:"#000" }}
                   onClick={function() { setView("pricing"); }}>
@@ -1181,7 +1181,7 @@ export default function EduAIPro() {
               <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:20 }}>
                 {[{l:"Materias",v:subjects.length,i:"ti-books",c:C.blue},{l:"Biblioteca",v:library.length,i:"ti-folder",c:C.green},{l:"Banco",v:bank.length,i:"ti-database",c:C.accent},{l:"Biblioteca Publica",v:publicLib.length,i:"ti-world",c:C.purple}].map(function(x) {
                   return (
-                    <div key={x.l} style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"15px 18px" }}>
+                    <div key={x.l} style={{ background:C.card, border:"1px solid #243350", borderRadius:4, padding:"15px 18px" }}>
                       <i className={"ti " + x.i} style={{ fontSize:22, marginBottom:8, color:x.c, display:"block" }} />
                       <div style={{ fontSize:28, fontWeight:700, color:x.c }}>{x.v}</div>
                       <div style={{ fontSize:12, color:C.textDim, marginTop:2 }}>{x.l}</div>
@@ -1201,7 +1201,7 @@ export default function EduAIPro() {
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:12 }}>
                     {subjects.map(function(sub) {
                       return (
-                        <div key={sub.id} style={{ background:C.bg, border:"2px solid " + (curSid === sub.id ? C.accent : C.border), borderRadius:10, padding:14, cursor:"pointer" }}
+                        <div key={sub.id} style={{ background:C.bg, border:"2px solid " + (curSid === sub.id ? C.accent : C.border), borderRadius:4, padding:14, cursor:"pointer" }}
                           onClick={function() { setCurSid(sub.id); }}>
                           <div style={{ fontSize:22, marginBottom:7 }}><i className="ti ti-book" style={{fontSize:22,color:C.accent}} /></div>
                           <div style={{ fontWeight:700, color:C.text, marginBottom:2, fontSize:14 }}>{sub.name}</div>
@@ -1222,7 +1222,7 @@ export default function EduAIPro() {
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10 }}>
                   {[{v:"generator",i:"ti-bolt",l:"Generador IA",c:C.accent},{v:"chat",i:"ti-message",l:"Chat Docente",c:C.blue},{v:"multimedia",i:"ti-photo",l:"Multimedia",c:C.green},{v:"corrector",i:"ti-checklist",l:"Corrector TPs",c:C.purple}].map(function(x) {
                     return (
-                      <button key={x.v} style={{ background:C.bg, border:"1px solid #243350", borderRadius:10, padding:"13px 8px", cursor:"pointer", textAlign:"center", fontFamily:"Quicksand,sans-serif" }}
+                      <button key={x.v} style={{ background:C.bg, border:"1px solid #243350", borderRadius:4, padding:"13px 8px", cursor:"pointer", textAlign:"center", fontFamily:"Quicksand,sans-serif" }}
                         onClick={function() { setView(x.v); }}>
                         <i className={"ti " + x.i} style={{ fontSize:24, marginBottom:5, color:x.c, display:"block" }} />
                         <div style={{ fontSize:12, fontWeight:600, color:x.c }}>{x.l}</div>
@@ -1330,7 +1330,7 @@ export default function EduAIPro() {
                     </div>
                     <MDView text={genResult} />
                     {makeCodeUrl && (
-                      <div style={{ marginTop:16, padding:"12px 16px", background:"#0f2027", borderRadius:8, border:"1px solid #00b4d8", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                      <div style={{ marginTop:16, padding:"12px 16px", background:"#0f2027", borderRadius:4, border:"1px solid #00b4d8", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                         <div>
                           <div style={{ fontSize:13, fontWeight:700, color:"#00b4d8", marginBottom:3 }}>Codigo MakeCode detectado</div>
                           <div style={{ fontSize:12, color:C.textMuted }}>Abri el proyecto en el editor con los bloques listos</div>
@@ -1353,7 +1353,7 @@ export default function EduAIPro() {
                     {actImgUrl && (
                       <div style={{ marginTop:14 }}>
                         <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8, marginBottom:10 }}>IMAGEN GENERADA</div>
-                        <img src={actImgUrl} alt={genTopic} style={{ width:"100%", borderRadius:8, display:"block" }} />
+                        <img src={actImgUrl} alt={genTopic} style={{ width:"100%", borderRadius:4, display:"block" }} />
                         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:8 }}>
                           <p style={{ fontSize:11, color:C.textDim }}>Las imagenes expiran en 1 hora. Descargala para guardarla.</p>
                           <a href={actImgUrl} download="imagen_actividad.png" target="_blank" rel="noopener noreferrer">
@@ -1429,7 +1429,7 @@ export default function EduAIPro() {
                             <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }}><i className="ti ti-download" style={{fontSize:13,marginRight:4}} />Descargar PNG</Btn>
                           </a>
                         </div>
-                        <img src={imgUrl} alt={mmTopic} style={{ width:"100%", borderRadius:8, display:"block" }} />
+                        <img src={imgUrl} alt={mmTopic} style={{ width:"100%", borderRadius:4, display:"block" }} />
                         <p style={{ fontSize:11, color:C.textDim, marginTop:10 }}>Las imagenes expiran en 1 hora. Descargala para guardarla.</p>
                       </div>
                     )}
@@ -1480,14 +1480,14 @@ export default function EduAIPro() {
                       <p style={{ fontSize:14, marginBottom:18 }}>Chat contextualizado a tu materia</p>
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, maxWidth:500, margin:"0 auto" }}>
                         {SUGS.map(function(s) {
-                          return <button key={s} style={{ background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 11px", color:C.textMuted, cursor:"pointer", textAlign:"left", fontSize:12, fontFamily:"Quicksand,sans-serif" }} onClick={function() { setChatIn(s); }}>{s}</button>;
+                          return <button key={s} style={{ background:C.bg, border:"1px solid #243350", borderRadius:4, padding:"9px 11px", color:C.textMuted, cursor:"pointer", textAlign:"left", fontSize:12, fontFamily:"Quicksand,sans-serif" }} onClick={function() { setChatIn(s); }}>{s}</button>;
                         })}
                       </div>
                     </div>
                   ) : chatMsgs.map(function(m, i) {
                     return (
                       <div key={i} style={{ display:"flex", justifyContent:m.role==="user"?"flex-end":"flex-start", marginBottom:14 }}>
-                        <div style={{ maxWidth:"82%", background:m.role==="user"?"#0d9488":C.card, borderRadius:12, padding:"10px 14px", border:m.role==="user"?"none":"1px solid #e0ddd6" }}>
+                        <div style={{ maxWidth:"82%", background:m.role==="user"?"#0d9488":C.card, borderRadius:4, padding:"10px 14px", border:m.role==="user"?"none":"1px solid #e0ddd6" }}>
                           {m.role === "user" ? <span style={{ fontSize:14, color:C.text }}>{m.content}</span> : <MDView text={m.content} maxH={9999} />}
                         </div>
                       </div>
@@ -1590,7 +1590,7 @@ export default function EduAIPro() {
                   {filtLib.map(function(item) {
                     var g = GEN_TYPES.find(function(g) { return g.id === item.type; }) || MM_TYPES.find(function(m) { return m.id === item.type; });
                     return (
-                      <div key={item.id} style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:16, cursor:"pointer" }} onClick={function() { setLibItem(item); }}>
+                      <div key={item.id} style={{ background:C.card, border:"1px solid #243350", borderRadius:4, padding:16, cursor:"pointer" }} onClick={function() { setLibItem(item); }}>
                         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:10 }}>
                           <i className={"ti " + (g ? g.icon : "ti-file")} style={{ fontSize:20, color:g ? g.color : C.textMuted }} />
                           <button style={{ background:"transparent", border:"none", cursor:"pointer", color:C.red, fontSize:15 }} onClick={function(e) { e.stopPropagation(); delLib(item.id); }}><i className="ti ti-trash" style={{fontSize:15}} /></button>
@@ -1658,7 +1658,7 @@ export default function EduAIPro() {
                   {publicLib.map(function(item) {
                     var g = GEN_TYPES.find(function(g) { return g.id === item.type; }) || MM_TYPES.find(function(m) { return m.id === item.type; });
                     return (
-                      <div key={item.id} style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:16 }}>
+                      <div key={item.id} style={{ background:C.card, border:"1px solid #243350", borderRadius:4, padding:16 }}>
                         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:10 }}>
                           <i className={"ti " + (g ? g.icon : "ti-file")} style={{ fontSize:20, color:g ? g.color : C.textMuted }} />
                           {authUser && item.user_id === authUser.id && (
@@ -1690,7 +1690,7 @@ export default function EduAIPro() {
       {/* SUBJECT MODAL */}
       {subjModal && (
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.8)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999 }}>
-          <div style={{ background:C.card, border:"1px solid #243350", borderRadius:16, padding:26, width:488, maxWidth:"92vw" }}>
+          <div style={{ background:C.card, border:"1px solid #243350", borderRadius:4, padding:26, width:488, maxWidth:"92vw" }}>
             <h2 style={{ margin:"0 0 18px", fontSize:19, fontWeight:700, color:C.text }}>Nueva Materia</h2>
             <label style={lbl}>NOMBRE *</label>
             <input style={Object.assign({}, inp, { marginBottom:13 })} value={sf.name} onChange={function(e) { setSf(Object.assign({}, sf, { name:e.target.value })); }} placeholder="Ej: Biologia, Historia, Matematica II..." autoFocus />
