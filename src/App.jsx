@@ -898,7 +898,7 @@ export default function AulaXpro() {
   return (
     <div style={{display:"flex",height:"100vh",background:C.bg,color:C.text,fontFamily:"Quicksand,sans-serif",overflow:"hidden"}}>
 
-      <div style={{width:bar?218:56,minWidth:bar?218:56,background:C.surf,borderRight:"1px solid "+C.border,display:"flex",flexDirection:"column",transition:"all .22s",overflow:"hidden"}}>
+      <div style={{width:bar?218:56,minWidth:bar?218:56,background:"#0D3559",borderRight:"1px solid "+C.border,display:"flex",flexDirection:"column",transition:"all .22s",overflow:"hidden"}}>
         <div style={{padding:"0 10px",borderBottom:"1px solid "+C.border,minHeight:54,display:"flex",alignItems:"center",gap:8}}>
           <button style={{background:"none",border:"none",cursor:"pointer",color:C.accent,fontSize:17,minWidth:26,fontFamily:"Quicksand,sans-serif"}} onClick={function(){setBar(!bar);}}>
             {bar?<i className="ti ti-chevron-left" style={{fontSize:16}}/>:<i className="ti ti-chevron-right" style={{fontSize:16}}/>}
@@ -916,7 +916,7 @@ export default function AulaXpro() {
         <nav style={{flex:1,padding:"6px 0",overflowY:"auto"}}>
           {NAV.map(function(n){
             return (
-              <div key={n.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 11px",cursor:"pointer",margin:"2px 6px",background:view===n.id?C.accentBg:"transparent",color:view===n.id?C.accent:C.textMuted,fontSize:13,whiteSpace:"nowrap",overflow:"hidden",borderLeft:view===n.id?"2px solid "+C.accent:"2px solid transparent"}}
+              <div key={n.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 11px",cursor:"pointer",margin:"2px 6px",background:view===n.id?C.accentBg:"transparent",color:view===n.id?"#26C3D4":"#7aaabf",fontSize:13,whiteSpace:"nowrap",overflow:"hidden",borderLeft:view===n.id?"2px solid "+C.accent:"2px solid transparent"}}
                 onClick={function(){setView(n.id);}}>
                 <i className={"ti "+n.icon} style={{fontSize:17,minWidth:24,textAlign:"center"}}/>
                 {bar&&<span>{n.label}</span>}
@@ -983,7 +983,7 @@ export default function AulaXpro() {
               <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
                 {[{l:"Materias",v:subjects.length,i:"ti-books",c:C.blue},{l:"Biblioteca",v:library.length,i:"ti-folder",c:C.green},{l:"Banco",v:bank.length,i:"ti-database",c:C.accent},{l:"Biblioteca Publica",v:publicLib.length,i:"ti-world",c:C.purple}].map(function(x){
                   return (
-                    <div key={x.l} style={Object.assign({},card,{marginBottom:0})}>
+                    <div key={x.l} style={{background:"#CFF09E",border:"1px solid #A8DBA8",borderRadius:4,padding:"18px 20px"}}style={Object.assign({},card,{marginBottom:0})}>
                       <i className={"ti "+x.i} style={{fontSize:22,marginBottom:8,color:x.c,display:"block"}}/>
                       <div style={{fontSize:28,fontWeight:700,color:x.c}}>{x.v}</div>
                       <div style={{fontSize:12,color:C.textDim,marginTop:2}}>{x.l}</div>
