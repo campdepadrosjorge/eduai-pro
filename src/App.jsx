@@ -1103,7 +1103,7 @@ export default function EduAIPro() {
     <div style={{ display:"flex", height:"100vh", background:C.bg, color:C.text, fontFamily:"Quicksand,sans-serif", overflow:"hidden" }}>
 
       <div style={{ width:bar?218:56, minWidth:bar?218:56, background:"#ffffff", borderRight:"1px solid #e0ddd6", display:"flex", flexDirection:"column", transition:"all .22s", overflow:"hidden" }}>
-        <div style={{ padding:"14px 10px 12px", borderBottom:"1px solid " + C.border, display:"flex", alignItems:"center", gap:8 }}>
+        <div style={{ padding:"0 10px", borderBottom:"1px solid " + C.border, minHeight:54, display:"flex", alignItems:"center", gap:8 }}>
           <button style={{ background:"none", border:"none", cursor:"pointer", color:C.accent, fontSize:17, minWidth:26, fontFamily:"Quicksand,sans-serif" }} onClick={function() { setBar(!bar); }}>
   {bar ? <i className="ti ti-chevron-left" style={{fontSize:16}} /> : <i className="ti ti-chevron-right" style={{fontSize:16}} />}
 </button>
