@@ -1788,6 +1788,40 @@ export default function EduAIPro() {
                 </div>
                 <div style={card}>
                   <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8, marginBottom:12 }}>SECUENCIAS GUARDADAS ({sequences.length})</div>
+{!sequences.length ? <p style={{ fontSize:13, color:C.textDim }}>No hay secuencias todavía.</p> :
+                    sequences.map(function(s) {
+                      return (
+                        <div key={s.id} style={{ padding:"8px 10px", borderRadius:4, marginBottom:4, cursor:"pointer", background:seqView && seqView.id === s.id ? "#e6f9fb" : "transparent", border:"1px solid " + (seqView && seqView.id === s.id ? C.accent : "transparent"), display:"flex", justifyContent:"space-between", alignItems:"center" }}
+                          onClick={function() { setSeqView(s); }}>
+                          <div>
+                            <div style={{ fontSize:13, fontWeight:600, color:C.text }}>{s.topic}</div>
+                            <div style={{ fontSize:11, color:C.textDim }}>{s.subject_name} · {s.n_classes} clases</div>
+                          </div>
+                          <button style={{ background:"transparent", border:"none", cursor:"pointer", color:C.textDim }} onClick={function(e) { e.stopPropagation(); dbDelSequence(s.id).then(function() { setSequences(function(prev) { return prev.filter(function(x) { return x.id !== s.id; }); }); if (seqView && seqView.id === s.id) setSeqView(null); }); }}>
+                            <i className="ti ti-trash" style={{fontSize:14}} />
+                          </button>
+                        </div>
+                      );
+                    })
+                  }
+                </div>
+              </div>
+              <div>
+                {seqLoading && <div style={card}><Spin /></div>}
+                {!seqLoading && !seqView && (
+                  <div style={Object.assign({}, card, { textAlign:"center", padding:"52px 24px", color:C.textDim })}>
+                    <i className="ti ti-list-numbers" style={{ fontSize:44, display:"block", marginBottom:12, color:C.textDim }} />
+                    <h3 style={{ color:C.textMuted, marginBottom:8 }}>Generá tu primera secuencia</h3>
+                    <p style={{ fontSize:13 }}>Una secuencia didáctica es un conjunto de clases encadenadas con progresión pedagógica clara.</p>
+                  </div>
+                )}
+                {!seqLoading && seqView && (
+                  <div style={card}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+                      <div>
+                        <h2 style={{ fontSize:18, fontWeight:700, color:C.text, margin:0 }}>{seqView.topic}</h2>
+                        <div style={{ fontSize:12, color:C.textDim, marginTop:3 }}>{seqView.subject_name} · {seqView.n_classes} clases · {seqView.level}</div>
+                      </div>
 {/* STUDENTS */}
           {!dataLoading && view === "students" && (
             <div style={{ display:"grid", gridTemplateColumns:"260px 1fr", gap:18 }}>
