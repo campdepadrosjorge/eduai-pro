@@ -1143,7 +1143,8 @@ export default function EduAIPro() {
       <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", minWidth:0 }}>
         <div style={{ background:"#ffffff", borderBottom:"1px solid #e0ddd6", padding:"10px 22px", display:"flex", alignItems:"center", gap:14, minHeight:54 }}>
           <h1 style={{ margin:0, fontSize:16, fontWeight:700, flex:1, color:C.text }}>
-            {(NAV.find(function(n) { return n.id === view; }) || {}).icon} {(NAV.find(function(n) { return n.id === view; }) || {}).label}
+            {(NAV.find(function(n) { return n.id === view; }) || {}).icon && <i className={"ti " + (NAV.find(function(n) { return n.id === view; }) || {}).icon} style={{marginRight:8}} />}
+            {(NAV.find(function(n) { return n.id === view; }) || {}).label}
           </h1>
           {curSubj && <div style={{ fontSize:12, color:C.textMuted, background:C.bg, padding:"4px 12px", borderRadius:20, border:"1px solid #e0ddd6", display:"flex", alignItems:"center", gap:5 }}><i className="ti ti-book" style={{fontSize:13}} />{curSubj.name}</div>}
           <Btn v="accent" st={{ padding:"5px 13px", fontSize:12 }} onClick={function() { setSubjModal(true); }}><i className="ti ti-plus" style={{fontSize:12,marginRight:3}} />Materia</Btn>
@@ -1172,7 +1173,7 @@ export default function EduAIPro() {
             <div>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:22 }}>
                 <div>
-                  <h2 style={{ fontSize:22, fontWeight:700, color:C.text, margin:0 }}>{"Bienvenido, " + userName + " 👋"}</h2>
+                  <h2 style={{ fontSize:22, fontWeight:700, color:C.text, margin:0 }}>{"Bienvenido, " + userName}</h2>
                   <p style={{ color:C.textDim, fontSize:13, margin:"4px 0 0" }}>Que creamos hoy para tus alumnos?</p>
                 </div>
                 <Btn onClick={function() { setSubjModal(true); }}><i className="ti ti-plus" style={{fontSize:13,marginRight:4}} />Nueva Materia</Btn>
