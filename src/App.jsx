@@ -1822,6 +1822,21 @@ export default function EduAIPro() {
                         <h2 style={{ fontSize:18, fontWeight:700, color:C.text, margin:0 }}>{seqView.topic}</h2>
                         <div style={{ fontSize:12, color:C.textDim, marginTop:3 }}>{seqView.subject_name} · {seqView.n_classes} clases · {seqView.level}</div>
                       </div>
+<div style={{ display:"flex", gap:8 }}>
+                        <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportDocx(seqView.topic, "Secuencia Didactica", seqView.subject_name, seqView.content); }}>
+                          <i className="ti ti-file-text" style={{fontSize:13,marginRight:4}} />Word
+                        </Btn>
+                        <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }} onClick={function() { exportPdf(seqView.topic, "Secuencia Didactica", seqView.subject_name, seqView.content); }}>
+                          <i className="ti ti-file-invoice" style={{fontSize:13,marginRight:4}} />PDF
+                        </Btn>
+                      </div>
+                    </div>
+                    <MDView text={seqView.content} maxH={620} />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 {/* STUDENTS */}
           {!dataLoading && view === "students" && (
             <div style={{ display:"grid", gridTemplateColumns:"260px 1fr", gap:18 }}>
