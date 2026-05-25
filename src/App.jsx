@@ -204,15 +204,15 @@ async function dbCreateTrial(userId) {
 }
 
 const C = {
-  bg:"#f0efea", surf:"#ffffff", card:"#ffffff", border:"#d4cfc6",
-  accent:"#0d9488", accentBg:"#e6f7f5",
-  text:"#111110", textMuted:"#555550", textDim:"#888880",
-  blue:"#1d4ed8", green:"#059669", purple:"#7c3aed", red:"#dc2626",
+  bg:"#EBF5F0", surf:"#ffffff", card:"#ffffff", border:"#A8DBA8",
+  accent:"#26C3D4", accentBg:"#e6f9fb",
+  text:"#0D3559", textMuted:"#2a5a7a", textDim:"#5a8aaa",
+  blue:"#0D3559", green:"#79BD9A", purple:"#26C3D4", red:"#dc2626",
 };
-const inp = {background:"#fff",border:"1px solid #d4cfc6",borderRadius:4,padding:"9px 13px",color:C.text,fontSize:14,width:"100%",outline:"none",fontFamily:"Quicksand,sans-serif"};
-const sel = {background:"#fff",border:"1px solid #d4cfc6",borderRadius:4,padding:"9px 13px",color:C.text,fontSize:13,outline:"none",fontFamily:"Quicksand,sans-serif"};
+const inp = {background:"#fff",border:"1px solid #A8DBA8",borderRadius:4,padding:"9px 13px",color:C.text,fontSize:14,width:"100%",outline:"none",fontFamily:"Quicksand,sans-serif"};
+const sel = {background:"#fff",border:"1px solid #A8DBA8",borderRadius:4,padding:"9px 13px",color:C.text,fontSize:13,outline:"none",fontFamily:"Quicksand,sans-serif"};
 const lbl = {fontSize:11,color:C.textMuted,marginBottom:5,display:"block",fontWeight:600,letterSpacing:.5};
-const card = {background:"#fff",border:"1px solid #d4cfc6",borderRadius:4,padding:"18px 20px",marginBottom:16};
+const card = {background:"#fff",border:"1px solid #A8DBA8",borderRadius:4,padding:"18px 20px",marginBottom:16};
 
 function Btn({children,onClick,v,disabled,st}) {
   if(!v) v="primary"; if(!st) st={}; if(!disabled) disabled=false;
