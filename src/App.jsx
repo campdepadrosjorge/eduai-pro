@@ -2012,9 +2012,9 @@ export default function EduAIPro() {
           )}
 
         </div>
-      </div>
+     </div>
 
-{/* EVAL MODAL */}
+          {/* EVAL MODAL */}
       {evalModal && selectedStudent && (
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.5)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999 }}>
           <div style={{ background:C.surf, border:"1px solid " + C.border, borderRadius:4, padding:26, width:500, maxWidth:"92vw" }}>
