@@ -231,22 +231,22 @@ async function dbDelBankItem(id) {
 // ── DESIGN ────────────────────────────────────────────────────────────────────
 
 const C = {
-  bg:"#f5f5f0", surf:"#ffffff", card:"#ffffff", border:"#e0ddd6",
-  accent:"#0d9488", accentBg:"#f0fdfa",
-  text:"#1c1917", textMuted:"#6b7280", textDim:"#9ca3af",
+  bg:"#f0efea", surf:"#ffffff", card:"#ffffff", border:"#d4cfc6",
+  accent:"#0d9488", accentBg:"#e6f7f5",
+  text:"#111110", textMuted:"#555550", textDim:"#888880",
   blue:"#1d4ed8", green:"#059669", purple:"#7c3aed", red:"#dc2626",
 };
 
-const inp = { background:"#ffffff", border:"1px solid #e0ddd6", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:14, width:"100%", outline:"none", fontFamily:"inherit" };
-const sel = { background:"#ffffff", border:"1px solid #e0ddd6", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:13, outline:"none", fontFamily:"inherit" };
+const inp = { background:"#ffffff", border:"1px solid #e0ddd6", borderRadius:4, padding:"9px 13px", color:C.text, fontSize:14, width:"100%", outline:"none", fontFamily:"Quicksand,sans-serif" };
+const sel = { background:"#ffffff", border:"1px solid #e0ddd6", borderRadius:4, padding:"9px 13px", color:C.text, fontSize:13, outline:"none", fontFamily:"Quicksand,sans-serif" };
 const lbl = { fontSize:11, color:C.textMuted, marginBottom:5, display:"block", fontWeight:600, letterSpacing:.5 };
-const card = { background:"#ffffff", border:"1px solid #e0ddd6", borderRadius:12, padding:"18px 20px", marginBottom:16 };
+const card = { background:"#ffffff", border:"1px solid #e0ddd6", borderRadius:4, padding:"18px 20px", marginBottom:16 };
 
 function Btn({ children, onClick, v, disabled, st }) {
   if (!v) v = "primary";
   if (!st) st = {};
   if (!disabled) disabled = false;
-  var base = { padding: v === "sm" ? "5px 11px" : "9px 18px", borderRadius:8, cursor:disabled?"not-allowed":"pointer", fontWeight:600, fontSize: v === "sm" ? 12 : 13, fontFamily:"inherit", opacity:disabled?.45:1, transition:"opacity .15s" };
+  var base = { padding: v === "sm" ? "5px 11px" : "9px 18px", borderRadius:8, cursor:disabled?"not-allowed":"pointer", fontWeight:600, fontSize: v === "sm" ? 12 : 13, fontFamily:"Quicksand,sans-serif", opacity:disabled?.45:1, transition:"opacity .15s" };
   var vs = {
     primary:   { background:C.accent, color:"#000", border:"none" },
     secondary: { background:C.card, color:C.text, border:"1px solid #243350" },
@@ -310,7 +310,7 @@ function MDView({ text, maxH }) {
     .replace(/\n\n+/g,"</p><p>").replace(/\n/g,"<br/>");
 
   return (
-    <div style={{ background:"#f9f9f7", border:"1px solid #e0ddd6", borderRadius:8, padding:"15px 19px", maxHeight:maxH, overflow:"auto", lineHeight:1.75, fontSize:14, fontFamily:"Arial,sans-serif" }}>
+    <div style={{ background:"#f9f9f7", border:"1px solid #e0ddd6", borderRadius:8, padding:"15px 19px", maxHeight:maxH, overflow:"auto", lineHeight:1.75, fontSize:14, fontFamily:"Quicksand,sans-serif" }}>
       <style>{css}</style>
       <div className="md"><p dangerouslySetInnerHTML={{ __html:h }}/></div>
     </div>
@@ -444,12 +444,12 @@ function AdminPanel({ authUser, supabaseClient }) {
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
           <div>
             <label style={{ fontSize:11, color:C.textMuted, marginBottom:5, display:"block", fontWeight:700 }}>NOMBRE DEL COLEGIO *</label>
-            <input style={{ background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:14, width:"100%", outline:"none", fontFamily:"inherit" }}
+            <input style={{ background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:14, width:"100%", outline:"none", fontFamily:"Quicksand,sans-serif" }}
               value={instName} onChange={function(e) { setInstName(e.target.value); }} placeholder="Ej: Colegio San Martin" />
           </div>
           <div>
             <label style={{ fontSize:11, color:C.textMuted, marginBottom:5, display:"block", fontWeight:700 }}>MAX USUARIOS</label>
-            <input style={{ background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:14, width:"100%", outline:"none", fontFamily:"inherit" }}
+            <input style={{ background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:14, width:"100%", outline:"none", fontFamily:"Quicksand,sans-serif" }}
               type="number" value={instMaxUsers} onChange={function(e) { setInstMaxUsers(parseInt(e.target.value)); }} />
           </div>
         </div>
@@ -458,7 +458,7 @@ function AdminPanel({ authUser, supabaseClient }) {
           <input type="file" accept=".xlsx,.xls,.csv" style={{ color:C.text, fontSize:13 }}
             onChange={function(e) { setInstFile(e.target.files[0]); }} />
         </div>
-        <button style={{ background:"#f59e0b", border:"none", borderRadius:8, padding:"9px 18px", cursor:instLoading||!instFile||!instName?"not-allowed":"pointer", fontWeight:600, fontSize:13, fontFamily:"inherit", opacity:instLoading||!instFile||!instName?.5:1 }}
+        <button style={{ background:"#f59e0b", border:"none", borderRadius:8, padding:"9px 18px", cursor:instLoading||!instFile||!instName?"not-allowed":"pointer", fontWeight:600, fontSize:13, fontFamily:"Quicksand,sans-serif", opacity:instLoading||!instFile||!instName?.5:1 }}
           onClick={processExcel} disabled={instLoading||!instFile||!instName}>
           {instLoading ? "Procesando..." : <><i className="ti ti-upload" style={{fontSize:13,marginRight:4}} />Cargar usuarios y activar suscripciones</>}
         </button>
@@ -478,14 +478,14 @@ function AdminPanel({ authUser, supabaseClient }) {
       <div style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"18px 20px", marginBottom:16 }}>
         <div style={{ fontSize:15, fontWeight:700, color:C.text, marginBottom:12, display:"flex", alignItems:"center", gap:8 }}><i className="ti ti-users" style={{fontSize:16, color:C.accent}} />Gestión de Usuarios Institucionales</div>
         <div style={{ display:"flex", gap:10, marginBottom:14 }}>
-          <select style={{ background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:14, flex:1, outline:"none", fontFamily:"inherit" }}
+          <select style={{ background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 13px", color:C.text, fontSize:14, flex:1, outline:"none", fontFamily:"Quicksand,sans-serif" }}
             value={selectedInst} onChange={function(e) { setSelectedInst(e.target.value); }}>
             <option value="">-- Seleccionar colegio --</option>
             {institutions.map(function(inst) {
               return <option key={inst} value={inst}>{inst}</option>;
             })}
           </select>
-          <button style={{ background:"#f59e0b", border:"none", borderRadius:8, padding:"9px 18px", cursor:"pointer", fontWeight:600, fontSize:13, fontFamily:"inherit" }}
+          <button style={{ background:"#f59e0b", border:"none", borderRadius:8, padding:"9px 18px", cursor:"pointer", fontWeight:600, fontSize:13, fontFamily:"Quicksand,sans-serif" }}
             onClick={function() { if (selectedInst) loadInstUsers(selectedInst); }}>
             Buscar
           </button>
@@ -501,7 +501,7 @@ function AdminPanel({ authUser, supabaseClient }) {
                     <div style={{ fontSize:13, color:C.text }}>{u.user_id.slice(0, 8) + "..."}</div>
                     <div style={{ fontSize:11, color:C.textMuted }}>{"Vence: " + new Date(u.current_period_end).toLocaleDateString("es-AR")}</div>
                   </div>
-                  <button style={{ padding:"5px 14px", borderRadius:6, border:"none", cursor:"pointer", fontFamily:"inherit", fontWeight:600, fontSize:12, background:u.status === "active" ? "#7f1d1d" : "#10b981", color:u.status === "active" ? "#fca5a5" : "#000" }}
+                  <button style={{ padding:"5px 14px", borderRadius:6, border:"none", cursor:"pointer", fontFamily:"Quicksand,sans-serif", fontWeight:600, fontSize:12, background:u.status === "active" ? "#7f1d1d" : "#10b981", color:u.status === "active" ? "#fca5a5" : "#000" }}
                     onClick={function() { toggleUserStatus(u.user_id, u.status); }}>
                     {u.status === "active" ? "Desactivar" : "Activar"}
                   </button>
@@ -678,7 +678,7 @@ function PricingPanel({ authUser }) {
                   );
                 })}
               </div>
-              <button style={{ width:"100%", padding:"11px 0", borderRadius:8, border:"none", cursor:loading===plan.id?"not-allowed":"pointer", fontWeight:700, fontSize:14, fontFamily:"inherit", background:plan.color, color:"#000", opacity:loading===plan.id?.7:1 }}
+              <button style={{ width:"100%", padding:"11px 0", borderRadius:8, border:"none", cursor:loading===plan.id?"not-allowed":"pointer", fontWeight:700, fontSize:14, fontFamily:"Quicksand,sans-serif", background:plan.color, color:"#000", opacity:loading===plan.id?.7:1 }}
                 onClick={function() { subscribe(plan); }} disabled={loading===plan.id}>
                 {loading===plan.id ? "Procesando..." : <><i className="ti ti-credit-card" style={{fontSize:13,marginRight:4}} />Suscribirme</>}
               </button>
@@ -729,7 +729,7 @@ function AuthScreen({ onAuth }) {
         <p style={{ color:C.textMuted, fontSize:15, marginBottom:8 }}>Te enviamos un link de confirmacion a {email}</p>
         <p style={{ color:C.textDim, fontSize:13, marginBottom:32 }}>Una vez que confirmes, volvé e iniciá sesion.</p>
         <div style={card}>
-          <button style={{ background:"transparent", border:"none", cursor:"pointer", color:C.accent, fontSize:14, fontFamily:"inherit", fontWeight:600 }}
+          <button style={{ background:"transparent", border:"none", cursor:"pointer", color:C.accent, fontSize:14, fontFamily:"Quicksand,sans-serif", fontWeight:600 }}
             onClick={function() { setConfirmed(false); setMode("login"); }}>
             Ir a iniciar sesion
           </button>
@@ -750,7 +750,7 @@ function AuthScreen({ onAuth }) {
           <div style={{ display:"flex", gap:4, marginBottom:22, background:C.bg, borderRadius:8, padding:4 }}>
             {[{id:"login",label:"Iniciar sesion"},{id:"register",label:"Registrarse"}].map(function(t) {
               return (
-                <button key={t.id} style={{ flex:1, padding:"7px 0", borderRadius:6, border:"none", cursor:"pointer", fontFamily:"inherit", fontWeight:600, fontSize:13, background:mode===t.id?C.card:"transparent", color:mode===t.id?C.text:C.textDim }}
+                <button key={t.id} style={{ flex:1, padding:"7px 0", borderRadius:6, border:"none", cursor:"pointer", fontFamily:"Quicksand,sans-serif", fontWeight:600, fontSize:13, background:mode===t.id?C.card:"transparent", color:mode===t.id?C.text:C.textDim }}
                   onClick={function() { setMode(t.id); setError(""); }}>
                   {t.label}
                 </button>
@@ -1082,7 +1082,7 @@ export default function EduAIPro() {
         <div style={{ background:C.card, border:"1px solid #243350", borderRadius:16, padding:28 }}>
           <PricingPanel authUser={authUser} />
         </div>
-        <button style={{ marginTop:20, background:"transparent", border:"none", cursor:"pointer", color:C.textDim, fontSize:13, fontFamily:"inherit" }} onClick={signOut}>
+        <button style={{ marginTop:20, background:"transparent", border:"none", cursor:"pointer", color:C.textDim, fontSize:13, fontFamily:"Quicksand,sans-serif" }} onClick={signOut}>
           Cerrar sesion
         </button>
       </div>
@@ -1100,11 +1100,11 @@ export default function EduAIPro() {
   var userName = (authUser.user_metadata && authUser.user_metadata.name) || authUser.email.split("@")[0] || "Docente";
 
   return (
-    <div style={{ display:"flex", height:"100vh", background:C.bg, color:C.text, fontFamily:"Arial,sans-serif", overflow:"hidden" }}>
+    <div style={{ display:"flex", height:"100vh", background:C.bg, color:C.text, fontFamily:"Quicksand,sans-serif", overflow:"hidden" }}>
 
       <div style={{ width:bar?218:56, minWidth:bar?218:56, background:"#ffffff", borderRight:"1px solid #e0ddd6", display:"flex", flexDirection:"column", transition:"all .22s", overflow:"hidden" }}>
         <div style={{ padding:"14px 10px 12px", borderBottom:"1px solid #243350", display:"flex", alignItems:"center", gap:8 }}>
-          <button style={{ background:"none", border:"none", cursor:"pointer", color:C.accent, fontSize:17, minWidth:26, fontFamily:"inherit" }} onClick={function() { setBar(!bar); }}>
+          <button style={{ background:"none", border:"none", cursor:"pointer", color:C.accent, fontSize:17, minWidth:26, fontFamily:"Quicksand,sans-serif" }} onClick={function() { setBar(!bar); }}>
   {bar ? <i className="ti ti-chevron-left" style={{fontSize:16}} /> : <i className="ti ti-chevron-right" style={{fontSize:16}} />}
 </button>
           {bar && <span style={{ fontSize:15, fontWeight:700, color:C.accent, whiteSpace:"nowrap" }}>EduAI Pro</span>}
@@ -1132,7 +1132,7 @@ export default function EduAIPro() {
           {bar ? (
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <div style={{ fontSize:11, color:C.textDim, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:4 }}><i className="ti ti-user" style={{fontSize:12}} />{userName}</div>
-              <button style={{ background:"transparent", border:"none", cursor:"pointer", color:C.textDim, fontSize:11, fontFamily:"inherit" }} onClick={signOut}>Salir</button>
+              <button style={{ background:"transparent", border:"none", cursor:"pointer", color:C.textDim, fontSize:11, fontFamily:"Quicksand,sans-serif" }} onClick={signOut}>Salir</button>
             </div>
           ) : (
             <button style={{ background:"transparent", border:"none", cursor:"pointer", fontSize:16, width:"100%", textAlign:"center", color:C.textDim }} onClick={signOut} title="Cerrar sesion"><i className="ti ti-logout" style={{fontSize:16}} /></button>
@@ -1157,7 +1157,7 @@ export default function EduAIPro() {
             return (
               <div style={{ background:"#1c1408", border:"1px solid #f59e0b", borderRadius:8, padding:"10px 16px", marginBottom:16, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                 <span style={{ fontSize:13, color:"#f59e0b" }}>{"Periodo de prueba: " + daysLeft + " dia" + (daysLeft === 1 ? "" : "s") + " restante" + (daysLeft === 1 ? "" : "s")}</span>
-                <button style={{ background:"#f59e0b", border:"none", borderRadius:6, padding:"5px 14px", cursor:"pointer", fontWeight:700, fontSize:12, fontFamily:"inherit", color:"#000" }}
+                <button style={{ background:"#f59e0b", border:"none", borderRadius:6, padding:"5px 14px", cursor:"pointer", fontWeight:700, fontSize:12, fontFamily:"Quicksand,sans-serif", color:"#000" }}
                   onClick={function() { setView("pricing"); }}>
                   <><i className="ti ti-credit-card" style={{fontSize:12,marginRight:4}} />Ver planes</>
                 </button>
@@ -1222,7 +1222,7 @@ export default function EduAIPro() {
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10 }}>
                   {[{v:"generator",i:"ti-bolt",l:"Generador IA",c:C.accent},{v:"chat",i:"ti-message",l:"Chat Docente",c:C.blue},{v:"multimedia",i:"ti-photo",l:"Multimedia",c:C.green},{v:"corrector",i:"ti-checklist",l:"Corrector TPs",c:C.purple}].map(function(x) {
                     return (
-                      <button key={x.v} style={{ background:C.bg, border:"1px solid #243350", borderRadius:10, padding:"13px 8px", cursor:"pointer", textAlign:"center", fontFamily:"inherit" }}
+                      <button key={x.v} style={{ background:C.bg, border:"1px solid #243350", borderRadius:10, padding:"13px 8px", cursor:"pointer", textAlign:"center", fontFamily:"Quicksand,sans-serif" }}
                         onClick={function() { setView(x.v); }}>
                         <i className={"ti " + x.i} style={{ fontSize:24, marginBottom:5, color:x.c, display:"block" }} />
                         <div style={{ fontSize:12, fontWeight:600, color:x.c }}>{x.l}</div>
@@ -1242,7 +1242,7 @@ export default function EduAIPro() {
                   <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8, marginBottom:12 }}>TIPO DE CONTENIDO</div>
                   {GEN_TYPES.map(function(g) {
                     return (
-                      <button key={g.id} style={{ display:"flex", alignItems:"center", gap:9, width:"100%", padding:"8px 10px", borderRadius:7, border:"none", cursor:"pointer", marginBottom:3, background:genType===g.id?"#1d3d7a":"transparent", color:genType===g.id?"#93c5fd":C.textMuted, textAlign:"left", fontFamily:"inherit", fontSize:13 }}
+                      <button key={g.id} style={{ display:"flex", alignItems:"center", gap:9, width:"100%", padding:"8px 10px", borderRadius:7, border:"none", cursor:"pointer", marginBottom:3, background:genType===g.id?"#1d3d7a":"transparent", color:genType===g.id?"#93c5fd":C.textMuted, textAlign:"left", fontFamily:"Quicksand,sans-serif", fontSize:13 }}
                         onClick={function() { setGenType(g.id); setGenResult(""); setGenSaved(false); setGenErr(""); setMakeCodeUrl(null); setActImgUrl(null); }}>
                         <i className={"ti " + g.icon} style={{ fontSize:16, minWidth:18 }} />
                         <span style={{ fontWeight:genType===g.id?700:400 }}>{g.label}</span>
@@ -1260,7 +1260,7 @@ export default function EduAIPro() {
                   <div style={{ display:"flex", gap:5 }}>
                     {["Basico","Intermedio","Avanzado"].map(function(d) {
                       return (
-                        <button key={d} style={{ flex:1, padding:"6px 3px", borderRadius:6, border:"1px solid " + (genDiff===d?C.accent:C.border), background:genDiff===d?C.accentBg:"transparent", color:genDiff===d?C.accent:C.textMuted, cursor:"pointer", fontSize:11, fontWeight:genDiff===d?700:400, fontFamily:"inherit" }}
+                        <button key={d} style={{ flex:1, padding:"6px 3px", borderRadius:6, border:"1px solid " + (genDiff===d?C.accent:C.border), background:genDiff===d?C.accentBg:"transparent", color:genDiff===d?C.accent:C.textMuted, cursor:"pointer", fontSize:11, fontWeight:genDiff===d?700:400, fontFamily:"Quicksand,sans-serif" }}
                           onClick={function() { setGenDiff(d); }}>{d}</button>
                       );
                     })}
@@ -1375,7 +1375,7 @@ export default function EduAIPro() {
                 <div style={{ fontSize:11, color:C.textMuted, fontWeight:700, letterSpacing:.8, marginBottom:12 }}>TIPO</div>
                 {MM_TYPES.map(function(m) {
                   return (
-                    <button key={m.id} style={{ display:"flex", alignItems:"flex-start", gap:10, width:"100%", padding:"8px 10px", borderRadius:7, border:"none", cursor:"pointer", marginBottom:4, background:mmType===m.id?"#1d3d7a":"transparent", textAlign:"left", fontFamily:"inherit" }}
+                    <button key={m.id} style={{ display:"flex", alignItems:"flex-start", gap:10, width:"100%", padding:"8px 10px", borderRadius:7, border:"none", cursor:"pointer", marginBottom:4, background:mmType===m.id?"#1d3d7a":"transparent", textAlign:"left", fontFamily:"Quicksand,sans-serif" }}
                       onClick={function() { setMmType(m.id); setMmResult(""); setImgUrl(null); setImgError(""); }}>
                       <i className={"ti " + m.icon} style={{ fontSize:17, minWidth:24 }} />
                       <div>
@@ -1480,7 +1480,7 @@ export default function EduAIPro() {
                       <p style={{ fontSize:14, marginBottom:18 }}>Chat contextualizado a tu materia</p>
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, maxWidth:500, margin:"0 auto" }}>
                         {SUGS.map(function(s) {
-                          return <button key={s} style={{ background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 11px", color:C.textMuted, cursor:"pointer", textAlign:"left", fontSize:12, fontFamily:"inherit" }} onClick={function() { setChatIn(s); }}>{s}</button>;
+                          return <button key={s} style={{ background:C.bg, border:"1px solid #243350", borderRadius:8, padding:"9px 11px", color:C.textMuted, cursor:"pointer", textAlign:"left", fontSize:12, fontFamily:"Quicksand,sans-serif" }} onClick={function() { setChatIn(s); }}>{s}</button>;
                         })}
                       </div>
                     </div>
