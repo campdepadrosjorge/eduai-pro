@@ -439,7 +439,7 @@ function AdminPanel({ authUser, supabaseClient }) {
         })}
       </div>
       <div style={{ background:C.card, border:"1px solid #243350", borderRadius:12, padding:"18px 20px", marginBottom:16 }}>
-        <<div style={{ fontSize:15, fontWeight:700, color:C.text, marginBottom:4, display:"flex", alignItems:"center", gap:8 }}><i className="ti ti-school" style={{fontSize:16, color:C.accent}} />Carga Institucional</div>
+        <div style={{ fontSize:15, fontWeight:700, color:C.text, marginBottom:4, display:"flex", alignItems:"center", gap:8 }}><i className="ti ti-school" style={{fontSize:16, color:C.accent}} />Carga Institucional</div>
         <p style={{ fontSize:13, color:C.textMuted, marginBottom:16 }}>Subí un Excel con columna A = Email y columna B = Nombre. El sistema crea las cuentas y activa las suscripciones automaticamente.</p>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
           <div>
