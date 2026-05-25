@@ -1356,7 +1356,7 @@ export default function EduAIPro() {
                         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:8 }}>
                           <p style={{ fontSize:11, color:C.textDim }}>Las imagenes expiran en 1 hora. Descargala para guardarla.</p>
                           <a href={actImgUrl} download="imagen_actividad.png" target="_blank" rel="noopener noreferrer">
-                            ><i className="ti ti-download" style={{fontSize:13,marginRight:4}} />Descargar</Btn>
+                            <Btn v="secondary" st={{ fontSize:12, padding:"5px 12px" }}><i className="ti ti-download" style={{fontSize:13,marginRight:4}} />Descargar</Btn>
                           </a>
                         </div>
                       </div>
