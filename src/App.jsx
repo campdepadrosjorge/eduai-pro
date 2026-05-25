@@ -1376,7 +1376,7 @@ export default function EduAIPro() {
                   return (
                     <button key={m.id} style={{ display:"flex", alignItems:"flex-start", gap:10, width:"100%", padding:"8px 10px", borderRadius:7, border:"none", cursor:"pointer", marginBottom:4, background:mmType===m.id?"#1d3d7a":"transparent", textAlign:"left", fontFamily:"inherit" }}
                       onClick={function() { setMmType(m.id); setMmResult(""); setImgUrl(null); setImgError(""); }}>
-                      <span style={{ fontSize:17, minWidth:24 }}>{m.icon}</span>
+                      <i className={"ti " + m.icon} style={{ fontSize:17, minWidth:24 }} />
                       <div>
                         <div style={{ fontWeight:mmType===m.id?700:400, fontSize:13, color:mmType===m.id?"#93c5fd":C.textMuted }}>{m.label}</div>
                         <div style={{ fontSize:11, color:C.textDim, marginTop:1 }}>{m.desc}</div>
