@@ -682,6 +682,8 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
   var [actImgUrl,setActImgUrl]=useState(null);
   var [actImgLoad,setActImgLoad]=useState(false);
   var [actImgErr,setActImgErr]=useState("");
+  var [diffResult,setDiffResult]=useState("");
+  var [diffLoading,setDiffLoading]=useState(false);
   var [actImgDesc,setActImgDesc]=useState("");
   var [mmType,setMmType]=useState("podcast");
   var [mmTopic,setMmTopic]=useState("");
@@ -811,6 +813,17 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
     catch{return null;}
   }
 
+  async function generateDiff() {
+    if(!genResult||!curSubj) return;
+    setDiffLoading(true);setDiffResult("");
+    try{
+      var sys="Sos especialista en diferenciacion pedagogica y educacion inclusiva. Responde en espanol rioplatense con Markdown.";
+      var usr="A partir del siguiente contenido educativo, genera 3 versiones diferenciadas para distintos niveles de aprendizaje:\n\n## CONTENIDO ORIGINAL:\n"+genResult.slice(0,3000)+"\n\n## VERSIONES A GENERAR:\n\n### VERSION 1 — BASICA (alumnos con dificultades o que necesitan apoyo)\n- Lenguaje simple y directo\n- Pasos muy detallados y secuenciados\n- Menos cantidad de consignas\n- Vocabulario accesible con definiciones de terminos clave\n- Ejemplos concretos y cercanos a la vida cotidiana\n\n### VERSION 2 — ESTANDAR (nivel esperado para el curso)\n- Fiel al contenido original con leves adaptaciones\n- Consignas claras con nivel de desafio apropiado\n\n### VERSION 3 — AVANZADA (alumnos con altas capacidades)\n- Mayor nivel de complejidad y abstraccion\n- Consignas que exigen analisis, sintesis y evaluacion (verbos Bloom superiores)\n- Contenido ampliado con conexiones interdisciplinarias\n- Desafios adicionales y preguntas de extension\n\nGenera las 3 versiones completas y utilizables en el aula.";
+      var r=await callClaude(sys,[{role:"user",content:usr}],6000);
+      setDiffResult(r);
+    }catch(e){setDiffResult("Error: "+e.message);}
+    setDiffLoading(false);
+  }
   async function generate(){
     if(!genTopic.trim()||!curSubj) return;
     setGenLoading(true);setGenResult("");setGenSaved(false);setGenErr("");setMakeCodeUrl(null);setActImgUrl(null);
@@ -1276,6 +1289,34 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
                         </a>
                       </div>
                     )}
+                    <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid "+C.border}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                        <div>
+                          <div style={{fontSize:13,fontWeight:700,color:C.text}}>Diferenciacion automatica</div>
+                          <div style={{fontSize:12,color:C.textDim}}>Genera 3 versiones: Basica, Estandar y Avanzada</div>
+                        </div>
+                        <Btn v="secondary" st={{fontSize:12,padding:"5px 14px"}} onClick={generateDiff} disabled={diffLoading}>
+                          {diffLoading?"Generando...":<><i className="ti ti-arrows-split" style={{fontSize:13,marginRight:4}}/>Diferenciar</>}
+                        </Btn>
+                      </div>
+                      {diffLoading&&<Spin/>}
+                      {diffResult&&!diffLoading&&(
+                        <div>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                            <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8}}>3 VERSIONES GENERADAS</div>
+                            <div style={{display:"flex",gap:8}}>
+                              <Btn v="secondary" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){saveLib(diffResult,"actividad","Actividad Diferenciada",genTopic+" (3 niveles)");}}>
+                                <><i className="ti ti-device-floppy" style={{fontSize:13,marginRight:4}}/>Guardar</>
+                              </Btn>
+                              <Btn v="secondary" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportDocx(genTopic+" - Diferenciacion",gt?gt.label:"",curSubj?curSubj.name:"",diffResult);}}>
+                                <i className="ti ti-file-text" style={{fontSize:13,marginRight:4}}/>Word
+                              </Btn>
+                            </div>
+                          </div>
+                          <MDView text={diffResult} maxH={600}/>
+                        </div>
+                      )}
+                    </div>
                     <div style={{marginTop:16}}>
                       <label style={lbl}>DESCRIPCION DE LA IMAGEN (opcional)</label>
                       <input style={Object.assign({},inp,{marginBottom:10})} value={actImgDesc} onChange={function(e){setActImgDesc(e.target.value);}} placeholder="Ej: diagrama de la celula eucariota"/>
