@@ -1802,7 +1802,7 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
             <textarea style={Object.assign({},inp,{height:80,resize:"vertical",marginBottom:20})} value={evalForm.feedback} onChange={function(e){setEvalForm(Object.assign({},evalForm,{feedback:e.target.value}));}} placeholder="Comentarios para el alumno..."/>
             <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
               <Btn v="ghost" onClick={function(){setEvalModal(false);}}>Cancelar</Btn>
-              <Btn disabled={!evalForm.topic.trim()} onClick={function(){dbAddEvaluation(authUser.id,selectedStudent.id,evalForm).then(function(ev){setStudentEvals(function(prev){return [ev].concat(prev);});dbLoadAllEvaluations(authUser.id,curSid).then(setAllEvals);setEvalModal(false);});}}>Guardar evaluacion</Btn>
+              <Btn disabled={!evalForm.topic.trim()} onClick={function(){dbAddEvaluation(authUser.id,selectedStudent.id,Object.assign({},evalForm,{rubric_id:evalForm.rubric_id||null}))dbAddEvaluation(authUser.id,selectedStudent.id,evalForm).then(function(ev){setStudentEvals(function(prev){return [ev].concat(prev);});dbLoadAllEvaluations(authUser.id,curSid).then(setAllEvals);setEvalModal(false);});}}>Guardar evaluacion</Btn>
             </div>
           </div>
         </div>
