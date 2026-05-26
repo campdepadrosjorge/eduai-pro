@@ -127,6 +127,10 @@ async function dbAddSubject(userId, form) {
   var r = await supabase.from("subjects").insert({user_id:userId,...form}).select().single();
   if(r.error) throw r.error; return r.data;
 }
+async function dbUpdateSubject(id, data) {
+  var r = await supabase.from("subjects").update(data).eq("id",id).select().single();
+  if(r.error) throw r.error; return r.data;
+}
 async function dbDelSubject(id) {
   var r = await supabase.from("subjects").delete().eq("id",id); if(r.error) throw r.error;
 }
@@ -655,7 +659,8 @@ export default function AulaXpro() {
   var [subjModal,setSubjModal]=useState(false);
   var [sf,setSf]=useState({name:"",level:"Secundario (4-6)",materials:"",bibliography:""});
 var [sfPdfs,setSfPdfs]=useState([]);
-var [pdfLoading,setPdfLoading]=useState(false);var [sf,setSf]=useState({name:"",level:"Secundario (4-6)",materials:""});
+var [pdfLoading,setPdfLoading]=useState(false);
+var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({name:"",level:"Secundario (4-6)",materials:""});
   var [library,setLibrary]=useState([]);
   var [bank,setBank]=useState([]);
   var [publicLib,setPublicLib]=useState([]);
@@ -770,12 +775,18 @@ var [pdfLoading,setPdfLoading]=useState(false);var [sf,setSf]=useState({name:"",
     var subData = Object.assign({},sf);
     if(sfPdfs.length>0){
       var bibTexts = sfPdfs.map(function(p){return "### "+p.filename+"\n"+p.text;}).join("\n\n");
-      subData.bibliography = bibTexts;
+      subData.bibliography = (sf.bibliography?sf.bibliography+"\n\n":"")+bibTexts;
       subData.bibliography_files = JSON.stringify(sfPdfs.map(function(p){return {filename:p.filename,chars:p.chars};}));
     }
-    var sub=await dbAddSubject(authUser.id,subData);
-    setSubjects(subjects.concat([sub]));setCurSid(sub.id);
-    setSf({name:"",level:"Secundario (4-6)",materials:"",bibliography:""});setSfPdfs([]);setSubjModal(false);
+    if(editingSubject){
+      var updated = await dbUpdateSubject(editingSubject.id, subData);
+      setSubjects(subjects.map(function(s){return s.id===editingSubject.id?updated:s;}));
+    } else {
+      var sub=await dbAddSubject(authUser.id,subData);
+      setSubjects(subjects.concat([sub]));setCurSid(sub.id);
+    }
+    setSf({name:"",level:"Secundario (4-6)",materials:"",bibliography:""});
+    setSfPdfs([]);setEditingSubject(null);setSubjModal(false);
   }
 
   function generateMakeCodeUrl(content){
@@ -1042,6 +1053,9 @@ var [pdfLoading,setPdfLoading]=useState(false);var [sf,setSf]=useState({name:"",
                           <div style={{display:"flex",gap:6}}>
                             <Btn v="sm" onClick={function(e){e.stopPropagation();setCurSid(sub.id);setView("generator");}}>
                               <i className="ti ti-bolt" style={{fontSize:12,marginRight:3}}/>Generar
+                            </Btn>
+                            <Btn v="ghost" st={{padding:"5px 9px",fontSize:12}} onClick={function(e){e.stopPropagation();setEditingSubject(sub);setSf({name:sub.name,level:sub.level,materials:sub.materials||"",bibliography:sub.bibliography||""});setSfPdfs([]);setSubjModal(true);}}>
+                              <i className="ti ti-pencil" style={{fontSize:14}}/>
                             </Btn>
                             <Btn v="ghost" st={{padding:"5px 9px",fontSize:12}} onClick={function(e){e.stopPropagation();dbDelSubject(sub.id).then(function(){var upd=subjects.filter(function(s){return s.id!==sub.id;});setSubjects(upd);if(curSid===sub.id) setCurSid(upd.length?upd[0].id:null);});}}>
                               <i className="ti ti-trash" style={{fontSize:14}}/>
@@ -1795,7 +1809,7 @@ var [pdfLoading,setPdfLoading]=useState(false);var [sf,setSf]=useState({name:"",
       {subjModal&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999}}>
           <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:4,padding:26,width:488,maxWidth:"92vw"}}>
-            <h2 style={{margin:"0 0 18px",fontSize:19,fontWeight:700,color:C.text}}>Nueva Materia</h2>
+            <h2 style={{margin:"0 0 18px",fontSize:19,fontWeight:700,color:C.text}}>{editingSubject?"Editar Materia":"Nueva Materia"}</h2>
             <label style={lbl}>NOMBRE *</label>
             <input style={Object.assign({},inp,{marginBottom:13})} value={sf.name} onChange={function(e){setSf(Object.assign({},sf,{name:e.target.value}));}} placeholder="Ej: Biologia, Historia, Matematica II..." autoFocus/>
             <label style={lbl}>NIVEL</label>
@@ -1842,7 +1856,7 @@ var [pdfLoading,setPdfLoading]=useState(false);var [sf,setSf]=useState({name:"",
               </div>
             )}
             <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
-              <Btn v="ghost" st={{fontSize:13}} onClick={function(){setSubjModal(false);}}>Cancelar</Btn>
+              <Btn v="ghost" st={{fontSize:13}} onClick={function(){setSubjModal(false);setEditingSubject(null);setSfPdfs([]);}}>Cancelar</Btn>
               <Btn onClick={addSubject} disabled={!sf.name.trim()}>
                 <i className="ti ti-plus" style={{fontSize:13,marginRight:4}}/>Crear Materia
               </Btn>
