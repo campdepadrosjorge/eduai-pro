@@ -43,8 +43,10 @@ const LEVELS = [
   "Terciario / Universitario","Formacion Docente","Capacitacion Profesional",
 ];
 
-function sysGen(type, subject, level, materials) {
-  var ctx = "Materia: \"" + subject + "\" | Nivel: " + level + "." + (materials ? "\n\nPrograma:\n" + materials : "");
+function sysGen(type, subject, level, materials, bibliography) {
+  var ctx = "Materia: \"" + subject + "\" | Nivel: " + level + "." +
+    (materials ? "\n\nPrograma:\n" + materials : "") +
+    (bibliography ? "\n\nBibliografia y contenido de referencia:\n" + bibliography.slice(0, 8000) : "");
   var p = {
     planclase:    "Sos experto en planificacion curricular. " + ctx,
     actividad:    "Sos especialista en diseno instruccional. " + ctx,
@@ -651,7 +653,9 @@ export default function AulaXpro() {
   var [view,setView]=useState("dashboard");
   var [bar,setBar]=useState(true);
   var [subjModal,setSubjModal]=useState(false);
-  var [sf,setSf]=useState({name:"",level:"Secundario (4-6)",materials:""});
+  var [sf,setSf]=useState({name:"",level:"Secundario (4-6)",materials:"",bibliography:""});
+var [sfPdfs,setSfPdfs]=useState([]);
+var [pdfLoading,setPdfLoading]=useState(false);var [sf,setSf]=useState({name:"",level:"Secundario (4-6)",materials:""});
   var [library,setLibrary]=useState([]);
   var [bank,setBank]=useState([]);
   var [publicLib,setPublicLib]=useState([]);
@@ -742,11 +746,36 @@ export default function AulaXpro() {
     setSubjects([]);setLibrary([]);setBank([]);setPublicLib([]);setSequences([]);setCurSid(null);setView("dashboard");
   }
 
+  async function processPdf(file) {
+    return new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          var base64 = e.target.result.split(",")[1];
+          var res = await fetch("/api/process-pdf", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ base64, filename: file.name }),
+          });
+          var data = await res.json();
+          if (!res.ok) throw new Error(data.error);
+          resolve(data);
+        } catch(err) { reject(err); }
+      };
+      reader.readAsDataURL(file);
+    });
+  }
   async function addSubject(){
     if(!sf.name.trim()||!authUser) return;
-    var sub=await dbAddSubject(authUser.id,sf);
+    var subData = Object.assign({},sf);
+    if(sfPdfs.length>0){
+      var bibTexts = sfPdfs.map(function(p){return "### "+p.filename+"\n"+p.text;}).join("\n\n");
+      subData.bibliography = bibTexts;
+      subData.bibliography_files = JSON.stringify(sfPdfs.map(function(p){return {filename:p.filename,chars:p.chars};}));
+    }
+    var sub=await dbAddSubject(authUser.id,subData);
     setSubjects(subjects.concat([sub]));setCurSid(sub.id);
-    setSf({name:"",level:"Secundario (4-6)",materials:""});setSubjModal(false);
+    setSf({name:"",level:"Secundario (4-6)",materials:"",bibliography:""});setSfPdfs([]);setSubjModal(false);
   }
 
   function generateMakeCodeUrl(content){
@@ -762,7 +791,7 @@ export default function AulaXpro() {
     if(!genTopic.trim()||!curSubj) return;
     setGenLoading(true);setGenResult("");setGenSaved(false);setGenErr("");setMakeCodeUrl(null);setActImgUrl(null);
     try{
-      var sys=sysGen(genType,curSubj.name,genLevel||curSubj.level,curSubj.materials);
+      var sys=sysGen(genType,curSubj.name,genLevel||curSubj.level,curSubj.materials,curSubj.bibliography);
       var usr=userGen(genType,genTopic,genDiff,genExtra,curSubj);
       var r=await callClaude(sys,[{role:"user",content:usr}]);
       setGenResult(r);setMakeCodeUrl(generateMakeCodeUrl(r));
@@ -1774,7 +1803,44 @@ export default function AulaXpro() {
               {LEVELS.map(function(l){return <option key={l}>{l}</option>;})}
             </select>
             <label style={lbl}>PROGRAMA / MATERIALES</label>
-            <textarea style={Object.assign({},inp,{height:118,resize:"vertical",marginBottom:20})} value={sf.materials} onChange={function(e){setSf(Object.assign({},sf,{materials:e.target.value}));}} placeholder="Pega programa, objetivos, unidades tematicas..."/>
+            <textarea style={Object.assign({},inp,{height:100,resize:"vertical",marginBottom:14})} value={sf.materials} onChange={function(e){setSf(Object.assign({},sf,{materials:e.target.value}));}} placeholder="Pega programa, objetivos, unidades tematicas..."/>
+            <label style={lbl}>BIBLIOGRAFIA EN PDF (opcional)</label>
+            <p style={{fontSize:12,color:C.textDim,margin:"0 0 8px"}}>Claude extraera el contenido para generar material mas preciso.</p>
+            <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+C.border,borderRadius:4,padding:"7px 14px",cursor:pdfLoading?"not-allowed":"pointer",fontSize:12,fontWeight:600,color:C.text,marginBottom:10,opacity:pdfLoading?.6:1}}>
+              <i className="ti ti-file-upload" style={{fontSize:14}}/>
+              {pdfLoading?"Procesando PDF...":"Subir PDF"}
+              <input type="file" accept=".pdf" multiple style={{display:"none"}} disabled={pdfLoading} onChange={async function(e){
+                var files=Array.from(e.target.files);
+                if(!files.length) return;
+                setPdfLoading(true);
+                for(var i=0;i<files.length;i++){
+                  try{
+                    var result=await processPdf(files[i]);
+                    setSfPdfs(function(prev){return prev.concat([result]);});
+                  }catch(err){alert("Error procesando "+files[i].name+": "+err.message);}
+                }
+                setPdfLoading(false);
+                e.target.value="";
+              }}/>
+            </label>
+            {sfPdfs.length>0&&(
+              <div style={{marginBottom:14}}>
+                {sfPdfs.map(function(p,i){
+                  return (
+                    <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 10px",background:C.bg,borderRadius:4,marginBottom:4,border:"1px solid "+C.border}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8}}>
+                        <i className="ti ti-file-type-pdf" style={{fontSize:15,color:C.red}}/>
+                        <span style={{fontSize:12,color:C.text}}>{p.filename}</span>
+                        <span style={{fontSize:11,color:C.textDim}}>{"("+Math.round(p.chars/1000)+"k caracteres)"}</span>
+                      </div>
+                      <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.textDim}} onClick={function(){setSfPdfs(function(prev){return prev.filter(function(_,j){return j!==i;});});}}>
+                        <i className="ti ti-x" style={{fontSize:14}}/>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
               <Btn v="ghost" st={{fontSize:13}} onClick={function(){setSubjModal(false);}}>Cancelar</Btn>
               <Btn onClick={addSubject} disabled={!sf.name.trim()}>
