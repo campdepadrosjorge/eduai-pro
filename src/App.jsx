@@ -211,6 +211,42 @@ async function dbDelQuestionItem(id) {
 async function dbLogUsage(userId, userEmail, type, typeName, subjectName, tokIn, tokOut, isImage) {
   try { await supabase.from("usage_log").insert({user_id:userId,user_email:userEmail,type,type_name:typeName,subject_name:subjectName||"",tokens_input:tokIn||0,tokens_output:tokOut||0,is_image:isImage||false}); } catch {}
 }
+async function dbGetUsage(userId) {
+  var r = await supabase.from("subscriptions")
+    .select("tokens_used,tokens_limit,extra_credits,tokens_reset_date")
+    .eq("user_id",userId).eq("status","active").limit(1);
+  if(r.error||!r.data||r.data.length===0) return null;
+  return r.data[0];
+}
+
+async function dbAddUsageCost(userId, costUsd) {
+  var usage = await dbGetUsage(userId);
+  if(!usage) return;
+  // Resetear si cambio el mes
+  var resetDate = new Date(usage.tokens_reset_date);
+  var now = new Date();
+  if(now > resetDate) {
+    var nextReset = new Date(now.getFullYear(), now.getMonth()+1, 1);
+    await supabase.from("subscriptions").update({
+      tokens_used: costUsd,
+      tokens_reset_date: nextReset.toISOString(),
+    }).eq("user_id",userId).eq("status","active");
+    return;
+  }
+  await supabase.from("subscriptions").update({
+    tokens_used: (usage.tokens_used||0) + costUsd,
+  }).eq("user_id",userId).eq("status","active");
+}
+
+async function dbCheckBudget(userId) {
+  var usage = await dbGetUsage(userId);
+  if(!usage) return true;
+  var resetDate = new Date(usage.tokens_reset_date);
+  var now = new Date();
+  if(now > resetDate) return true;
+  var totalLimit = (usage.tokens_limit||3) + (usage.extra_credits||0);
+  return (usage.tokens_used||0) < totalLimit;
+}
 async function dbCheckSubscription(userId) {
   var r = await supabase.from("subscriptions").select("id,status,current_period_end,plan_id,is_trial").eq("user_id",userId).eq("status","active").limit(1);
   if(r.error||!r.data||r.data.length===0) return null;
@@ -683,6 +719,8 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
   var [dataLoading,setDataLoading]=useState(false);
   var [subscription,setSubscription]=useState(null);
   var [subChecked,setSubChecked]=useState(false);
+  var [usage,setUsage]=useState(null);
+  var [budgetExceeded,setBudgetExceeded]=useState(false);
   var [genType,setGenType]=useState("planclase");
   var [genTopic,setGenTopic]=useState("");
   var [genLevel,setGenLevel]=useState("Secundario (4-6)");
@@ -766,8 +804,8 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
         if(results[0].length) setCurSid(results[0][0].id);
         setDataLoading(false);
         dbCheckSubscription(authUser.id).then(function(sub){
-          if(!sub){dbCreateTrial(authUser.id).then(function(){dbCheckSubscription(authUser.id).then(function(ns){setSubscription(ns);setSubChecked(true);});});}
-          else{setSubscription(sub);setSubChecked(true);}
+          if(!sub){dbCreateTrial(authUser.id).then(function(){dbCheckSubscription(authUser.id).then(function(ns){setSubscription(ns);setSubChecked(true);dbGetUsage(authUser.id).then(function(u){setUsage(u);});});});}
+          else{setSubscription(sub);setSubChecked(true);dbGetUsage(authUser.id).then(function(u){setUsage(u);});}
         });
       }).catch(function(){setDataLoading(false);});
   },[authUser]);
@@ -892,6 +930,8 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
   }
   async function generate(){
     if(!genTopic.trim()||!curSubj) return;
+    var hasBudget = await dbCheckBudget(authUser.id);
+    if(!hasBudget){setBudgetExceeded(true);return;}
     setGenLoading(true);setGenResult("");setGenSaved(false);setGenErr("");setMakeCodeUrl(null);setActImgUrl(null);
     try{
       var sys=sysGen(genType,curSubj.name,genLevel||curSubj.level,curSubj.materials,curSubj.bibliography);
@@ -899,7 +939,11 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
       var r=await callClaude(sys,[{role:"user",content:usr}]);
       setGenResult(r);setMakeCodeUrl(generateMakeCodeUrl(r));
       var gt2=GEN_TYPES.find(function(g){return g.id===genType;});
-      dbLogUsage(authUser.id,authUser.email,genType,gt2?gt2.label:genType,curSubj?curSubj.name:"",Math.round((sys.length+usr.length)/4),Math.round(r.length/4),false);
+      var tokIn=Math.round((sys.length+usr.length)/4);
+      var tokOut=Math.round(r.length/4);
+      var costUsd=(tokIn*0.000003)+(tokOut*0.000015);
+      dbLogUsage(authUser.id,authUser.email,genType,gt2?gt2.label:genType,curSubj?curSubj.name:"",tokIn,tokOut,false);
+      dbAddUsageCost(authUser.id,costUsd).then(function(){dbGetUsage(authUser.id).then(function(u){setUsage(u);});});
     }catch(e){setGenErr("Error: "+e.message);}
     setGenLoading(false);
   }
@@ -926,7 +970,7 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
   async function generateImage(){
     if(!mmTopic.trim()||!curSubj) return;
     setImgLoading(true);setImgUrl(null);setImgError("");
-    try{var url=await callImgApi(mmTopic,curSubj.name,curSubj.level);setImgUrl(url);dbLogUsage(authUser.id,authUser.email,"imagen_ia","Imagen IA Multimedia",curSubj.name,300,0,true);}
+   try{var url=await callImgApi(mmTopic,curSubj.name,curSubj.level);setImgUrl(url);dbLogUsage(authUser.id,authUser.email,"imagen_ia","Imagen IA Multimedia",curSubj.name,300,0,true);dbAddUsageCost(authUser.id,0.07).then(function(){dbGetUsage(authUser.id).then(function(u){setUsage(u);});});}
     catch(e){setImgError("Error: "+e.message);}
     setImgLoading(false);
   }
@@ -934,7 +978,7 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
   async function generateActivityImage(){
     if(!genResult||!curSubj) return;
     setActImgLoad(true);setActImgUrl(null);setActImgErr("");
-    try{var desc=actImgDesc||("Educational illustration for: "+genTopic+". Subject: "+curSubj.name);var url=await callImgApi(desc,curSubj.name,genLevel);setActImgUrl(url);dbLogUsage(authUser.id,authUser.email,"imagen","Imagen IA",curSubj.name,300,0,true);}
+    try{var desc=actImgDesc||("Educational illustration for: "+genTopic+". Subject: "+curSubj.name);var url=await callImgApi(desc,curSubj.name,genLevel);setActImgUrl(url);dbLogUsage(authUser.id,authUser.email,"imagen","Imagen IA",curSubj.name,300,0,true);dbAddUsageCost(authUser.id,0.07).then(function(){dbGetUsage(authUser.id).then(function(u){setUsage(u);});});
     catch(e){setActImgErr("Error: "+e.message);}
     setActImgLoad(false);
   }
@@ -1060,6 +1104,40 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
 
   if(!authUser) return <AuthScreen onAuth={setAuthUser}/>;
 
+  if(budgetExceeded&&authUser.email!==import.meta.env.VITE_ADMIN_EMAIL) return (
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:C.bg}}>
+      <div style={{width:480,textAlign:"center"}}>
+        <i className="ti ti-coin-off" style={{fontSize:52,color:C.red,display:"block",marginBottom:12}}/>
+        <h2 style={{color:C.red,fontSize:24,fontWeight:700,margin:"0 0 8px"}}>Credito mensual agotado</h2>
+        <p style={{color:C.textMuted,fontSize:15,marginBottom:8}}>Usaste todo tu credito de $3 USD este mes.</p>
+        <p style={{color:C.textDim,fontSize:13,marginBottom:32}}>Compra credito adicional para seguir generando contenido.</p>
+        <div style={Object.assign({},card,{padding:28,textAlign:"left"})}>
+          <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:16}}>Credito adicional</div>
+          {[{usd:1,ars:1000,label:"Starter"},{usd:3,ars:2800,label:"Standard"},{usd:5,ars:4500,label:"Pro"}].map(function(pack){
+            return (
+              <div key={pack.usd} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid "+C.border}}>
+                <div>
+                  <div style={{fontSize:14,fontWeight:600,color:C.text}}>{pack.label+" — $"+pack.usd+" USD"}</div>
+                  <div style={{fontSize:12,color:C.textDim}}>{"$"+pack.ars+" ARS · ~"+(pack.usd===1?"40 generaciones":pack.usd===3?"120 generaciones":"200 generaciones")}</div>
+                </div>
+                <Btn st={{fontSize:13,padding:"7px 16px"}} onClick={async function(){
+                  try{
+                    var res=await fetch("/api/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({plan_id:"credit_"+pack.usd,user_email:authUser.email,user_id:authUser.id,amount_ars:pack.ars,amount_usd:pack.usd,type:"credit"})});
+                    var data=await res.json();
+                    if(!res.ok) throw new Error(data.error);
+                    window.open(data.init_point,"_blank");
+                  }catch(e){alert("Error: "+e.message);}
+                }}>Comprar</Btn>
+              </div>
+            );
+          })}
+        </div>
+        <button style={{marginTop:20,background:"transparent",border:"none",cursor:"pointer",color:C.textDim,fontSize:13,fontFamily:"Quicksand,sans-serif",display:"inline-flex",alignItems:"center",gap:5}} onClick={function(){setBudgetExceeded(false);}}>
+          <i className="ti ti-arrow-left" style={{fontSize:14}}/>Volver a la app
+        </button>
+      </div>
+    </div>
+  );
   if(subChecked&&!subscription&&authUser.email!==import.meta.env.VITE_ADMIN_EMAIL) return (
     <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:C.bg}}>
       <div style={{width:900,textAlign:"center"}}>
@@ -1151,6 +1229,29 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
 
         <div style={{flex:1,overflow:"auto",padding:"20px 26px"}}>
 
+          {usage&&authUser.email!==import.meta.env.VITE_ADMIN_EMAIL&&(function(){
+            var resetDate=new Date(usage.tokens_reset_date);
+            var totalLimit=(usage.tokens_limit||3)+(usage.extra_credits||0);
+            var used=usage.tokens_used||0;
+            var pct=Math.min(Math.round((used/totalLimit)*100),100);
+            var remaining=(totalLimit-used).toFixed(2);
+            if(pct<80) return null;
+            return (
+              <div style={{background:pct>=100?"#fee2e2":C.accentBg,border:"1px solid "+(pct>=100?C.red:C.accent),borderRadius:4,padding:"10px 16px",marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div>
+                  <span style={{fontSize:13,color:pct>=100?C.red:C.accent,fontWeight:600}}>
+                    {pct>=100?"Credito mensual agotado":"Credito casi agotado — "+pct+"% usado"}
+                  </span>
+                  <span style={{fontSize:12,color:C.textMuted,marginLeft:8}}>
+                    {pct>=100?"Compra credito adicional para seguir generando":"Restante: $"+remaining+" USD"}
+                  </span>
+                </div>
+                <button style={{background:pct>=100?C.red:C.accent,border:"none",borderRadius:4,padding:"5px 14px",cursor:"pointer",fontWeight:700,fontSize:12,fontFamily:"Quicksand,sans-serif",color:"#fff"}} onClick={function(){setView("pricing");}}>
+                  <i className="ti ti-plus" style={{fontSize:12,marginRight:4}}/>Comprar credito
+                </button>
+              </div>
+            );
+          })()}
           {subscription&&subscription.is_trial&&authUser.email!==import.meta.env.VITE_ADMIN_EMAIL&&(function(){
             var daysLeft=Math.ceil((new Date(subscription.current_period_end)-new Date())/(1000*60*60*24));
             if(daysLeft<=0) return null;
