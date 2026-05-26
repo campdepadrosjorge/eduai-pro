@@ -850,8 +850,8 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
           topic:q.topic||bankItem.topic,
           type:q.type||"multiple",
           difficulty:q.difficulty||"Intermedio",
-          question:q.question||"",
-          answer:q.answer||"",
+          question:(q.question||"").replace(/\$\$[\s\S]*?\$\$/g,"").replace(/\\boxed\{[^}]*\}/g,"").replace(/\\textbf\{([^}]*)\}/g,"$1").replace(/\\qquad/g," ").trim(),
+          answer:(q.answer||"").replace(/\$\$[\s\S]*?\$\$/g,"").replace(/\\boxed\{[^}]*\}/g,"").replace(/\\textbf\{([^}]*)\}/g,"$1").trim(),
           options:JSON.stringify(q.options||[]),
         });
       }
