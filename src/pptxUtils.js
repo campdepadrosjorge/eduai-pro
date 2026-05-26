@@ -73,7 +73,7 @@ export async function generatePptx(topic, subject, content) {
   var pptx = new PptxGenJS();
   pptx.layout = "LAYOUT_16x9";
   pptx.title = topic;
-  pptx.author = "EduAI Pro";
+  pptx.author = "AulaXpro";
  
   // ── SLIDE DE TÍTULO ──────────────────────────────────────────
   var titleSlide = pptx.addSlide();
@@ -89,7 +89,7 @@ export async function generatePptx(topic, subject, content) {
       fontSize:18, color:COLORS.accent, fontFace:"Arial", align:"left",
     });
   }
-  titleSlide.addText("EduAI Pro · Claude AI", {
+  titleSlide.addText("AulaXpro · Claude AI", {
     x:0.5, y:4.5, w:8.8, h:0.3,
     fontSize:11, color:COLORS.textMuted, fontFace:"Arial", align:"left",
   });
@@ -148,7 +148,7 @@ export async function generatePptx(topic, subject, content) {
     x:0.5, y:2.0, w:8.8, h:1.0,
     fontSize:44, bold:true, color:COLORS.white, fontFace:"Arial", align:"left",
   });
-  closing.addText("Generado con EduAI Pro · Claude AI", {
+  closing.addText("Generado con AulaXpro · Claude AI", {
     x:0.5, y:3.2, w:8.8, h:0.4,
     fontSize:13, color:COLORS.accent, fontFace:"Arial", align:"left",
   });

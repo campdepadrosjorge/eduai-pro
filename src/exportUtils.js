@@ -49,7 +49,7 @@ function buildDoc(topic,typeName,subject,content){
         new Paragraph({children:[
           new TextRun({text:typeName||"",font:F,size:SZ_SUB,italics:true,color:"888888"}),
           new TextRun({text:subject?`  ·  ${subject}`:"",font:F,size:SZ_SUB,italics:true,color:"888888"}),
-          new TextRun({text:"  ·  EduAI Pro",font:F,size:SZ_SUB,color:"f59e0b"}),
+          new TextRun({text:"  ·  AulaXpro",font:F,size:SZ_SUB,color:"f59e0b"}),
         ],border:{bottom:{style:BorderStyle.SINGLE,size:6,color:"f59e0b",space:4}},spacing:{after:480}}),
         ...mdToDocx(content),
       ],
@@ -110,7 +110,7 @@ em{font-style:italic}
 </head>
 <body>
 <div class="titulo">${topic}</div>
-<div class="meta">${typeName||""}${subject?" · "+subject:""} · EduAI Pro</div>
+<div class="meta">${typeName||""}${subject?" · "+subject:""} · AulaXpro</div>
 <p>${mdToHtml(content)}</p>
 <script>window.onload=function(){window.print()}<\/script>
 </body>

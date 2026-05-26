@@ -90,11 +90,11 @@ function userMM(type, topic, extra) {
   return m[type] || "Contenido multimedia educativo sobre \"" + topic + "\"." + e;
 }
 
-function userSequence(topic, nClasses, level, subject) {
+function userSequence(topic, nClasses, level, subject, extra) {
   return "Diseña una secuencia didactica de " + nClasses + " clases sobre: \"" + topic + "\"" +
     (subject ? " para " + subject.name : "") + (level ? " | Nivel: " + level : "") +
     (subject && subject.materials ? "\n\nPrograma:\n" + subject.materials.slice(0, 400) : "") +
-    "\n\nPara cada clase usa ESTE FORMATO EXACTO:\n\n## CLASE [N]: [Titulo]\n**Duracion:** [min]\n**Objetivos:** [2-3]\n**Retoma:** [conexion anterior]\n**Inicio (10min):** [apertura]\n**Desarrollo (25min):** [actividad principal]\n**Cierre (10min):** [sintesis]\n**Recursos:** [materiales]\n**Evaluacion:** [como evaluar]\n\n---\n\nProgresion clara de dificultad entre clases.";
+    "\n\nPara cada clase usa ESTE FORMATO EXACTO:\n\n## CLASE [N]: [Titulo]\n**Duracion:** [min]\n**Objetivos:** [2-3]\n**Retoma:** [conexion anterior]\n**Inicio (10min):** [apertura]\n**Desarrollo (25min):** [actividad principal]\n**Cierre (10min):** [sintesis]\n**Recursos:** [materiales]\n**Evaluacion:** [como evaluar]\n\n---\n\nProgresion clara de dificultad entre clases." + (extra ? "\n\nInstrucciones adicionales: " + extra : "");
 }
 
 async function callClaude(system, messages, maxTokens) {
@@ -1533,7 +1533,7 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
                     setSeqLoading(true);
                     try{
                       var sys="Sos experto en planificacion curricular argentina. Responde en espanol rioplatense con Markdown.";
-                      var r=await callClaude(sys,[{role:"user",content:userSequence(seqForm.topic,seqForm.n_classes,seqForm.level||(curSubj?curSubj.level:""),curSubj)}],6000);
+                      var r=await callClaude(sys,[{role:"user",content:userSequence(seqForm.topic,seqForm.n_classes,seqForm.level||(curSubj?curSubj.level:""),curSubj,seqForm.extra)}],6000);
                       var seq={subject_id:curSid,subject_name:curSubj?curSubj.name:"",topic:seqForm.topic,level:seqForm.level||(curSubj?curSubj.level:""),n_classes:seqForm.n_classes,content:r};
                       var saved=await dbAddSequence(authUser.id,seq);
                       setSequences(function(prev){return [saved].concat(prev);});setSeqView(saved);
@@ -1542,6 +1542,8 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
                   }}>
                     {seqLoading?"Generando...":<><i className="ti ti-list-numbers" style={{fontSize:13,marginRight:4}}/>Generar secuencia</>}
                   </Btn>
+                  <label style={Object.assign({},lbl,{marginTop:12})}>INSTRUCCIONES ADICIONALES (opcional)</label>
+                  <textarea style={Object.assign({},inp,{height:70,resize:"vertical",marginBottom:12})} value={seqForm.extra||""} onChange={function(e){setSeqForm(Object.assign({},seqForm,{extra:e.target.value}));}} placeholder="Ej: enfoque en trabajo grupal, incluir uso de tecnologia, adaptar para alumnos con NEE..."/>
                   {!curSubj&&<p style={{fontSize:12,color:C.red,marginTop:8}}>Selecciona una materia primero.</p>}
                 </div>
                 <div style={card}>
