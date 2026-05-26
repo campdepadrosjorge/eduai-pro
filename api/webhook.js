@@ -17,6 +17,29 @@ export default async function handler(req, res) {
   // Confirmar recepcion inmediatamente
   res.status(200).json({ received: true });
  
+  if (topic === "payment") {
+    // Pago unico de creditos
+    try {
+      var mpPayRes = await fetch("https://api.mercadopago.com/v1/payments/" + id, {
+        headers: { "Authorization": "Bearer " + process.env.MP_ACCESS_TOKEN },
+      });
+      if (!mpPayRes.ok) return;
+      var payment = await mpPayRes.json();
+      if (payment.status !== "approved") return;
+      var externalRef = payment.external_reference;
+      if (!externalRef || !externalRef.includes("|")) return;
+      var parts = externalRef.split("|");
+      var userId = parts[0];
+      var amountUsd = parseFloat(parts[1]) || 1;
+      var subResult = await supabase.from("subscriptions").select("id,extra_credits").eq("user_id",userId).eq("status","active").limit(1);
+      if (subResult.error || !subResult.data || subResult.data.length === 0) return;
+      var sub = subResult.data[0];
+      await supabase.from("subscriptions").update({extra_credits:(sub.extra_credits||0)+amountUsd}).eq("id",sub.id);
+      await supabase.from("credit_purchases").insert({user_id:userId,amount_usd:amountUsd,amount_local:payment.transaction_amount||0,currency:payment.currency_id||"ARS",status:"approved",mp_payment_id:String(id)});
+    } catch(e) { console.error("Credits webhook error:",e.message); }
+    return;
+  }
+
   if (topic !== "preapproval" && topic !== "subscription_preapproval") return;
  
   try {

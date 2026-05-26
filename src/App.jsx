@@ -1122,7 +1122,7 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
                 </div>
                 <Btn st={{fontSize:13,padding:"7px 16px"}} onClick={async function(){
                   try{
-                    var res=await fetch("/api/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({plan_id:"credit_"+pack.usd,user_email:authUser.email,user_id:authUser.id,amount_ars:pack.ars,amount_usd:pack.usd,type:"credit"})});
+                    var res=await fetch("/api/buy-credits",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:authUser.id,user_email:authUser.email,amount_ars:pack.ars,amount_usd:pack.usd,label:"AulaXpro - Credito $"+pack.usd+" USD"})});
                     var data=await res.json();
                     if(!res.ok) throw new Error(data.error);
                     window.open(data.init_point,"_blank");
