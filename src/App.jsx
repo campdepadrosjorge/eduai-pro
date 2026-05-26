@@ -699,6 +699,11 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
   var [corrW,setCorrW]=useState("");
   var [corrResult,setCorrResult]=useState("");
   var [corrLoading,setCorrLoading]=useState(false);
+  var [batchFile,setBatchFile]=useState(null);
+  var [batchLoading,setBatchLoading]=useState(false);
+  var [batchProgress,setBatchProgress]=useState(0);
+  var [batchTotal,setBatchTotal]=useState(0);
+  var [batchResults,setBatchResults]=useState([]);
   var [libFilter,setLibFilter]=useState("all");
   var [libSearch,setLibSearch]=useState("");
   var [libItem,setLibItem]=useState(null);
@@ -892,6 +897,63 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
     setChatLoading(false);
   }
 
+  function extractScore(text) {
+    var patterns = [
+      /calificaci[oó]n\s*final[:\s]+(\d+(?:[.,]\d+)?)/i,
+      /nota\s*final[:\s]+(\d+(?:[.,]\d+)?)/i,
+      /puntaje\s*final[:\s]+(\d+(?:[.,]\d+)?)/i,
+      /calificaci[oó]n[:\s]+(\d+(?:[.,]\d+)?)\s*\/\s*10/i,
+      /(\d+(?:[.,]\d+)?)\s*\/\s*10/,
+    ];
+    for(var i=0;i<patterns.length;i++){
+      var match=text.match(patterns[i]);
+      if(match){var score=parseFloat(match[1].replace(",","."));if(score>=0&&score<=10) return score;}
+    }
+    return null;
+  }
+
+  async function correctBatch() {
+    if(!corrR.trim()||!batchFile||!curSubj) return;
+    setBatchLoading(true);setBatchResults([]);setBatchProgress(0);
+    try {
+      var XLSX = await import("xlsx");
+      var buffer = await batchFile.arrayBuffer();
+      var wb = XLSX.read(buffer,{type:"array"});
+      var sheet = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(sheet,{header:1});
+      var trabajos = [];
+      for(var i=1;i<rows.length;i++){
+        var row=rows[i];
+        if(row[0]&&row[1]) trabajos.push({name:String(row[0]).trim(),work:String(row[1]).trim()});
+      }
+      setBatchTotal(trabajos.length);
+      var results = [];
+      var sys = "Sos docente evaluador experto. Materia: \""+(curSubj?curSubj.name:"General")+"\". Responde en espanol rioplatense con Markdown.";
+      for(var j=0;j<trabajos.length;j++){
+        var t = trabajos[j];
+        setBatchProgress(j+1);
+        try {
+          var usr = "Correccion usando la rubrica.\n\n## RUBRICA:\n"+corrR+"\n\n## TRABAJO DE "+t.name+":\n"+t.work+"\n\nIncluí: evaluacion por criterio, Calificacion final: X/10, fortalezas, areas de mejora, devolucion al alumno.";
+          var r = await callClaude(sys,[{role:"user",content:usr}],3000);
+          var score = extractScore(r);
+          results.push({name:t.name,result:r,score:score,saved:false});
+          // Buscar alumno en la lista y guardar evaluacion automaticamente
+          var student = students.find(function(s){return s.name.toLowerCase().includes(t.name.toLowerCase())||t.name.toLowerCase().includes(s.name.toLowerCase());});
+          if(student && score !== null && authUser){
+            try{
+              await dbAddEvaluation(authUser.id,student.id,{topic:"Correccion batch - "+(new Date().toLocaleDateString("es-AR")),score:score,max_score:10,rubric_id:null,rubric_name:"",feedback:r.slice(0,500)});
+              results[results.length-1].saved=true;
+            }catch{}
+          }
+        } catch(e) {
+          results.push({name:t.name,result:"Error: "+e.message,score:null,saved:false});
+        }
+      }
+      setBatchResults(results);
+      await dbLoadAllEvaluations(authUser.id,curSid).then(setAllEvals);
+    } catch(e) { alert("Error: "+e.message); }
+    setBatchLoading(false);setBatchProgress(0);
+  }
   async function correctTP(){
     if(!corrR.trim()||!corrW.trim()) return;
     setCorrLoading(true);setCorrResult("");
@@ -1389,6 +1451,57 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
                 )}
                 <label style={lbl}>TRABAJO DEL ALUMNO *</label>
                 <textarea style={Object.assign({},inp,{height:175,resize:"vertical",marginBottom:18})} value={corrW} onChange={function(e){setCorrW(e.target.value);}} placeholder="Pega el texto del trabajo practico..."/>
+                <div style={{marginTop:20,paddingTop:16,borderTop:"1px solid "+C.border}}>
+                  <label style={Object.assign({},lbl,{marginBottom:8})}>CORRECCION EN BATCH (Excel)</label>
+                  <p style={{fontSize:12,color:C.textDim,marginBottom:10}}>Subi un Excel con columna A = Nombre del alumno, columna B = Texto del trabajo. La IA corrige todos y guarda las notas en Mis Alumnos automaticamente.</p>
+                  <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+C.border,borderRadius:4,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:C.text,marginBottom:10}}>
+                    <i className="ti ti-upload" style={{fontSize:14}}/>
+                    {batchFile?batchFile.name:"Subir Excel de trabajos"}
+                    <input type="file" accept=".xlsx,.xls,.csv" style={{display:"none"}} onChange={function(e){setBatchFile(e.target.files[0]);setBatchResults([]);}}/>
+                  </label>
+                  {batchFile&&(
+                    <div style={{display:"flex",gap:10,alignItems:"center"}}>
+                      <Btn disabled={batchLoading||!corrR.trim()} onClick={correctBatch}>
+                        {batchLoading
+                          ?<><i className="ti ti-loader" style={{fontSize:13,marginRight:4}}/>{"Corrigiendo "+batchProgress+" de "+batchTotal+"..."}</>
+                          :<><i className="ti ti-checklist" style={{fontSize:13,marginRight:4}}/>Corregir todos los trabajos</>
+                        }
+                      </Btn>
+                    </div>
+                  )}
+                  {batchResults.length>0&&(
+                    <div style={{marginTop:14}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                        <span style={{fontSize:13,fontWeight:600,color:C.text}}>{batchResults.length+" correcciones completadas"}</span>
+                        <Btn v="secondary" st={{fontSize:12,padding:"5px 12px"}} onClick={async function(){
+                          var zip = (await import("jszip")).default();
+                          batchResults.forEach(function(r){
+                            zip.file(r.name.replace(/[^a-zA-Z0-9]/g,"_")+".txt",r.result);
+                          });
+                          var blob = await zip.generateAsync({type:"blob"});
+                          var url = URL.createObjectURL(blob);
+                          var a = document.createElement("a");
+                          a.href=url;a.download="correcciones.zip";a.click();
+                        }}>
+                          <i className="ti ti-download" style={{fontSize:13,marginRight:4}}/>Descargar ZIP
+                        </Btn>
+                      </div>
+                      {batchResults.map(function(r,i){
+                        return (
+                          <div key={i} style={{padding:"10px 14px",background:C.bg,borderRadius:4,marginBottom:6,border:"1px solid "+C.border}}>
+                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                                <span style={{fontSize:13,fontWeight:600,color:C.text}}>{r.name}</span>
+                                {r.score!==null&&<span style={{fontSize:13,fontWeight:700,color:r.score>=6?C.green:C.red}}>{r.score+"/10"}</span>}
+                                {r.saved&&<span style={{fontSize:11,color:C.green,display:"flex",alignItems:"center",gap:3}}><i className="ti ti-check" style={{fontSize:12}}/>Guardado en Mis Alumnos</span>}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
                 <Btn onClick={correctTP} disabled={corrLoading||!corrR.trim()||!corrW.trim()}>
                   {corrLoading?"Corrigiendo...":<><i className="ti ti-checklist" style={{fontSize:13,marginRight:4}}/>Corregir Trabajo Practico</>}
                 </Btn>
