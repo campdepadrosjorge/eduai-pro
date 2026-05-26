@@ -656,6 +656,7 @@ export default function AulaXpro() {
   var [curSid,setCurSid]=useState(null);
   var [view,setView]=useState("dashboard");
   var [bar,setBar]=useState(true);
+  var [mobileMenu,setMobileMenu]=useState(false);
   var [subjModal,setSubjModal]=useState(false);
   var [sf,setSf]=useState({name:"",level:"Secundario (4-6)",materials:"",bibliography:""});
 var [sfPdfs,setSfPdfs]=useState([]);
@@ -720,7 +721,12 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
   var [newStudentName,setNewStudentName]=useState("");
   var [evalModal,setEvalModal]=useState(false);
   var [evalForm,setEvalForm]=useState({topic:"",score:0,max_score:10,rubric_id:"",rubric_name:"",feedback:""});
-
+  var [isMobile,setIsMobile]=useState(window.innerWidth<768);
+  useEffect(function(){
+    function handleResize(){setIsMobile(window.innerWidth<768);}
+    window.addEventListener("resize",handleResize);
+    return function(){window.removeEventListener("resize",handleResize);};
+  },[]);
   var curSubj=subjects.find(function(s){return s.id===curSid;})||null;
 
   useEffect(function(){
@@ -1002,7 +1008,10 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
   return (
     <div style={{display:"flex",height:"100vh",background:C.bg,color:C.text,fontFamily:"Quicksand,sans-serif",overflow:"hidden"}}>
 
-      <div style={{width:bar?218:56,minWidth:bar?218:56,background:"#0D3559",borderRight:"1px solid "+C.border,display:"flex",flexDirection:"column",transition:"all .22s",overflow:"hidden"}}>
+      {isMobile&&mobileMenu&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:9998}} onClick={function(){setMobileMenu(false);}}/>
+      )}
+      <div style={{width:isMobile?(mobileMenu?280:0):bar?218:56,minWidth:isMobile?(mobileMenu?280:0):bar?218:56,background:"#0D3559",borderRight:"1px solid "+C.border,display:"flex",flexDirection:"column",transition:"all .22s",overflow:"hidden",position:isMobile?"fixed":"relative",top:0,left:0,height:isMobile?"100vh":"auto",zIndex:isMobile?9999:"auto"}}>
         <div style={{padding:"0 10px",borderBottom:"1px solid "+C.border,minHeight:54,display:"flex",alignItems:"center",gap:8}}>
           <button style={{background:"none",border:"none",cursor:"pointer",color:C.accent,fontSize:17,minWidth:26,fontFamily:"Quicksand,sans-serif"}} onClick={function(){setBar(!bar);}}>
             {bar?<i className="ti ti-chevron-left" style={{fontSize:16}}/>:<i className="ti ti-chevron-right" style={{fontSize:16}}/>}
@@ -1021,7 +1030,7 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
           {NAV.map(function(n){
             return (
               <div key={n.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 11px",cursor:"pointer",margin:"2px 6px",background:view===n.id?C.accentBg:"transparent",color:view===n.id?"#26C3D4":"#7aaabf",fontSize:13,whiteSpace:"nowrap",overflow:"hidden",borderLeft:view===n.id?"2px solid "+C.accent:"2px solid transparent"}}
-                onClick={function(){setView(n.id);}}>
+                onClick={function(){setView(n.id);if(isMobile) setMobileMenu(false);}}>
                 <i className={"ti "+n.icon} style={{fontSize:17,minWidth:24,textAlign:"center"}}/>
                 {bar&&<span>{n.label}</span>}
               </div>
@@ -1046,6 +1055,11 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
 
       <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden",minWidth:0}}>
         <div style={{background:C.surf,borderBottom:"1px solid "+C.border,padding:"0 22px",display:"flex",alignItems:"center",gap:14,minHeight:54}}>
+          {isMobile&&(
+            <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.text,marginRight:8,padding:4}} onClick={function(){setMobileMenu(!mobileMenu);}}>
+              <i className="ti ti-menu-2" style={{fontSize:22}}/>
+            </button>
+          )}
           <h1 style={{margin:0,fontSize:16,fontWeight:700,flex:1,color:C.text,display:"flex",alignItems:"center",gap:8}}>
             {(NAV.find(function(n){return n.id===view;})||{}).icon&&<i className={"ti "+((NAV.find(function(n){return n.id===view;})||{}).icon||"")} style={{fontSize:16}}/>}
             {(NAV.find(function(n){return n.id===view;})||{}).label}
@@ -1084,7 +1098,7 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
                   <i className="ti ti-plus" style={{fontSize:13,marginRight:4}}/>Nueva Materia
                 </Btn>
               </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
+              <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:12,marginBottom:20}}>
                 {[{l:"Materias",v:subjects.length,i:"ti-books",c:C.blue},{l:"Biblioteca",v:library.length,i:"ti-folder",c:C.green},{l:"Banco",v:bank.length,i:"ti-database",c:C.accent},{l:"Biblioteca Publica",v:publicLib.length,i:"ti-world",c:C.purple}].map(function(x){
                   return (
                     <div key={x.l} style={{background:"#CFF09E",border:"1px solid #A8DBA8",borderRadius:4,padding:"18px 20px"}}style={Object.assign({},card,{marginBottom:0})}>
@@ -1106,7 +1120,7 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
                     </Btn>
                   </div>
                 ):(
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>
+                  <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>
                     {subjects.map(function(sub){
                       return (
                         <div key={sub.id} style={{background:C.bg,border:"2px solid "+(curSid===sub.id?C.accent:C.border),borderRadius:4,padding:14,cursor:"pointer"}} onClick={function(){setCurSid(sub.id);}}>
@@ -1133,7 +1147,7 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
               </div>
               <div style={card}>
                 <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:14}}>ACCESO RAPIDO</div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
+                <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:10}}>
                   {[{v:"generator",i:"ti-bolt",l:"Generador IA",c:C.accent},{v:"chat",i:"ti-message",l:"Chat Docente",c:C.blue},{v:"multimedia",i:"ti-photo",l:"Multimedia",c:C.green},{v:"corrector",i:"ti-checklist",l:"Corrector TPs",c:C.purple}].map(function(x){
                     return (
                       <button key={x.v} style={{background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"13px 8px",cursor:"pointer",textAlign:"center",fontFamily:"Quicksand,sans-serif"}} onClick={function(){setView(x.v);}}>
@@ -1148,7 +1162,7 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
           )}
 
           {!dataLoading&&view==="generator"&&(
-            <div style={{display:"grid",gridTemplateColumns:"258px 1fr",gap:18}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"258px 1fr",gap:18}}>
               <div>
                 <div style={card}>
                   <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:12}}>TIPO DE CONTENIDO</div>
@@ -1293,7 +1307,7 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
           )}
 
           {!dataLoading&&view==="multimedia"&&(
-            <div style={{display:"grid",gridTemplateColumns:"248px 1fr",gap:18}}>
+           <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"248px 1fr",gap:18}}>
               <div style={card}>
                 <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:12}}>TIPO</div>
                 {MM_TYPES.map(function(m){
@@ -1436,7 +1450,7 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
           })()}
 
           {!dataLoading&&view==="corrector"&&(
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:18}}>
               <div style={card}>
                 <h3 style={{margin:"0 0 5px",fontSize:18,fontWeight:700,color:C.text}}>Corrector de TPs</h3>
                 <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Pega la rubrica y el trabajo del alumno para una correccion completa.</p>
@@ -1653,7 +1667,7 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
           )}
 
           {!dataLoading&&view==="sequences"&&(
-            <div style={{display:"grid",gridTemplateColumns:"280px 1fr",gap:18}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"280px 1fr",gap:18}}>
               <div>
                 <div style={card}>
                   <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:14}}>NUEVA SECUENCIA</div>
@@ -1739,7 +1753,7 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
           )}
 
           {!dataLoading&&view==="students"&&(
-            <div style={{display:"grid",gridTemplateColumns:"260px 1fr",gap:18}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"260px 1fr",gap:18}}>
               <div>
                 <div style={card}>
                   <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:12}}>{"ALUMNOS — "+(curSubj?curSubj.name:"Sin materia")}</div>
