@@ -868,12 +868,12 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
     try{
       var selected=questionItems.filter(function(q){return qiSelected.includes(q.id);});
       var sys="Sos experto en evaluacion educativa. Responde en espanol rioplatense con Markdown.";
-      var questionsText=selected.map(function(q,i){
+      var questionsText=selected.sort(function(a,b){return a.type.localeCompare(b.type);}).map(function(q,i){
         var opts=[];
         try{opts=JSON.parse(q.options||"[]");}catch{}
         return (i+1)+". ["+q.type.toUpperCase()+"] "+q.question+(opts.length?"\n"+opts.map(function(o,j){return String.fromCharCode(65+j)+") "+o;}).join("\n"):"")+(q.answer?"\nRespuesta: "+q.answer:"");
       }).join("\n\n");
-      var usr="Arma una evaluacion formal con las siguientes preguntas seleccionadas del banco. Incluye encabezado institucional, instrucciones por seccion, las preguntas organizadas y al final la clave de respuestas.\n\nPREGUNTAS:\n"+questionsText;
+      var usr="Arma una evaluacion formal con las siguientes preguntas seleccionadas del banco. Incluye encabezado institucional, instrucciones por seccion, las preguntas organizadas y al final la clave de respuestas.No uses emojis. Para preguntas Verdadero/Falso usa este formato: V ___ F ___ (sin tablas). Para opciones multiple usa letras a) b) c) d) sin tablas.\n\nPREGUNTAS:\n"+questionsText;
       var r=await callClaude(sys,[{role:"user",content:usr}],4000);
       setQiExamResult(r);
     }catch(e){setQiExamResult("Error: "+e.message);}
