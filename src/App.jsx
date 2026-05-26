@@ -11,6 +11,7 @@ const NAV = [
   { id:"corrector",  label:"Corrector de TPs",     icon:"ti-checklist" },
   { id:"library",    label:"Biblioteca",           icon:"ti-books" },
   { id:"bank",       label:"Banco de Preguntas",   icon:"ti-database" },
+  { id:"smartbank",  label:"Banco Inteligente",     icon:"ti-brain" },
   { id:"sequences",  label:"Secuencias",           icon:"ti-list-numbers" },
   { id:"students",   label:"Mis Alumnos",          icon:"ti-users" },
   { id:"publiclib",  label:"Biblioteca Publica",   icon:"ti-world" },
@@ -193,6 +194,19 @@ async function dbLoadAllEvaluations(userId, subjectId) {
   var data = r.data||[];
   if(subjectId) data = data.filter(function(e){return e.students && e.students.subject_id===subjectId;});
   return data;
+}
+async function dbLoadQuestionItems(userId, subjectName) {
+  var q = supabase.from("question_items").select("*").eq("user_id",userId).order("topic");
+  if(subjectName) q = q.eq("subject_name",subjectName);
+  var r = await q;
+  if(r.error) throw r.error; return r.data||[];
+}
+async function dbAddQuestionItem(userId, item) {
+  var r = await supabase.from("question_items").insert({user_id:userId,...item}).select().single();
+  if(r.error) throw r.error; return r.data;
+}
+async function dbDelQuestionItem(id) {
+  var r = await supabase.from("question_items").delete().eq("id",id); if(r.error) throw r.error;
 }
 async function dbLogUsage(userId, userEmail, type, typeName, subjectName, tokIn, tokOut, isImage) {
   try { await supabase.from("usage_log").insert({user_id:userId,user_email:userEmail,type,type_name:typeName,subject_name:subjectName||"",tokens_input:tokIn||0,tokens_output:tokOut||0,is_image:isImage||false}); } catch {}
@@ -684,6 +698,12 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
   var [actImgErr,setActImgErr]=useState("");
   var [diffResult,setDiffResult]=useState("");
   var [diffLoading,setDiffLoading]=useState(false);
+  var [questionItems,setQuestionItems]=useState([]);
+  var [qiLoading,setQiLoading]=useState(false);
+  var [qiFilter,setQiFilter]=useState("all");
+  var [qiSelected,setQiSelected]=useState([]);
+  var [qiExamLoading,setQiExamLoading]=useState(false);
+  var [qiExamResult,setQiExamResult]=useState("");
   var [actImgDesc,setActImgDesc]=useState("");
   var [mmType,setMmType]=useState("podcast");
   var [mmTopic,setMmTopic]=useState("");
@@ -740,9 +760,9 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
   useEffect(function(){
     if(!authUser) return;
     setDataLoading(true);
-    Promise.all([dbLoadSubjects(authUser.id),dbLoadLibrary(authUser.id),dbLoadBank(authUser.id),dbLoadPublicLib(),dbLoadSequences(authUser.id)])
+    Promise.all([dbLoadSubjects(authUser.id),dbLoadLibrary(authUser.id),dbLoadBank(authUser.id),dbLoadPublicLib(),dbLoadSequences(authUser.id),dbLoadQuestionItems(authUser.id)])
       .then(function(results){
-        setSubjects(results[0]);setLibrary(results[1]);setBank(results[2]);setPublicLib(results[3]);setSequences(results[4]);
+        setSubjects(results[0]);setLibrary(results[1]);setBank(results[2]);setPublicLib(results[3]);setSequences(results[4]);setQuestionItems(results[5]);
         if(results[0].length) setCurSid(results[0][0].id);
         setDataLoading(false);
         dbCheckSubscription(authUser.id).then(function(sub){
@@ -813,6 +833,52 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
     catch{return null;}
   }
 
+  async function extractQuestionsFromBank(bankItem) {
+    if(!authUser) return;
+    setQiLoading(true);
+    try {
+      var sys="Sos experto en evaluacion educativa. Responde SOLO con JSON valido, sin texto adicional.";
+      var usr="Extrae todas las preguntas de esta evaluacion y devuelve un JSON array con este formato exacto:\n[\n  {\n    \"topic\": \"tema de la pregunta\",\n    \"type\": \"multiple|verdadero_falso|desarrollo|completar\",\n    \"difficulty\": \"Basico|Intermedio|Avanzado\",\n    \"question\": \"texto completo de la pregunta\",\n    \"answer\": \"respuesta correcta\",\n    \"options\": [\"opcion1\",\"opcion2\",\"opcion3\",\"opcion4\"]\n  }\n]\n\nEVALUACION:\n"+bankItem.content.slice(0,4000);
+      var r=await callClaude(sys,[{role:"user",content:usr}],3000);
+      var clean=r.replace(/```json\n?/g,"").replace(/```\n?/g,"").trim();
+      var questions=JSON.parse(clean);
+      for(var i=0;i<questions.length;i++){
+        var q=questions[i];
+        await dbAddQuestionItem(authUser.id,{
+          bank_id:bankItem.id,
+          subject_name:bankItem.subject_name||"",
+          topic:q.topic||bankItem.topic,
+          type:q.type||"multiple",
+          difficulty:q.difficulty||"Intermedio",
+          question:q.question||"",
+          answer:q.answer||"",
+          options:JSON.stringify(q.options||[]),
+        });
+      }
+      var updated=await dbLoadQuestionItems(authUser.id);
+      setQuestionItems(updated);
+      alert(questions.length+" preguntas extraidas y guardadas.");
+    }catch(e){alert("Error: "+e.message);}
+    setQiLoading(false);
+  }
+
+  async function buildExam() {
+    if(!qiSelected.length) return;
+    setQiExamLoading(true);setQiExamResult("");
+    try{
+      var selected=questionItems.filter(function(q){return qiSelected.includes(q.id);});
+      var sys="Sos experto en evaluacion educativa. Responde en espanol rioplatense con Markdown.";
+      var questionsText=selected.map(function(q,i){
+        var opts=[];
+        try{opts=JSON.parse(q.options||"[]");}catch{}
+        return (i+1)+". ["+q.type.toUpperCase()+"] "+q.question+(opts.length?"\n"+opts.map(function(o,j){return String.fromCharCode(65+j)+") "+o;}).join("\n"):"")+(q.answer?"\nRespuesta: "+q.answer:"");
+      }).join("\n\n");
+      var usr="Arma una evaluacion formal con las siguientes preguntas seleccionadas del banco. Incluye encabezado institucional, instrucciones por seccion, las preguntas organizadas y al final la clave de respuestas.\n\nPREGUNTAS:\n"+questionsText;
+      var r=await callClaude(sys,[{role:"user",content:usr}],4000);
+      setQiExamResult(r);
+    }catch(e){setQiExamResult("Error: "+e.message);}
+    setQiExamLoading(false);
+  }
   async function generateDiff() {
     if(!genResult||!curSubj) return;
     setDiffLoading(true);setDiffResult("");
@@ -1680,6 +1746,119 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
             </div>
           )}
 
+          {!dataLoading&&view==="smartbank"&&(
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"320px 1fr",gap:18}}>
+              <div>
+                <div style={card}>
+                  <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:12}}>IMPORTAR DEL BANCO</div>
+                  <p style={{fontSize:12,color:C.textDim,marginBottom:12}}>Selecciona una evaluacion del banco para extraer sus preguntas automaticamente.</p>
+                  {!bank.length?<p style={{fontSize:13,color:C.textDim}}>No hay evaluaciones en el banco todavia.</p>:bank.map(function(item){
+                    return (
+                      <div key={item.id} style={{padding:"8px 10px",borderRadius:4,marginBottom:4,border:"1px solid "+C.border,background:C.bg}}>
+                        <div style={{fontSize:13,fontWeight:600,color:C.text,marginBottom:2}}>{item.topic}</div>
+                        <div style={{fontSize:11,color:C.textDim,marginBottom:6}}>{item.subject_name||""}</div>
+                        <Btn v="sm" disabled={qiLoading} onClick={function(){extractQuestionsFromBank(item);}}>
+                          {qiLoading?"Extrayendo...":<><i className="ti ti-brain" style={{fontSize:12,marginRight:3}}/>Extraer preguntas</>}
+                        </Btn>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={card}>
+                  <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:12}}>FILTRAR POR MATERIA</div>
+                  <select style={Object.assign({},sel,{width:"100%"})} value={qiFilter} onChange={function(e){setQiFilter(e.target.value);}}>
+                    <option value="all">Todas las materias</option>
+                    {[...new Set(questionItems.map(function(q){return q.subject_name;}))].filter(Boolean).map(function(s){return <option key={s} value={s}>{s}</option>;})}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <div style={card}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                    <div>
+                      <div style={{fontSize:15,fontWeight:700,color:C.text}}>{"Banco inteligente ("+questionItems.length+" preguntas)"}</div>
+                      <div style={{fontSize:12,color:C.textDim,marginTop:2}}>{qiSelected.length>0?qiSelected.length+" seleccionadas":"Selecciona preguntas para armar una evaluacion"}</div>
+                    </div>
+                    <div style={{display:"flex",gap:8}}>
+                      {qiSelected.length>0&&(
+                        <Btn onClick={buildExam} disabled={qiExamLoading}>
+                          {qiExamLoading?"Armando...":<><i className="ti ti-file-plus" style={{fontSize:13,marginRight:4}}/>Armar evaluacion</>}
+                        </Btn>
+                      )}
+                      {qiSelected.length>0&&<Btn v="ghost" st={{fontSize:12,padding:"5px 10px"}} onClick={function(){setQiSelected([]);}}>Limpiar</Btn>}
+                    </div>
+                  </div>
+                  {!questionItems.length?(
+                    <div style={{textAlign:"center",padding:"32px 0",color:C.textDim}}>
+                      <i className="ti ti-brain" style={{fontSize:36,display:"block",marginBottom:10,color:C.textDim}}/>
+                      <p>Importa preguntas del banco para empezar.</p>
+                    </div>
+                  ):(
+                    <div>
+                      {Object.entries(
+                        questionItems
+                          .filter(function(q){return qiFilter==="all"||q.subject_name===qiFilter;})
+                          .reduce(function(acc,q){if(!acc[q.topic]) acc[q.topic]=[];acc[q.topic].push(q);return acc;},{})
+                      ).map(function(entry){
+                        var topic=entry[0];var qs=entry[1];
+                        return (
+                          <div key={topic} style={{marginBottom:16}}>
+                            <div style={{fontSize:12,fontWeight:700,color:C.accent,marginBottom:8,display:"flex",alignItems:"center",gap:6}}>
+                              <i className="ti ti-tag" style={{fontSize:13}}/>
+                              {topic}
+                              <span style={{fontSize:11,color:C.textDim,fontWeight:400}}>({qs.length} preguntas)</span>
+                            </div>
+                            {qs.map(function(q){
+                              var isSelected=qiSelected.includes(q.id);
+                              return (
+                                <div key={q.id} style={{padding:"10px 14px",borderRadius:4,marginBottom:6,border:"1px solid "+(isSelected?C.accent:C.border),background:isSelected?C.accentBg:C.bg,cursor:"pointer"}} onClick={function(){setQiSelected(function(prev){return isSelected?prev.filter(function(x){return x!==q.id;}):prev.concat([q.id]);});}}>
+                                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
+                                    <div style={{flex:1}}>
+                                      <div style={{fontSize:13,color:C.text,marginBottom:4}}>{q.question}</div>
+                                      <div style={{display:"flex",gap:6}}>
+                                        <Tag color={C.accent}>{q.type}</Tag>
+                                        <Tag color={q.difficulty==="Avanzado"?C.red:q.difficulty==="Basico"?C.green:C.blue}>{q.difficulty}</Tag>
+                                      </div>
+                                    </div>
+                                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                                      {isSelected&&<i className="ti ti-check" style={{fontSize:16,color:C.accent}}/>}
+                                      <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.textDim}} onClick={function(e){e.stopPropagation();dbDelQuestionItem(q.id).then(function(){setQuestionItems(function(prev){return prev.filter(function(x){return x.id!==q.id;});});setQiSelected(function(prev){return prev.filter(function(x){return x!==q.id;});});});}}>
+                                        <i className="ti ti-trash" style={{fontSize:14}}/>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+                {qiExamLoading&&<div style={card}><Spin/></div>}
+                {qiExamResult&&!qiExamLoading&&(
+                  <div style={card}>
+                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:14}}>
+                      <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8}}>EVALUACION GENERADA</div>
+                      <div style={{display:"flex",gap:8}}>
+                        <Btn v="secondary" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){saveLib(qiExamResult,"evaluacion","Evaluacion del Banco","Evaluacion "+new Date().toLocaleDateString("es-AR"));}}>
+                          <><i className="ti ti-device-floppy" style={{fontSize:13,marginRight:4}}/>Guardar</>
+                        </Btn>
+                        <Btn v="secondary" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportDocx("Evaluacion","Evaluacion",curSubj?curSubj.name:"",qiExamResult);}}>
+                          <i className="ti ti-file-text" style={{fontSize:13,marginRight:4}}/>Word
+                        </Btn>
+                        <Btn v="secondary" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportPdf("Evaluacion","Evaluacion",curSubj?curSubj.name:"",qiExamResult);}}>
+                          <i className="ti ti-file-invoice" style={{fontSize:13,marginRight:4}}/>PDF
+                        </Btn>
+                      </div>
+                    </div>
+                    <MDView text={qiExamResult} maxH={600}/>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           {!dataLoading&&view==="bank"&&(
             <div>
               <h2 style={{fontSize:19,fontWeight:700,marginBottom:18,color:C.text,display:"flex",alignItems:"center",gap:8}}>
