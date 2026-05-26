@@ -699,6 +699,8 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
   var [corrW,setCorrW]=useState("");
   var [corrResult,setCorrResult]=useState("");
   var [corrLoading,setCorrLoading]=useState(false);
+  var [imgExtractLoading,setImgExtractLoading]=useState(false);
+  var [imgExtractErr,setImgExtractErr]=useState("");
   var [batchFile,setBatchFile]=useState(null);
   var [batchLoading,setBatchLoading]=useState(false);
   var [batchProgress,setBatchProgress]=useState(0);
@@ -1450,7 +1452,32 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
                   </div>
                 )}
                 <label style={lbl}>TRABAJO DEL ALUMNO *</label>
-                <textarea style={Object.assign({},inp,{height:175,resize:"vertical",marginBottom:18})} value={corrW} onChange={function(e){setCorrW(e.target.value);}} placeholder="Pega el texto del trabajo practico..."/>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                  <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+C.border,borderRadius:4,padding:"7px 14px",cursor:imgExtractLoading?"not-allowed":"pointer",fontSize:12,fontWeight:600,color:C.text,opacity:imgExtractLoading?.6:1}}>
+                    <i className="ti ti-camera" style={{fontSize:14}}/>
+                    {imgExtractLoading?"Extrayendo texto...":"Fotografiar examen"}
+                    <input type="file" accept="image/*" capture="environment" style={{display:"none"}} disabled={imgExtractLoading} onChange={async function(e){
+                      var file=e.target.files[0]; if(!file) return;
+                      setImgExtractLoading(true);setImgExtractErr("");
+                      try{
+                        var reader=new FileReader();
+                        reader.onload=async function(ev){
+                          var base64=ev.target.result.split(",")[1];
+                          var mediaType=file.type||"image/jpeg";
+                          var res=await fetch("/api/extract-text",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({base64,mediaType})});
+                          var data=await res.json();
+                          if(!res.ok) throw new Error(data.error);
+                          setCorrW(data.text);
+                          setImgExtractLoading(false);
+                        };
+                        reader.readAsDataURL(file);
+                      }catch(err){setImgExtractErr("Error: "+err.message);setImgExtractLoading(false);}
+                    }}/>
+                  </label>
+                  {imgExtractErr&&<span style={{fontSize:12,color:C.red}}>{imgExtractErr}</span>}
+                  {corrW&&<span style={{fontSize:11,color:C.green,display:"flex",alignItems:"center",gap:3}}><i className="ti ti-check" style={{fontSize:12}}/>Texto extraido</span>}
+                </div>
+                <textarea style={Object.assign({},inp,{height:175,resize:"vertical",marginBottom:18})} value={corrW} onChange={function(e){setCorrW(e.target.value);}} placeholder="Pega el texto del trabajo o fotografialo con el boton de arriba..."/>
                 <div style={{marginTop:20,paddingTop:16,borderTop:"1px solid "+C.border}}>
                   <label style={Object.assign({},lbl,{marginBottom:8})}>CORRECCION EN BATCH (Excel)</label>
                   <p style={{fontSize:12,color:C.textDim,marginBottom:10}}>Subi un Excel con columna A = Nombre del alumno, columna B = Texto del trabajo. La IA corrige todos y guarda las notas en Mis Alumnos automaticamente.</p>
