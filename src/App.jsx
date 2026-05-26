@@ -978,7 +978,7 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
   async function generateActivityImage(){
     if(!genResult||!curSubj) return;
     setActImgLoad(true);setActImgUrl(null);setActImgErr("");
-    try{var desc=actImgDesc||("Educational illustration for: "+genTopic+". Subject: "+curSubj.name);var url=await callImgApi(desc,curSubj.name,genLevel);setActImgUrl(url);dbLogUsage(authUser.id,authUser.email,"imagen","Imagen IA",curSubj.name,300,0,true);dbAddUsageCost(authUser.id,0.07).then(function(){dbGetUsage(authUser.id).then(function(u){setUsage(u);});});
+    try{var desc=actImgDesc||("Educational illustration for: "+genTopic+". Subject: "+curSubj.name);var url=await callImgApi(desc,curSubj.name,genLevel);setActImgUrl(url);dbLogUsage(authUser.id,authUser.email,"imagen","Imagen IA",curSubj.name,300,0,true);dbAddUsageCost(authUser.id,0.07).then(function(){dbGetUsage(authUser.id).then(function(u){setUsage(u);});});}
     catch(e){setActImgErr("Error: "+e.message);}
     setActImgLoad(false);
   }
