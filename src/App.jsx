@@ -873,7 +873,7 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
         try{opts=JSON.parse(q.options||"[]");}catch{}
         return (i+1)+". ["+q.type.toUpperCase()+"] "+q.question+(opts.length?"\n"+opts.map(function(o,j){return String.fromCharCode(65+j)+") "+o;}).join("\n"):"")+(q.answer?"\nRespuesta: "+q.answer:"");
       }).join("\n\n");
-      var usr="Arma una evaluacion formal. NO inventes nombre de institucion ni docente. Usa este titulo y encabezado exacto:\n\n# Evaluacion de "+(curSubj?curSubj.name:"Materia")+"\n\n| | |\n|---|---|\n| **Institucion:** | |\n| **Alumno/a:** | |\n| **Curso:** | |\n| **Fecha:** | |\n| **Calificacion:** | |\n\nLuego instrucciones por seccion y preguntas organizadas por tipo. Para V/F usa: V ___ F ___ (sin tablas). Para multiple choice usa a) b) c) d) sin tablas. No uses emojis. Al final la clave de respuestas.\n\nPREGUNTAS:\n"+questionsText;
+      var usr="Arma una evaluacion formal. NO inventes nombre de institucion ni docente. Usa este titulo y encabezado exacto:\n\n# Evaluacion de "+(curSubj?curSubj.name:"Materia")+"\n\n**Institucion:** ___________________________\n\n**Alumno/a:** ___________________________ **Curso:** ____________\n\n**Fecha:** ____________ **Calificacion:** ____________\n\n---\n\nLuego instrucciones por seccion y preguntas organizadas por tipo. Para V/F usa: V ___ F ___ (sin tablas). Para multiple choice usa a) b) c) d) sin tablas. No uses emojis. Al final la clave de respuestas.\n\nPREGUNTAS:\n"+questionsText;
       var r=await callClaude(sys,[{role:"user",content:usr}],4000);
       setQiExamResult(r);
     }catch(e){setQiExamResult("Error: "+e.message);}
