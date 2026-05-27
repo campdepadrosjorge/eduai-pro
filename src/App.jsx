@@ -799,6 +799,18 @@ function AuthScreen({onAuth}) {
           <label style={lbl}>CONTRASENA</label>
           <input style={Object.assign({},inp,{marginBottom:20})} type="password" value={password} onChange={function(e){setPass(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter") mode==="login"?handleLogin():handleRegister();}} placeholder="Minimo 6 caracteres"/>
           {error&&<div style={{color:C.red,fontSize:13,background:"#fee2e2",padding:"9px 13px",borderRadius:4,marginBottom:14}}>{error}</div>}
+          {mode==="login"&&(
+            <div style={{textAlign:"right",marginBottom:14}}>
+              <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.accent,fontSize:12,fontFamily:"Quicksand,sans-serif",fontWeight:600}} onClick={async function(){
+                if(!email){setError("Ingresa tu email primero.");return;}
+                setLoading(true);
+                var result=await supabase.auth.resetPasswordForEmail(email,{redirectTo:"https://app.aulaxpro.com/reset-password"});
+                if(result.error){setError(result.error.message);}
+                else{setError("");alert("Te enviamos un email para restablecer tu contraseña. Revisá tu bandeja.");}
+                setLoading(false);
+              }}>¿Olvidaste tu contraseña?</button>
+            </div>
+          )}
           <Btn st={{width:"100%",padding:"11px 20px",fontSize:14,justifyContent:"center"}} disabled={loading} onClick={mode==="login"?handleLogin:handleRegister}>
             {loading?"Procesando...":mode==="login"?"Entrar":"Crear cuenta"}
           </Btn>
