@@ -15,8 +15,8 @@ const NAV = [
   { id:"sequences",  label:"Secuencias",           icon:"ti-list-numbers" },
   { id:"students",   label:"Mis Alumnos",          icon:"ti-users" },
   { id:"publiclib",  label:"Biblioteca Publica",   icon:"ti-world" },
-  { id:"pricing",    label:"Planes y Precios",     icon:"ti-credit-card" },
   { id:"projects",   label:"Proyectos Colaborativos", icon:"ti-topology-star" },
+  { id:"pricing",    label:"Planes y Precios",     icon:"ti-credit-card" },
   { id:"admin",      label:"Panel Admin",          icon:"ti-chart-bar" },
 ];
 
