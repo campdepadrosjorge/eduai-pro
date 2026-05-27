@@ -228,13 +228,9 @@ async function dbDelQuestionItem(id) {
 }
 async function dbLoadProjects(userId) {
   var owned = await supabase.from("projects").select("*, project_members(*)").eq("owner_id",userId).order("created_at",{ascending:false});
-  var member = await supabase.from("project_members").select("project_id, status").eq("user_id",userId).eq("status","active");
-  var memberIds = (member.data||[]).map(function(m){return m.project_id;});
-  var shared = {data:[]};
-  if(memberIds.length>0){
-    shared = await supabase.from("projects").select("*, project_members(*)").in("id",memberIds).neq("owner_id",userId);
-  }
-  return {owned:owned.data||[], shared:shared.data||[]};
+  var sharedRes = await fetch("/api/get-shared-projects",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:userId})});
+  var sharedData = sharedRes.ok ? await sharedRes.json() : {projects:[]};
+  return {owned:owned.data||[], shared:sharedData.projects||[]};
 }
 
 async function dbAddProject(userId, data) {
