@@ -75,7 +75,7 @@ function userGen(type, topic, diff, extra, subject) {
     material:    "Material didactico sobre: \"" + topic + "\" | Dificultad: " + diff + "\n\nIntroduccion, desarrollo por subtemas, ejemplos, actividades, sintesis, glosario." + e,
     presentacion:"Esquema sobre: \"" + topic + "\" | Dificultad: " + diff + "\n\nGenera 12-15 diapositivas con EXACTAMENTE este formato:\n\n## SLIDE [N]: [Titulo]\n[Bullets comenzando con -]\nNOTAS: [Lo que dice el presentador]\n\n---\n\nRepeti para cada slide." + e,
     guia:        "Guia de estudio sobre: \"" + topic + "\" | Dificultad: " + diff + "\n\nObjetivos, mapa de conceptos, preguntas orientadoras, actividades, autoevaluacion, estrategias de repaso." + e,
-    adaptado:    "Contenido adaptado NEE sobre: \"" + topic + "\" | 4 versiones: Dislexia, TDAH, Discapacidad Visual, Altas Capacidades. Instrucciones paso a paso, estrategias docentes." + e,
+    adaptado:    "Contenido educativo adaptado para NEE sobre: \"" + topic + "\".\n\nGenera versiones adaptadas para CADA UNA de estas necesidades educativas especiales:\n\n1. **DISLEXIA** — Fuente sans-serif sugerida, texto fragmentado, ayudas visuales, sin columnas, palabras clave destacadas\n2. **TDAH** — Instrucciones muy cortas, una tarea a la vez, pausas activas, elementos visuales de motivacion, tiempo estimado por actividad\n3. **TEA** — Lenguaje literal y concreto, rutinas claras, anticipacion de cambios, sin metaforas, estructura visual muy clara\n4. **DISCAPACIDAD VISUAL** — Descripcion verbal detallada de todo elemento visual, sin tablas complejas, estructura lineal\n5. **DISCAPACIDAD AUDITIVA** — Material 100% escrito, sin referencias a audio, apoyo visual fuerte, glosario de terminos\n6. **BAJA VISION** — Texto ampliable, alto contraste sugerido, elementos grandes, sin informacion solo en color\n7. **ALTAS CAPACIDADES** — Mayor complejidad, conexiones interdisciplinarias, preguntas de extension, proyectos autonomos\n8. **DIFICULTADES EN LECTOESCRITURA** — Vocabulario simplificado, oraciones cortas, mucho espacio en blanco, apoyo en imagenes\n9. **BARRERAS IDIOMATICAS** — Lenguaje simple, glosario basico, ejemplos concretos y universales\n\nPara CADA version incluí: a) Material adaptado completo, b) Estrategias especificas para el docente, c) Recursos y materiales sugeridos.\n\n" + (e ? "Instrucciones adicionales: " + e : ""),
   };
   return m[type] || "Contenido educativo sobre \"" + topic + "\". Dificultad: " + diff + "." + e;
 }
@@ -1389,7 +1389,14 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
                       <label style={lbl}>TEMA ESPECIFICO *</label>
                       <input style={Object.assign({},inp,{marginBottom:12})} value={genTopic} onChange={function(e){setGenTopic(e.target.value);}} placeholder="Ej: La Primera Guerra Mundial"/>
                       <label style={lbl}>INSTRUCCIONES ADICIONALES (opcional)</label>
-                      <textarea style={Object.assign({},inp,{height:70,resize:"vertical",marginBottom:18})} value={genExtra} onChange={function(e){setGenExtra(e.target.value);}} placeholder="Ej: grupos de 4, enfoque por proyectos..."/>
+                      <textarea style={Object.assign({},inp,{height:70,resize:"vertical",marginBottom:12})} value={genExtra} onChange={function(e){setGenExtra(e.target.value);}} placeholder="Ej: grupos de 4, enfoque por proyectos..."/>
+                      {genType==="adaptado"&&(
+                        <div style={{marginBottom:18}}>
+                          <label style={lbl}>MATERIAL BASE (opcional) — pega aqui el contenido que queres adaptar</label>
+                          <textarea style={Object.assign({},inp,{height:120,resize:"vertical"})} value={genExtra.includes("MATERIAL BASE:")?genExtra:""} onChange={function(e){setGenExtra("MATERIAL BASE:\n"+e.target.value);}} placeholder="Pega aqui el texto, actividad o material que queres adaptar para NEE. Si lo dejas vacio la IA genera desde cero basandose en el tema."/>
+                        </div>
+                      )}
+                      {genType!=="adaptado"&&<div style={{marginBottom:18}}/>}
                       <div style={{display:"flex",gap:10,alignItems:"center"}}>
                         <Btn onClick={generate} disabled={genLoading||!genTopic.trim()}>
                           {genLoading?"Generando...":<><i className="ti ti-bolt" style={{fontSize:13,marginRight:4}}/>{"Generar "+(gt?gt.label:"")}</>}
