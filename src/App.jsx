@@ -2571,7 +2571,9 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
                             <Btn st={{width:"100%",justifyContent:"center"}} onClick={async function(){
                               if(!inviteEmail||!inviteSubject) return;
                               try{
-                                await dbInviteToProject(currentProject.id,inviteEmail,inviteSubject);
+                                var invRes=await fetch("/api/invite-project",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({project_id:currentProject.id,email:inviteEmail,subject_name:inviteSubject})});
+                              var invData=await invRes.json();
+                              if(!invRes.ok) throw new Error(invData.error);
                                 var updated=await dbLoadProjects(authUser.id);
                                 setProjects(updated);
                                 var updatedProject=updated.owned.find(function(p){return p.id===currentProject.id;});
