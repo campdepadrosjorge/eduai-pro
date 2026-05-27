@@ -16,6 +16,7 @@ const NAV = [
   { id:"students",   label:"Mis Alumnos",          icon:"ti-users" },
   { id:"publiclib",  label:"Biblioteca Publica",   icon:"ti-world" },
   { id:"pricing",    label:"Planes y Precios",     icon:"ti-credit-card" },
+  { id:"projects",   label:"Proyectos Colaborativos", icon:"ti-topology-star" },
   { id:"admin",      label:"Panel Admin",          icon:"ti-chart-bar" },
 ];
 
@@ -224,6 +225,51 @@ async function dbAddQuestionItem(userId, item) {
 }
 async function dbDelQuestionItem(id) {
   var r = await supabase.from("question_items").delete().eq("id",id); if(r.error) throw r.error;
+}
+async function dbLoadProjects(userId) {
+  var owned = await supabase.from("projects").select("*, project_members(*)").eq("owner_id",userId).order("created_at",{ascending:false});
+  var member = await supabase.from("project_members").select("project_id, status").eq("user_id",userId).eq("status","active");
+  var memberIds = (member.data||[]).map(function(m){return m.project_id;});
+  var shared = memberIds.length ? await supabase.from("projects").select("*, project_members(*)").in("id",memberIds) : {data:[]};
+  return {owned:owned.data||[], shared:shared.data||[]};
+}
+
+async function dbAddProject(userId, data) {
+  var r = await supabase.from("projects").insert({owner_id:userId,...data}).select().single();
+  if(r.error) throw r.error; return r.data;
+}
+
+async function dbDelProject(id) {
+  var r = await supabase.from("projects").delete().eq("id",id); if(r.error) throw r.error;
+}
+
+async function dbLoadProjectContents(projectId) {
+  var r = await supabase.from("project_contents").select("*").eq("project_id",projectId).order("created_at",{ascending:false});
+  if(r.error) throw r.error; return r.data||[];
+}
+
+async function dbAddProjectContent(userId, projectId, data) {
+  var r = await supabase.from("project_contents").insert({user_id:userId,project_id:projectId,...data}).select().single();
+  if(r.error) throw r.error; return r.data;
+}
+
+async function dbDelProjectContent(id) {
+  var r = await supabase.from("project_contents").delete().eq("id",id); if(r.error) throw r.error;
+}
+
+async function dbInviteToProject(projectId, email, subjectName) {
+  var userResult = await supabase.auth.admin.listUsers();
+  var users = userResult.data ? userResult.data.users : [];
+  var user = users.find(function(u){return u.email===email;});
+  if(!user) throw new Error("El usuario no tiene cuenta en AulaXpro");
+  var r = await supabase.from("project_members").insert({project_id:projectId,user_id:user.id,subject_name:subjectName,status:"active",joined_at:new Date().toISOString()});
+  if(r.error) throw r.error;
+  return user;
+}
+
+async function dbAcceptInvitation(memberId) {
+  var r = await supabase.from("project_members").update({status:"active",joined_at:new Date().toISOString()}).eq("id",memberId);
+  if(r.error) throw r.error;
 }
 async function dbLogUsage(userId, userEmail, type, typeName, subjectName, tokIn, tokOut, isImage) {
   try { await supabase.from("usage_log").insert({user_id:userId,user_email:userEmail,type,type_name:typeName,subject_name:subjectName||"",tokens_input:tokIn||0,tokens_output:tokOut||0,is_image:isImage||false}); } catch {}
@@ -759,6 +805,16 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
   var [qiSelected,setQiSelected]=useState([]);
   var [qiExamLoading,setQiExamLoading]=useState(false);
   var [qiExamResult,setQiExamResult]=useState("");
+  var [projects,setProjects]=useState({owned:[],shared:[]});
+  var [currentProject,setCurrentProject]=useState(null);
+  var [projectContents,setProjectContents]=useState([]);
+  var [projectModal,setProjectModal]=useState(false);
+  var [projectForm,setProjectForm]=useState({title:"",description:"",subjects:["","",""],emails:["","",""]});
+  var [projectLoading,setProjectLoading]=useState(false);
+  var [projectGenLoading,setProjectGenLoading]=useState(false);
+  var [projectGenResult,setProjectGenResult]=useState("");
+  var [inviteEmail,setInviteEmail]=useState("");
+  var [inviteSubject,setInviteSubject]=useState("");
   var [actImgDesc,setActImgDesc]=useState("");
   var [mmType,setMmType]=useState("podcast");
   var [mmTopic,setMmTopic]=useState("");
@@ -815,9 +871,9 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
   useEffect(function(){
     if(!authUser) return;
     setDataLoading(true);
-    Promise.all([dbLoadSubjects(authUser.id),dbLoadLibrary(authUser.id),dbLoadBank(authUser.id),dbLoadPublicLib(),dbLoadSequences(authUser.id),dbLoadQuestionItems(authUser.id)])
+    Promise.all([dbLoadSubjects(authUser.id),dbLoadLibrary(authUser.id),dbLoadBank(authUser.id),dbLoadPublicLib(),dbLoadSequences(authUser.id),dbLoadQuestionItems(authUser.id),dbLoadProjects(authUser.id)])
       .then(function(results){
-        setSubjects(results[0]);setLibrary(results[1]);setBank(results[2]);setPublicLib(results[3]);setSequences(results[4]);setQuestionItems(results[5]);
+        setSubjects(results[0]);setLibrary(results[1]);setBank(results[2]);setPublicLib(results[3]);setSequences(results[4]);setQuestionItems(results[5]);setProjects(results[6]);
         if(results[0].length) setCurSid(results[0][0].id);
         setDataLoading(false);
         dbCheckSubscription(authUser.id).then(function(sub){
@@ -2284,6 +2340,199 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
             </div>
           )}
 
+          {!dataLoading&&view==="projects"&&(
+            <div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+                <h2 style={{fontSize:19,fontWeight:700,color:C.text,display:"flex",alignItems:"center",gap:8}}>
+                  <i className="ti ti-topology-star" style={{fontSize:18,color:C.accent}}/>Proyectos Colaborativos
+                </h2>
+                <Btn onClick={function(){setProjectModal(true);setProjectForm({title:"",description:"",subjects:["","",""],emails:["","",""]});setProjectGenResult("");}}>
+                  <i className="ti ti-plus" style={{fontSize:13,marginRight:4}}/>Nuevo proyecto
+                </Btn>
+              </div>
+
+              {!currentProject?(
+                <div>
+                  {(projects.owned.length+projects.shared.length)===0?(
+                    <div style={Object.assign({},card,{textAlign:"center",padding:"52px 24px",color:C.textDim})}>
+                      <i className="ti ti-topology-star" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
+                      <h3 style={{color:C.textMuted,marginBottom:8}}>No hay proyectos todavia</h3>
+                      <p style={{fontSize:13,marginBottom:16}}>Crea un proyecto interdisciplinario e invita a tus colegas.</p>
+                      <Btn onClick={function(){setProjectModal(true);}}>
+                        <i className="ti ti-plus" style={{fontSize:13,marginRight:4}}/>Crear primer proyecto
+                      </Btn>
+                    </div>
+                  ):(
+                    <div>
+                      {projects.owned.length>0&&(
+                        <div style={{marginBottom:24}}>
+                          <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:12}}>MIS PROYECTOS</div>
+                          <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(auto-fill,minmax(280px,1fr))",gap:14}}>
+                            {projects.owned.map(function(p){
+                              var members=(p.project_members||[]).filter(function(m){return m.status==="active";});
+                              return (
+                                <div key={p.id} style={{background:C.card,border:"1px solid "+C.border,borderRadius:4,padding:20,cursor:"pointer"}} onClick={function(){setCurrentProject(p);dbLoadProjectContents(p.id).then(setProjectContents);}}>
+                                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
+                                    <h3 style={{fontSize:15,fontWeight:700,color:C.text}}>{p.title}</h3>
+                                    <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.textDim}} onClick={function(e){e.stopPropagation();dbDelProject(p.id).then(function(){dbLoadProjects(authUser.id).then(setProjects);});}}>
+                                      <i className="ti ti-trash" style={{fontSize:14}}/>
+                                    </button>
+                                  </div>
+                                  <p style={{fontSize:13,color:C.textMuted,marginBottom:12}}>{p.description}</p>
+                                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                                    <i className="ti ti-users" style={{fontSize:14,color:C.accent}}/>
+                                    <span style={{fontSize:12,color:C.textDim}}>{members.length+" colaborador"+(members.length!==1?"es":"")}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      {projects.shared.length>0&&(
+                        <div>
+                          <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:12}}>PROYECTOS EN LOS QUE PARTICIPO</div>
+                          <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(auto-fill,minmax(280px,1fr))",gap:14}}>
+                            {projects.shared.map(function(p){
+                              return (
+                                <div key={p.id} style={{background:C.card,border:"1px solid "+C.border,borderRadius:4,padding:20,cursor:"pointer"}} onClick={function(){setCurrentProject(p);dbLoadProjectContents(p.id).then(setProjectContents);}}>
+                                  <h3 style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:6}}>{p.title}</h3>
+                                  <p style={{fontSize:13,color:C.textMuted}}>{p.description}</p>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ):(
+                <div>
+                  <Btn v="ghost" st={{marginBottom:14,fontSize:12}} onClick={function(){setCurrentProject(null);setProjectContents([]);setProjectGenResult("");}}>
+                    <i className="ti ti-arrow-left" style={{fontSize:13,marginRight:4}}/>Volver a proyectos
+                  </Btn>
+                  <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 320px",gap:18}}>
+                    <div>
+                      <div style={card}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
+                          <div>
+                            <h2 style={{fontSize:18,fontWeight:700,color:C.text,margin:0}}>{currentProject.title}</h2>
+                            <p style={{fontSize:13,color:C.textMuted,marginTop:4}}>{currentProject.description}</p>
+                          </div>
+                          <div style={{display:"flex",gap:8}}>
+                            <Btn v="secondary" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportDocx(currentProject.title,"Proyecto Interdisciplinario","",projectContents.map(function(c){return "## "+c.title+" ("+c.subject_name+")\n\n"+c.content;}).join("\n\n---\n\n"));}}>
+                              <i className="ti ti-file-text" style={{fontSize:13,marginRight:4}}/>Exportar
+                            </Btn>
+                          </div>
+                        </div>
+                        <div style={{marginBottom:16}}>
+                          <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:10}}>GENERAR CONTENIDO PARA ESTE PROYECTO</div>
+                          <div style={{display:"flex",gap:10,marginBottom:10,flexWrap:"wrap"}}>
+                            <input style={Object.assign({},inp,{flex:1,minWidth:200})} value={projectGenResult.topic||""} onChange={function(e){setProjectGenResult(Object.assign({},projectGenResult,{topic:e.target.value}));}} placeholder="Tema del contenido..."/>
+                            <select style={Object.assign({},sel,{minWidth:160})} value={projectGenResult.type||"actividad"} onChange={function(e){setProjectGenResult(Object.assign({},projectGenResult,{type:e.target.value}));}}>
+                              {GEN_TYPES.map(function(g){return <option key={g.id} value={g.id}>{g.label}</option>;})}
+                            </select>
+                            <Btn disabled={projectGenLoading||!projectGenResult.topic} onClick={async function(){
+                              setProjectGenLoading(true);
+                              try{
+                                var members=(currentProject.project_members||[]).filter(function(m){return m.status==="active";});
+                                var materiasCtx=members.map(function(m){return m.subject_name;}).filter(Boolean).join(", ");
+                                var gt3=GEN_TYPES.find(function(g){return g.id===(projectGenResult.type||"actividad");});
+                                var sys="Sos experto en proyectos interdisciplinarios. Materia del docente: "+(curSubj?curSubj.name:"General")+". Materias colaboradoras: "+materiasCtx+". Responde en espanol rioplatense con Markdown.";
+                                var usr=userGen(projectGenResult.type||"actividad",projectGenResult.topic,"Intermedio","Proyecto interdisciplinario que conecta: "+(curSubj?curSubj.name:"")+(materiasCtx?" con "+materiasCtx:""),curSubj);
+                                var r=await callClaude(sys,[{role:"user",content:usr}]);
+                                await dbAddProjectContent(authUser.id,currentProject.id,{subject_name:curSubj?curSubj.name:"General",type:projectGenResult.type||"actividad",type_name:gt3?gt3.label:"Contenido",title:projectGenResult.topic,content:r});
+                                var updated=await dbLoadProjectContents(currentProject.id);
+                                setProjectContents(updated);
+                                setProjectGenResult("");
+                              }catch(e){alert("Error: "+e.message);}
+                              setProjectGenLoading(false);
+                            }}>
+                              {projectGenLoading?"Generando...":<><i className="ti ti-bolt" style={{fontSize:13,marginRight:4}}/>Generar</>}
+                            </Btn>
+                          </div>
+                        </div>
+                        {!projectContents.length?(
+                          <div style={{textAlign:"center",padding:"32px 0",color:C.textDim}}>
+                            <p style={{fontSize:13}}>No hay contenido todavia. Generá el primer material para este proyecto.</p>
+                          </div>
+                        ):projectContents.map(function(c){
+                          var g=GEN_TYPES.find(function(g){return g.id===c.type;});
+                          return (
+                            <div key={c.id} style={{borderBottom:"1px solid "+C.border,padding:"14px 0"}}>
+                              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                                <div>
+                                  <div style={{fontSize:14,fontWeight:700,color:C.text}}>{c.title}</div>
+                                  <div style={{fontSize:11,color:C.textDim,marginTop:2,display:"flex",gap:8}}>
+                                    <span>{c.subject_name}</span>
+                                    <span>·</span>
+                                    <span>{c.type_name}</span>
+                                    <span>·</span>
+                                    <span>{new Date(c.created_at).toLocaleDateString("es-AR")}</span>
+                                  </div>
+                                </div>
+                                <div style={{display:"flex",gap:6}}>
+                                  <Btn v="secondary" st={{fontSize:11,padding:"4px 10px"}} onClick={function(){exportDocx(c.title,c.type_name,c.subject_name,c.content);}}>
+                                    <i className="ti ti-file-text" style={{fontSize:12}}/>
+                                  </Btn>
+                                  {c.user_id===authUser.id&&(
+                                    <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.textDim}} onClick={function(){dbDelProjectContent(c.id).then(function(){dbLoadProjectContents(currentProject.id).then(setProjectContents);});}}>
+                                      <i className="ti ti-trash" style={{fontSize:14}}/>
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              <MDView text={c.content.slice(0,600)+(c.content.length>600?"...":"")} maxH={200}/>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={card}>
+                        <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:14}}>Colaboradores</div>
+                        {(currentProject.project_members||[]).filter(function(m){return m.status==="active";}).map(function(m){
+                          return (
+                            <div key={m.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:"1px solid "+C.border}}>
+                              <div style={{width:32,height:32,borderRadius:"50%",background:C.accentBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:C.accent}}>
+                                {(m.subject_name||"?").charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <div style={{fontSize:13,fontWeight:600,color:C.text}}>{m.subject_name||"Colaborador"}</div>
+                                <div style={{fontSize:11,color:C.textDim}}>{m.status==="active"?"Activo":"Pendiente"}</div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {currentProject.owner_id===authUser.id&&(
+                          <div style={{marginTop:14}}>
+                            <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:10}}>INVITAR COLABORADOR</div>
+                            <input style={Object.assign({},inp,{marginBottom:8})} value={inviteEmail} onChange={function(e){setInviteEmail(e.target.value);}} placeholder="Email del docente..."/>
+                            <input style={Object.assign({},inp,{marginBottom:10})} value={inviteSubject} onChange={function(e){setInviteSubject(e.target.value);}} placeholder="Materia que dicta..."/>
+                            <Btn st={{width:"100%",justifyContent:"center"}} onClick={async function(){
+                              if(!inviteEmail||!inviteSubject) return;
+                              try{
+                                await dbInviteToProject(currentProject.id,inviteEmail,inviteSubject);
+                                var updated=await dbLoadProjects(authUser.id);
+                                setProjects(updated);
+                                var updatedProject=updated.owned.find(function(p){return p.id===currentProject.id;});
+                                if(updatedProject) setCurrentProject(updatedProject);
+                                setInviteEmail("");setInviteSubject("");
+                                alert("Colaborador agregado exitosamente.");
+                              }catch(e){alert("Error: "+e.message);}
+                            }}>
+                              <i className="ti ti-user-plus" style={{fontSize:13,marginRight:4}}/>Invitar
+                            </Btn>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           {!dataLoading&&view==="pricing"&&<PricingPanel authUser={authUser}/>}
           {!dataLoading&&view==="admin"&&<AdminPanel authUser={authUser} supabaseClient={supabase}/>}
 
@@ -2321,6 +2570,41 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
         </div>
       )}
 
+      {projectModal&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999}}>
+          <div style={{background:C.surf,border:"1px solid "+C.border,borderRadius:4,padding:26,width:540,maxWidth:"92vw",maxHeight:"90vh",overflow:"auto"}}>
+            <h2 style={{margin:"0 0 18px",fontSize:18,fontWeight:700,color:C.text}}>Nuevo Proyecto Interdisciplinario</h2>
+            <label style={lbl}>TITULO DEL PROYECTO *</label>
+            <input style={Object.assign({},inp,{marginBottom:12})} value={projectForm.title} onChange={function(e){setProjectForm(Object.assign({},projectForm,{title:e.target.value}));}} placeholder="Ej: El agua en la vida cotidiana"/>
+            <label style={lbl}>DESCRIPCION</label>
+            <textarea style={Object.assign({},inp,{height:70,resize:"vertical",marginBottom:16})} value={projectForm.description} onChange={function(e){setProjectForm(Object.assign({},projectForm,{description:e.target.value}));}} placeholder="Breve descripcion del proyecto y sus objetivos..."/>
+            <label style={lbl}>MATERIAS COLABORADORAS</label>
+            <p style={{fontSize:12,color:C.textDim,marginBottom:8}}>Ingresa las materias que van a participar (ademas de la tuya).</p>
+            {[0,1,2].map(function(i){
+              return (
+                <input key={i} style={Object.assign({},inp,{marginBottom:8})} value={projectForm.subjects[i]||""} onChange={function(e){var s=[...projectForm.subjects];s[i]=e.target.value;setProjectForm(Object.assign({},projectForm,{subjects:s}));}} placeholder={"Materia "+(i+2)+" (opcional)"}/>
+              );
+            })}
+            <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:20}}>
+              <Btn v="ghost" st={{fontSize:13}} onClick={function(){setProjectModal(false);}}>Cancelar</Btn>
+              <Btn disabled={projectLoading||!projectForm.title.trim()} onClick={async function(){
+                setProjectLoading(true);
+                try{
+                  var p=await dbAddProject(authUser.id,{title:projectForm.title,description:projectForm.description});
+                  var updated=await dbLoadProjects(authUser.id);
+                  setProjects(updated);
+                  setProjectModal(false);
+                  setCurrentProject(p);
+                  setProjectContents([]);
+                }catch(e){alert("Error: "+e.message);}
+                setProjectLoading(false);
+              }}>
+                {projectLoading?"Creando...":<><i className="ti ti-plus" style={{fontSize:13,marginRight:4}}/>Crear proyecto</>}
+              </Btn>
+            </div>
+          </div>
+        </div>
+      )}
       {subjModal&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999}}>
           <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:4,padding:26,width:488,maxWidth:"92vw"}}>
