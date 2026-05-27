@@ -34,8 +34,19 @@ export default async function handler(req, res) {
       joined_at: new Date().toISOString(),
     });
  
-    if (r.error) throw new Error(r.error.message);
- 
+   if (r.error) throw new Error(r.error.message);
+
+    // Obtener nombre del proyecto
+    var projectResult = await supabase.from("projects").select("title,owner_id").eq("id",projectId).single();
+    var projectTitle = projectResult.data ? projectResult.data.title : "un proyecto";
+
+    // Enviar email de notificacion
+    await supabase.auth.admin.sendRawEmail({
+      to: email,
+      subject: "Te invitaron a colaborar en AulaXpro",
+      html: "<p>Hola,</p><p>Te invitaron a colaborar en el proyecto <strong>"+projectTitle+"</strong> en AulaXpro.</p><p>Ingresá a tu cuenta para ver el proyecto y empezar a colaborar.</p><a href='https://app.aulaxpro.com' style='background:#0d9488;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;margin-top:12px;font-weight:700'>Ver proyecto en AulaXpro</a><p style='margin-top:20px;color:#888;font-size:12px'>AulaXpro — Tu asistente docente con IA</p>",
+    }).catch(function(){});
+
     return res.status(200).json({ success: true, user_id: user.id });
  
   } catch (error) {
