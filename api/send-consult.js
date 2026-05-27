@@ -25,6 +25,7 @@ export default async function handler(req, res) {
       <p style="margin-top:20px;color:#888;font-size:12px">AulaXpro — aulaxpro.com</p>
     `;
  
+    console.log("API KEY:", process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.slice(0,8)+"..." : "NO ENCONTRADA");
     var resendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
