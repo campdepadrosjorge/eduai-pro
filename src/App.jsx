@@ -271,6 +271,21 @@ async function dbAcceptInvitation(memberId) {
   var r = await supabase.from("project_members").update({status:"active",joined_at:new Date().toISOString()}).eq("id",memberId);
   if(r.error) throw r.error;
 }
+async function dbSearchSchools(query) {
+  if(!query||query.length<2) return [];
+  var r = await supabase.from("schools").select("id,name,city").ilike("name","%"+query+"%").limit(8);
+  return r.data||[];
+}
+
+async function dbAddOrUpdateSchool(name, city) {
+  if(!name) return;
+  var existing = await supabase.from("schools").select("id,users_count").eq("name",name).single();
+  if(existing.data) {
+    await supabase.from("schools").update({users_count:(existing.data.users_count||1)+1}).eq("id",existing.data.id);
+  } else {
+    await supabase.from("schools").insert({name,city:city||""}).catch(function(){});
+  }
+}
 async function dbLogUsage(userId, userEmail, type, typeName, subjectName, tokIn, tokOut, isImage) {
   try { await supabase.from("usage_log").insert({user_id:userId,user_email:userEmail,type,type_name:typeName,subject_name:subjectName||"",tokens_input:tokIn||0,tokens_output:tokOut||0,is_image:isImage||false}); } catch {}
 }
@@ -694,6 +709,8 @@ function AuthScreen({onAuth}) {
   var [email,setEmail]=useState("");
   var [password,setPass]=useState("");
   var [name,setName]=useState("");
+  var [school,setSchool]=useState("");
+  var [schoolSuggestions,setSchoolSuggestions]=useState([]);
   var [loading,setLoading]=useState(false);
   var [error,setError]=useState("");
   var [confirmed,setConfirmed]=useState(false);
@@ -710,10 +727,13 @@ function AuthScreen({onAuth}) {
   async function handleRegister() {
     if(!email||!password||!name) return;
     setLoading(true);setError("");
-    var result=await supabase.auth.signUp({email,password,options:{data:{name}}});
+    var result=await supabase.auth.signUp({email,password,options:{data:{name,school:school||""}}});
     if(result.error){setError(result.error.message);}
-    else if(result.data.session){onAuth(result.data.user);}
-    else{setConfirmed(true);}
+    else{
+      if(school) dbAddOrUpdateSchool(school,"").catch(function(){});
+      if(result.data.session){onAuth(result.data.user);}
+      else{setConfirmed(true);}
+    }
     setLoading(false);
   }
 
@@ -746,6 +766,32 @@ function AuthScreen({onAuth}) {
             <div>
               <label style={lbl}>NOMBRE</label>
               <input style={Object.assign({},inp,{marginBottom:12})} value={name} onChange={function(e){setName(e.target.value);}} placeholder="Prof. Garcia"/>
+              <label style={lbl}>COLEGIO (opcional)</label>
+              <div style={{position:"relative",marginBottom:12}}>
+                <input style={inp} value={school} onChange={async function(e){
+                  setSchool(e.target.value);
+                  if(e.target.value.length>=2){
+                    var suggestions=await dbSearchSchools(e.target.value);
+                    setSchoolSuggestions(suggestions);
+                  } else {
+                    setSchoolSuggestions([]);
+                  }
+                }} placeholder="Ej: Colegio San Martin"/>
+                {schoolSuggestions.length>0&&(
+                  <div style={{position:"absolute",top:"100%",left:0,right:0,background:C.surf,border:"1px solid "+C.border,borderRadius:4,zIndex:100,boxShadow:"0 4px 12px rgba(0,0,0,.1)"}}>
+                    {schoolSuggestions.map(function(s){
+                      return (
+                        <div key={s.id} style={{padding:"9px 13px",cursor:"pointer",fontSize:13,color:C.text,borderBottom:"1px solid "+C.border}} onClick={function(){setSchool(s.name);setSchoolSuggestions([]);}}>
+                          {s.name}{s.city?" — "+s.city:""}
+                        </div>
+                      );
+                    })}
+                    <div style={{padding:"8px 13px",cursor:"pointer",fontSize:12,color:C.textDim}} onClick={function(){setSchoolSuggestions([]);}}>
+                      Usar "{school}" como nuevo colegio
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
           <label style={lbl}>EMAIL</label>
