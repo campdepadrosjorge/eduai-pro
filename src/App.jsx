@@ -230,7 +230,10 @@ async function dbLoadProjects(userId) {
   var owned = await supabase.from("projects").select("*, project_members(*)").eq("owner_id",userId).order("created_at",{ascending:false});
   var member = await supabase.from("project_members").select("project_id, status").eq("user_id",userId).eq("status","active");
   var memberIds = (member.data||[]).map(function(m){return m.project_id;});
-  var shared = memberIds.length ? await supabase.from("projects").select("*, project_members(*)").in("id",memberIds) : {data:[]};
+  var shared = {data:[]};
+  if(memberIds.length>0){
+    shared = await supabase.from("projects").select("*, project_members(*)").in("id",memberIds).neq("owner_id",userId);
+  }
   return {owned:owned.data||[], shared:shared.data||[]};
 }
 
