@@ -42,7 +42,8 @@ export default async function handler(req, res) {
  
     if (!resendRes.ok) {
       var err = await resendRes.json();
-      throw new Error(err.message || "Error al enviar email");
+      console.log("Resend error:", JSON.stringify(err));
+      throw new Error(JSON.stringify(err));
     }
  
     return res.status(200).json({ success: true });
