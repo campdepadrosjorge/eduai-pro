@@ -33,7 +33,7 @@ export default async function handler(req, res) {
         "Authorization": "Bearer " + process.env.RESEND_API_KEY,
       },
       body: JSON.stringify({
-        from: "AulaXpro <onboarding@resend.dev>",
+        from: "AulaXpro <hola@aulaxpro.com>",
         to: "hola@aulaxpro.com",
         reply_to: email,
         subject: "Consulta institucional — " + plan + " — " + colegio,
