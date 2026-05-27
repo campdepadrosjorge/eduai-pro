@@ -1,9 +1,8 @@
 // scripts/crear-planes-mp.js
-// Ejecutar UNA SOLA VEZ para crear los planes en MercadoPago
-// node scripts/crear-planes-mp.js
- 
-const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
- 
+// Ejecutar UNA SOLA VEZ: node scripts/crear-planes-mp.js
+
+const ACCESS_TOKEN = "TEST-8953457601925021-052021-ac2facf04bc481480384ba15a941c4a5-725828321"; // pegá tu token directamente
+
 async function crearPlan(plan) {
   const res = await fetch("https://api.mercadopago.com/preapproval_plan", {
     method: "POST",
@@ -15,74 +14,42 @@ async function crearPlan(plan) {
   });
   const data = await res.json();
   console.log("Plan creado:", plan.reason, "→ ID:", data.id);
+  if(data.message) console.log("Error:", data.message);
   return data;
 }
- 
+
 async function main() {
   console.log("Creando planes en MercadoPago...\n");
- 
-  // Plan Individual Mensual
+
   await crearPlan({
-    reason: "EduAI Pro - Individual Mensual",
-    auto_recurring: {
-      frequency: 1,
-      frequency_type: "months",
-      transaction_amount: 10000, // en centavos ARS (= $100 ARS ejemplo)
-      currency_id: "ARS",
-    },
-    back_url: "https://eduai-pro-nine.vercel.app",
-    payment_methods_allowed: {
-      payment_types: [{ id: "credit_card" }, { id: "debit_card" }],
-    },
+    reason: "AulaXpro - Individual Mensual",
+    auto_recurring: { frequency:1, frequency_type:"months", transaction_amount:12000, currency_id:"ARS" },
+    back_url: "https://app.aulaxpro.com",
+    payment_methods_allowed: { payment_types: [{ id:"credit_card" },{ id:"debit_card" }] },
   });
- 
-  // Plan Individual Anual
+
   await crearPlan({
-    reason: "EduAI Pro - Individual Anual",
-    auto_recurring: {
-      frequency: 12,
-      frequency_type: "months",
-      transaction_amount: 96000,
-      currency_id: "ARS",
-    },
-    back_url: "https://eduai-pro-nine.vercel.app",
-    payment_methods_allowed: {
-      payment_types: [{ id: "credit_card" }, { id: "debit_card" }],
-    },
+    reason: "AulaXpro - Individual Anual",
+    auto_recurring: { frequency:12, frequency_type:"months", transaction_amount:102000, currency_id:"ARS" },
+    back_url: "https://app.aulaxpro.com",
+    payment_methods_allowed: { payment_types: [{ id:"credit_card" },{ id:"debit_card" }] },
   });
- 
-  // Plan Institucional Basico Mensual
+
   await crearPlan({
-    reason: "EduAI Pro - Institucional Basico Mensual",
-    auto_recurring: {
-      frequency: 1,
-      frequency_type: "months",
-      transaction_amount: 80000,
-      currency_id: "ARS",
-    },
-    back_url: "https://eduai-pro-nine.vercel.app",
-    payment_methods_allowed: {
-      payment_types: [{ id: "credit_card" }, { id: "debit_card" }],
-    },
+    reason: "AulaXpro - Institucional Basico",
+    auto_recurring: { frequency:1, frequency_type:"months", transaction_amount:100000, currency_id:"ARS" },
+    back_url: "https://app.aulaxpro.com",
+    payment_methods_allowed: { payment_types: [{ id:"credit_card" },{ id:"debit_card" }] },
   });
- 
-  // Plan Institucional Pro Mensual
+
   await crearPlan({
-    reason: "EduAI Pro - Institucional Pro Mensual",
-    auto_recurring: {
-      frequency: 1,
-      frequency_type: "months",
-      transaction_amount: 150000,
-      currency_id: "ARS",
-    },
-    back_url: "https://eduai-pro-nine.vercel.app",
-    payment_methods_allowed: {
-      payment_types: [{ id: "credit_card" }, { id: "debit_card" }],
-    },
+    reason: "AulaXpro - Institucional Pro",
+    auto_recurring: { frequency:1, frequency_type:"months", transaction_amount:255000, currency_id:"ARS" },
+    back_url: "https://app.aulaxpro.com",
+    payment_methods_allowed: { payment_types: [{ id:"credit_card" },{ id:"debit_card" }] },
   });
- 
-  console.log("\nGuarda los IDs de los planes en Supabase tabla plans (campo mp_plan_id)");
+
+  console.log("\nListo — copiá los IDs y actualizalos en App.jsx");
 }
- 
+
 main().catch(console.error);
- 

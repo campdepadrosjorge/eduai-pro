@@ -417,10 +417,10 @@ function PricingPanel({authUser}) {
   var [loading,setLoading]=useState(null);
   var [error,setError]=useState("");
   var plans=[
-    {id:"98238f5797f94e58b94d51aa08f63fad",name:"Individual Mensual",price:"$12.000",period:"por mes",users:1,color:C.blue,features:["Generador IA (8 tipos)","Multimedia + Imagenes","Chat Docente","Corrector de TPs","Exportacion Word y PDF","Biblioteca personal"]},
-    {id:"55095e9d02bb469ba4aef78826676787",name:"Individual Anual",price:"$102.000",period:"por anio",badge:"Ahorra 15%",users:1,color:C.accent,features:["Todo Individual","2 meses gratis","Soporte prioritario"]},
-    {id:"bcdbe285413b4acbbd187fc2fe6d52dc",name:"Institucional Basico",price:"$100.000",period:"por mes",users:10,color:C.green,features:["Hasta 10 docentes","Biblioteca publica compartida","Panel admin institucional","Soporte dedicado"]},
-    {id:"e01bfd16f46c4d0db1a8aa56afc837d7",name:"Institucional Pro",price:"$255.000",period:"por mes",users:30,color:C.purple,features:["Hasta 30 docentes","Todo Institucional Basico","Carga masiva de usuarios","Reportes de uso"]},
+    {id:"b2917cb9b9a948bc8adb1e0eb3bbad39",name:"Individual Mensual",price:"$12.000",period:"por mes",users:1,color:C.blue,features:["Generador IA (8 tipos)","Multimedia + Imagenes","Chat Docente","Corrector de TPs","Exportacion Word y PDF","Biblioteca personal"]},
+    {id:"bb7e1d8a1bef42b08bcbca6833667980",name:"Individual Anual",price:"$102.000",period:"por anio",badge:"Ahorra 15%",users:1,color:C.accent,features:["Todo Individual","2 meses gratis","Soporte prioritario"]},
+    {id:"094acfa852694705ad08318d83a1051c",name:"Institucional Basico",price:"$100.000",period:"por mes",users:10,color:C.green,features:["Hasta 10 docentes","Biblioteca publica compartida","Panel admin institucional","Soporte dedicado"]},
+    {id:"e166b413a9764c6d9eb78eb60ed80cf1",name:"Institucional Pro",price:"$255.000",period:"por mes",users:30,color:C.purple,features:["Hasta 30 docentes","Todo Institucional Basico","Carga masiva de usuarios","Reportes de uso"]},
   ];
   async function subscribe(plan) {
     if(!authUser){setError("Tenes que iniciar sesion para suscribirte.");return;}
