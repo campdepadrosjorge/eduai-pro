@@ -33,8 +33,8 @@ export default async function handler(req, res) {
         "Authorization": "Bearer " + process.env.RESEND_API_KEY,
       },
       body: JSON.stringify({
-        from: "AulaXpro <campdepadros.jorge@gmail.com>",
-        to: "hola@aulaxpro.com",
+        from: "AulaXpro <hola@aulaxpro.com>",
+        to: "campdepadros.jorge@gmail.com",
         reply_to: email,
         subject: "Consulta institucional — " + plan + " — " + colegio,
         html,
