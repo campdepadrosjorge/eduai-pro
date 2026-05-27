@@ -416,6 +416,11 @@ function MDView({text,maxH}) {
 function PricingPanel({authUser}) {
   var [loading,setLoading]=useState(null);
   var [error,setError]=useState("");
+  var [consultModal,setConsultModal]=useState(false);
+  var [consultPlan,setConsultPlan]=useState("");
+  var [consultForm,setConsultForm]=useState({nombre:"",cargo:"",colegio:"",telefono:"",email:"",docentes:""});
+  var [consultLoading,setConsultLoading]=useState(false);
+  var [consultSent,setConsultSent]=useState(false);
   var plans=[
     {id:"b2917cb9b9a948bc8adb1e0eb3bbad39",name:"Individual Mensual",price:"$12.000",period:"por mes",users:1,color:C.blue,features:["Generador IA (8 tipos)","Multimedia + Imagenes","Chat Docente","Corrector de TPs","Exportacion Word y PDF","Biblioteca personal"]},
     {id:"bb7e1d8a1bef42b08bcbca6833667980",name:"Individual Anual",price:"$102.000",period:"por anio",badge:"Ahorra 15%",users:1,color:C.accent,features:["Todo Individual","2 meses gratis","Soporte prioritario"]},
@@ -425,9 +430,10 @@ function PricingPanel({authUser}) {
   async function subscribe(plan) {
     if(!authUser){setError("Tenes que iniciar sesion para suscribirte.");return;}
     if(plan.institutional){
-      var subject=encodeURIComponent("Consulta Plan "+plan.name+" — AulaXpro");
-      var body=encodeURIComponent("Hola,\n\nEstoy interesado en el "+plan.name+" de AulaXpro.\n\nNombre: "+(authUser.user_metadata&&authUser.user_metadata.name)||""+"\nEmail: "+authUser.email+"\nColegio: "+((authUser.user_metadata&&authUser.user_metadata.school)||"")+"\n\nQuedo a la espera de su respuesta.");
-      window.open("mailto:hola@aulaxpro.com?subject="+subject+"&body="+body,"_blank");
+      setConsultPlan(plan.name);
+      setConsultForm({nombre:(authUser.user_metadata&&authUser.user_metadata.name)||"",cargo:"",colegio:(authUser.user_metadata&&authUser.user_metadata.school)||"",telefono:"",email:authUser.email||"",docentes:""});
+      setConsultSent(false);
+      setConsultModal(true);
       return;
     }
     setLoading(plan.id);setError("");
@@ -475,6 +481,67 @@ function PricingPanel({authUser}) {
         })}
       </div>
       <p style={{textAlign:"center",color:C.textDim,fontSize:12,marginTop:24}}>Pagos procesados por MercadoPago</p>
+      {consultModal&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999}}>
+          <div style={{background:C.surf,border:"1px solid "+C.border,borderRadius:4,padding:26,width:500,maxWidth:"92vw",maxHeight:"90vh",overflow:"auto"}}>
+            {consultSent?(
+              <div style={{textAlign:"center",padding:"32px 0"}}>
+                <i className="ti ti-check" style={{fontSize:52,color:C.green,display:"block",marginBottom:16}}/>
+                <h2 style={{fontSize:20,fontWeight:700,color:C.text,marginBottom:8}}>Consulta enviada</h2>
+                <p style={{fontSize:14,color:C.textMuted,marginBottom:24}}>Nos contactaremos a la brevedad al email indicado.</p>
+                <Btn onClick={function(){setConsultModal(false);}}>Cerrar</Btn>
+              </div>
+            ):(
+              <div>
+                <h2 style={{margin:"0 0 6px",fontSize:18,fontWeight:700,color:C.text}}>{"Consulta — "+consultPlan}</h2>
+                <p style={{fontSize:13,color:C.textMuted,marginBottom:20}}>Completá el formulario y te contactamos a la brevedad.</p>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+                  <div>
+                    <label style={lbl}>NOMBRE *</label>
+                    <input style={inp} value={consultForm.nombre} onChange={function(e){setConsultForm(Object.assign({},consultForm,{nombre:e.target.value}));}} placeholder="Prof. García"/>
+                  </div>
+                  <div>
+                    <label style={lbl}>CARGO *</label>
+                    <input style={inp} value={consultForm.cargo} onChange={function(e){setConsultForm(Object.assign({},consultForm,{cargo:e.target.value}));}} placeholder="Director/Docente/Coordinador"/>
+                  </div>
+                </div>
+                <div style={{marginBottom:12}}>
+                  <label style={lbl}>COLEGIO *</label>
+                  <input style={inp} value={consultForm.colegio} onChange={function(e){setConsultForm(Object.assign({},consultForm,{colegio:e.target.value}));}} placeholder="Nombre del colegio"/>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+                  <div>
+                    <label style={lbl}>EMAIL *</label>
+                    <input style={inp} type="email" value={consultForm.email} onChange={function(e){setConsultForm(Object.assign({},consultForm,{email:e.target.value}));}} placeholder="email@colegio.edu.ar"/>
+                  </div>
+                  <div>
+                    <label style={lbl}>TELEFONO</label>
+                    <input style={inp} value={consultForm.telefono} onChange={function(e){setConsultForm(Object.assign({},consultForm,{telefono:e.target.value}));}} placeholder="+54 11 1234-5678"/>
+                  </div>
+                </div>
+                <div style={{marginBottom:20}}>
+                  <label style={lbl}>CANTIDAD DE DOCENTES *</label>
+                  <input style={inp} type="number" value={consultForm.docentes} onChange={function(e){setConsultForm(Object.assign({},consultForm,{docentes:e.target.value}));}} placeholder="Ej: 15"/>
+                </div>
+                <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+                  <Btn v="ghost" onClick={function(){setConsultModal(false);}}>Cancelar</Btn>
+                  <Btn disabled={consultLoading||!consultForm.nombre||!consultForm.cargo||!consultForm.colegio||!consultForm.email||!consultForm.docentes} onClick={async function(){
+                    setConsultLoading(true);
+                    try{
+                      var res=await fetch("/api/send-consult",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({plan:consultPlan,...consultForm})});
+                      if(!res.ok) throw new Error("Error al enviar");
+                      setConsultSent(true);
+                    }catch(e){alert("Error: "+e.message);}
+                    setConsultLoading(false);
+                  }}>
+                    {consultLoading?"Enviando...":<><i className="ti ti-send" style={{fontSize:13,marginRight:4}}/>Enviar consulta</>}
+                  </Btn>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
