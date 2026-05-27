@@ -75,7 +75,24 @@ function userGen(type, topic, diff, extra, subject) {
     material:    "Material didactico sobre: \"" + topic + "\" | Dificultad: " + diff + "\n\nIntroduccion, desarrollo por subtemas, ejemplos, actividades, sintesis, glosario." + e,
     presentacion:"Esquema sobre: \"" + topic + "\" | Dificultad: " + diff + "\n\nGenera 12-15 diapositivas con EXACTAMENTE este formato:\n\n## SLIDE [N]: [Titulo]\n[Bullets comenzando con -]\nNOTAS: [Lo que dice el presentador]\n\n---\n\nRepeti para cada slide." + e,
     guia:        "Guia de estudio sobre: \"" + topic + "\" | Dificultad: " + diff + "\n\nObjetivos, mapa de conceptos, preguntas orientadoras, actividades, autoevaluacion, estrategias de repaso." + e,
-    adaptado:    "Contenido educativo adaptado para NEE sobre: \"" + topic + "\".\n\nGenera versiones adaptadas para CADA UNA de estas necesidades educativas especiales:\n\n1. **DISLEXIA** — Fuente sans-serif sugerida, texto fragmentado, ayudas visuales, sin columnas, palabras clave destacadas\n2. **TDAH** — Instrucciones muy cortas, una tarea a la vez, pausas activas, elementos visuales de motivacion, tiempo estimado por actividad\n3. **TEA** — Lenguaje literal y concreto, rutinas claras, anticipacion de cambios, sin metaforas, estructura visual muy clara\n4. **DISCAPACIDAD VISUAL** — Descripcion verbal detallada de todo elemento visual, sin tablas complejas, estructura lineal\n5. **DISCAPACIDAD AUDITIVA** — Material 100% escrito, sin referencias a audio, apoyo visual fuerte, glosario de terminos\n6. **BAJA VISION** — Texto ampliable, alto contraste sugerido, elementos grandes, sin informacion solo en color\n7. **ALTAS CAPACIDADES** — Mayor complejidad, conexiones interdisciplinarias, preguntas de extension, proyectos autonomos\n8. **DIFICULTADES EN LECTOESCRITURA** — Vocabulario simplificado, oraciones cortas, mucho espacio en blanco, apoyo en imagenes\n9. **BARRERAS IDIOMATICAS** — Lenguaje simple, glosario basico, ejemplos concretos y universales\n\nPara CADA version incluí: a) Material adaptado completo, b) Estrategias especificas para el docente, c) Recursos y materiales sugeridos.\n\n" + (e ? "Instrucciones adicionales: " + e : ""),
+    adaptado: (function(){
+      var neeType = extra && extra.startsWith("NEE:") ? extra.split("\n")[0].replace("NEE:","").trim() : "General";
+      var material = extra && extra.includes("MATERIAL:") ? extra.split("MATERIAL:")[1].trim() : "";
+      var lineamientos = {
+        "Dislexia": "Usa fuente sans-serif. Texto fragmentado en bloques cortos. Sin columnas. Palabras clave en negrita. Oraciones de maximo 15 palabras. Mucho espacio en blanco. Evita parrafos densos. Usa listas con viñetas. Incluye apoyo visual o icono para cada seccion.",
+        "TDAH": "Instrucciones de UN paso a la vez. Actividades de maximo 10 minutos. Incluye pausas activas entre tareas. Usa temporizadores sugeridos. Resalta con color la consigna principal. Agrega elementos de motivacion (retos, puntos, logros). Evita paginas densas.",
+        "TEA": "Lenguaje literal y concreto, sin metaforas ni ironias. Rutina y estructura visual muy clara. Anticipa cada cambio de actividad. Sin ambiguedades. Usa pictogramas o descripciones visuales. Secuencia numerada de pasos. Evita estimulos innecesarios en el texto.",
+        "Discapacidad Visual": "Descripcion verbal detallada de TODOS los elementos visuales. Sin tablas complejas. Estructura lineal y predecible. Sin referencias a colores como unica informacion. Todo el contenido en texto puro accesible. Evita cuadros y graficos sin descripcion.",
+        "Discapacidad Auditiva": "Material 100% escrito, sin referencias a audio o consignas orales. Apoyo visual fuerte. Glosario de terminos clave al inicio. Uso de imagenes, esquemas y mapas conceptuales. Lenguaje claro y directo.",
+        "Baja Vision": "Sugiere fuente minimo 18pt. Alto contraste. Sin informacion transmitida solo por color. Elementos grandes y bien espaciados. Sin detalles pequenos. Formato imprimible en A4 con margen amplio.",
+        "Altas Capacidades": "Mayor complejidad y abstraccion. Conexiones interdisciplinarias. Preguntas de extension que exigen analisis critico. Proyectos autonomos opcionales. Recursos adicionales para profundizar. Desafios abiertos sin respuesta unica.",
+        "Dificultades en Lectoescritura": "Vocabulario simplificado. Oraciones de maximo 10 palabras. Mucho espacio en blanco. Apoyo en imagenes o iconos. Actividades con respuesta corta o seleccion. Evita copias largas. Incluye modelo de respuesta esperada.",
+        "Barreras Idiomaticas": "Lenguaje simple y universal. Glosario basico al inicio. Ejemplos concretos y cotidianos. Evita expresiones regionales o modismos. Incluye traduccion de terminos clave si es posible. Apoya con imagenes o esquemas.",
+      };
+      var lin = lineamientos[neeType] || "Adapta el contenido segun las necesidades del alumno.";
+      var base = material ? "\n\nMATERIAL A ADAPTAR:\n"+material : "";
+      return "Genera contenido educativo adaptado para un alumno con "+neeType+" sobre: \""+topic+"\"\n\nLINEAMIENTOS ESPECIFICOS PARA "+neeType.toUpperCase()+":\n"+lin+"\n\nEstructura la respuesta en:\n1. **Material adaptado completo** (aplicando todos los lineamientos)\n2. **Estrategias especificas para el docente** (como presentarlo, como evaluar, como acompañar)\n3. **Recursos y materiales sugeridos** (herramientas, apps, materiales fisicos)\n4. **Indicadores de logro adaptados** (como saber que el alumno alcanzo el objetivo)"+base;
+    })(),
   };
   return m[type] || "Contenido educativo sobre \"" + topic + "\". Dificultad: " + diff + "." + e;
 }
@@ -1392,8 +1409,22 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
                       <textarea style={Object.assign({},inp,{height:70,resize:"vertical",marginBottom:12})} value={genExtra} onChange={function(e){setGenExtra(e.target.value);}} placeholder="Ej: grupos de 4, enfoque por proyectos..."/>
                       {genType==="adaptado"&&(
                         <div style={{marginBottom:18}}>
-                          <label style={lbl}>MATERIAL BASE (opcional) — pega aqui el contenido que queres adaptar</label>
-                          <textarea style={Object.assign({},inp,{height:120,resize:"vertical"})} value={genExtra.includes("MATERIAL BASE:")?genExtra:""} onChange={function(e){setGenExtra("MATERIAL BASE:\n"+e.target.value);}} placeholder="Pega aqui el texto, actividad o material que queres adaptar para NEE. Si lo dejas vacio la IA genera desde cero basandose en el tema."/>
+                          <label style={lbl}>TIPO DE NEE *</label>
+                          <select style={Object.assign({},sel,{width:"100%",marginBottom:12})} onChange={function(e){
+                            var nee=e.target.value;
+                            var mat=genExtra.includes("MATERIAL:")?"\nMATERIAL:"+genExtra.split("MATERIAL:")[1]:"";
+                            setGenExtra(nee?"NEE:"+nee+mat:"");
+                          }}>
+                            <option value="">Seleccionar necesidad educativa...</option>
+                            {["Dislexia","TDAH","TEA","Discapacidad Visual","Discapacidad Auditiva","Baja Vision","Altas Capacidades","Dificultades en Lectoescritura","Barreras Idiomaticas"].map(function(n){
+                              return <option key={n} value={n}>{n}</option>;
+                            })}
+                          </select>
+                          <label style={lbl}>MATERIAL BASE (opcional)</label>
+                          <textarea style={Object.assign({},inp,{height:100,resize:"vertical"})} onChange={function(e){
+                            var nee=genExtra.includes("NEE:")?genExtra.split("\n")[0]:"";
+                            setGenExtra(nee+(e.target.value?"\nMATERIAL:"+e.target.value:""));
+                          }} placeholder="Pega aqui el material que queres adaptar. Si lo dejas vacio la IA genera desde cero."/>
                         </div>
                       )}
                       {genType!=="adaptado"&&<div style={{marginBottom:18}}/>}
