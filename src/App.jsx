@@ -419,11 +419,17 @@ function PricingPanel({authUser}) {
   var plans=[
     {id:"b2917cb9b9a948bc8adb1e0eb3bbad39",name:"Individual Mensual",price:"$12.000",period:"por mes",users:1,color:C.blue,features:["Generador IA (8 tipos)","Multimedia + Imagenes","Chat Docente","Corrector de TPs","Exportacion Word y PDF","Biblioteca personal"]},
     {id:"bb7e1d8a1bef42b08bcbca6833667980",name:"Individual Anual",price:"$102.000",period:"por anio",badge:"Ahorra 15%",users:1,color:C.accent,features:["Todo Individual","2 meses gratis","Soporte prioritario"]},
-    {id:"094acfa852694705ad08318d83a1051c",name:"Institucional Basico",price:"$100.000",period:"por mes",users:10,color:C.green,features:["Hasta 10 docentes","Biblioteca publica compartida","Panel admin institucional","Soporte dedicado"]},
-    {id:"e166b413a9764c6d9eb78eb60ed80cf1",name:"Institucional Pro",price:"$255.000",period:"por mes",users:30,color:C.purple,features:["Hasta 30 docentes","Todo Institucional Basico","Carga masiva de usuarios","Reportes de uso"]},
+    {id:"institucional_basico",name:"Institucional Basico",price:"$100.000",period:"por mes",users:10,color:C.green,institutional:true,features:["Hasta 10 docentes","Biblioteca publica compartida","Panel admin institucional","Soporte dedicado"]},
+    {id:"institucional_consulta",name:"Institucional A Medida",price:"Consultar",period:"segun cantidad de docentes",users:999,color:C.purple,institutional:true,features:["Mas de 10 docentes","Todo Institucional Basico","Precio segun cantidad","Soporte dedicado"]},
   ];
   async function subscribe(plan) {
     if(!authUser){setError("Tenes que iniciar sesion para suscribirte.");return;}
+    if(plan.institutional){
+      var subject=encodeURIComponent("Consulta Plan "+plan.name+" — AulaXpro");
+      var body=encodeURIComponent("Hola,\n\nEstoy interesado en el "+plan.name+" de AulaXpro.\n\nNombre: "+(authUser.user_metadata&&authUser.user_metadata.name)||""+"\nEmail: "+authUser.email+"\nColegio: "+((authUser.user_metadata&&authUser.user_metadata.school)||"")+"\n\nQuedo a la espera de su respuesta.");
+      window.open("mailto:hola@aulaxpro.com?subject="+subject+"&body="+body,"_blank");
+      return;
+    }
     setLoading(plan.id);setError("");
     try {
       var res=await fetch("/api/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({plan_id:plan.id,user_email:authUser.email,user_name:(authUser.user_metadata&&authUser.user_metadata.name)||"",user_id:authUser.id})});
@@ -462,7 +468,7 @@ function PricingPanel({authUser}) {
                 })}
               </div>
               <button style={{width:"100%",padding:"11px 0",borderRadius:4,border:"none",cursor:loading===plan.id?"not-allowed":"pointer",fontWeight:700,fontSize:14,fontFamily:"Quicksand,sans-serif",background:plan.color,color:"#fff",opacity:loading===plan.id?.7:1}} onClick={function(){subscribe(plan);}} disabled={loading===plan.id}>
-                {loading===plan.id?"Procesando...":"Suscribirme"}
+                {loading===plan.id?"Procesando...":plan.institutional?"Consultar":"Suscribirme"}
               </button>
             </div>
           );
