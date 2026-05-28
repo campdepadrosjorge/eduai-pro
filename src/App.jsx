@@ -353,17 +353,6 @@ async function dbCreateTrial(userId) {
   await supabase.from("subscriptions").insert({user_id:userId,type:"individual",status:"active",is_trial:true,max_users:1,current_period_start:new Date().toISOString(),current_period_end:endDate.toISOString()});
 }
 
-const C = darkMode ? {
-  bg:"#0f1117", surf:"#1a1d27", card:"#1a1d27", border:"#2a2d3a",
-  accent:"#26C3D4", accentBg:"#0d2a2e",
-  text:"#e8eaf0", textMuted:"#9499b0", textDim:"#5a5f7a",
-  blue:"#60a5fa", green:"#34d399", purple:"#a78bfa", red:"#f87171",
-} : {
-  bg:"#f0efea", surf:"#ffffff", card:"#ffffff", border:"#d4cfc6",
-  accent:"#0d9488", accentBg:"#e6f7f5",
-  text:"#111110", textMuted:"#555550", textDim:"#888880",
-  blue:"#1d4ed8", green:"#059669", purple:"#7c3aed", red:"#dc2626",
-};
 const inp = {background:"#fff",border:"1px solid #A8DBA8",borderRadius:4,padding:"9px 13px",color:C.text,fontSize:14,width:"100%",outline:"none",fontFamily:"Quicksand,sans-serif"};
 const sel = {background:"#fff",border:"1px solid #A8DBA8",borderRadius:4,padding:"9px 13px",color:C.text,fontSize:13,outline:"none",fontFamily:"Quicksand,sans-serif"};
 const lbl = {fontSize:11,color:C.textMuted,marginBottom:5,display:"block",fontWeight:600,letterSpacing:.5};
@@ -922,6 +911,17 @@ export default function AulaXpro() {
   var [view,setView]=useState("dashboard");
   var [bar,setBar]=useState(true);
   var [darkMode,setDarkMode]=useState(function(){return localStorage.getItem("darkMode")==="true";});
+  var C = darkMode ? {
+  bg:"#0f1117", surf:"#1a1d27", card:"#1a1d27", border:"#2a2d3a",
+  accent:"#26C3D4", accentBg:"#0d2a2e",
+  text:"#e8eaf0", textMuted:"#9499b0", textDim:"#5a5f7a",
+  blue:"#60a5fa", green:"#34d399", purple:"#a78bfa", red:"#f87171",
+} : {
+  bg:"#f0efea", surf:"#ffffff", card:"#ffffff", border:"#d4cfc6",
+  accent:"#0d9488", accentBg:"#e6f7f5",
+  text:"#111110", textMuted:"#555550", textDim:"#888880",
+  blue:"#1d4ed8", green:"#059669", purple:"#7c3aed", red:"#dc2626",
+};
   var [mobileMenu,setMobileMenu]=useState(false);
   var [subjModal,setSubjModal]=useState(false);
   var [sf,setSf]=useState({name:"",level:"Secundario (4-6)",materials:"",bibliography:""});
