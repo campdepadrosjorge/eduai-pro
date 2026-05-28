@@ -85,7 +85,8 @@ function userGen(type, topic, diff, extra, subject) {
       "- Materiales y recursos necesarios\n" +
       "- Criterios de evaluacion formativa con indicadores observables\n" +
       "- Tarea o actividad de extension para casa\n" +
-      "- Nota para el docente con sugerencias de diferenciacion" + e,
+      "- Nota para el docente con sugerencias de diferenciacion\n" +
+"- Usar emojis con moderacion, solo donde aporten claridad real" + e,
 
     actividad:
       "Crea una actividad didactica COMPLETA y lista para entregar al alumno sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
@@ -99,7 +100,9 @@ function userGen(type, topic, diff, extra, subject) {
       "- Incluir preguntas de reflexion final (minimo 3)\n" +
       "- Terminar con espacio para bitacora o registro del alumno\n" +
       "- Incluir NOTA PARA EL DOCENTE con sugerencias pedagogicas en recuadro separado\n" +
-      "- Incluir una rubrica de evaluacion sintetica al final" + mk + e,
+      "- Incluir una rubrica de evaluacion sintetica al final\n" +
+"- Usar emojis con moderacion, solo donde aporten claridad visual real\n" +
+"- El documento completo debe poder imprimirse y entregarse directamente al alumno con espacios para completar (lineas de puntos o guiones para escribir)" + mk + e,
 
     rubrica:
       "Crea una rubrica analitica COMPLETA y profesional para evaluar: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
