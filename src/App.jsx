@@ -21,7 +21,7 @@ const NAV = [
 ];
 
 const GEN_TYPES = [
-  { id:"planclase",    label:"Plan de Clase",            icon:"ti-calendar",   color:"#1d4ed8" },
+  { id:"planclase",    label:"Actividad Completa",       icon:"ti-calendar",   color:"#1d4ed8" },
   { id:"actividad",   label:"Actividad Didactica",       icon:"ti-target",     color:"#059669" },
   { id:"rubrica",     label:"Rubrica de Evaluacion",     icon:"ti-list-check", color:"#0d9488" },
   { id:"evaluacion",  label:"Evaluacion / Examen",       icon:"ti-writing",    color:"#7c3aed" },
@@ -73,20 +73,27 @@ function userGen(type, topic, diff, extra, subject) {
   var materia = subject ? " en el contexto de " + subject.name : "";
   var m = {
     planclase:
-      "Crea un plan de clase completo y detallado sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
-      "El plan debe incluir:\n" +
-      "- Encabezado con todos los datos del plan (materia, nivel, duracion, agrupamiento, fecha)\n" +
-      "- 4-5 objetivos especificos con verbos de Bloom adecuados al nivel\n" +
+      "Crea un documento educativo COMPLETO sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
+      "El documento tiene DOS partes integradas:\n\n" +
+      "## PARTE 1 — GUIA PARA EL DOCENTE\n" +
+      "- Encabezado con datos del plan (materia, nivel, duracion, agrupamiento, fecha, docente)\n" +
+      "- 4-5 objetivos especificos con verbos de Bloom\n" +
       "- Contenidos conceptuales, procedimentales y actitudinales\n" +
-      "- Secuencia didactica DETALLADA con tiempos exactos:\n" +
-      "  * INICIO (tiempo): actividad de apertura, pregunta disparadora, activacion de conocimientos previos\n" +
-      "  * DESARROLLO (tiempo): actividad principal paso a paso, consignas exactas para los alumnos\n" +
-      "  * CIERRE (tiempo): sintesis, puesta en comun, evaluacion formativa\n" +
-      "- Materiales y recursos necesarios\n" +
-      "- Criterios de evaluacion formativa con indicadores observables\n" +
-      "- Tarea o actividad de extension para casa\n" +
-      "- Nota para el docente con sugerencias de diferenciacion\n" +
-"- Usar emojis con moderacion, solo donde aporten claridad real" + e,
+      "- Materiales necesarios con checklist\n" +
+      "- Secuencia didactica con tiempos exactos (inicio/desarrollo/cierre)\n" +
+      "- Consignas textuales exactas para dar a los alumnos\n" +
+      "- Preguntas orientadoras para circular por los grupos\n" +
+      "- Tabla de evaluacion formativa con indicadores observables\n" +
+      "- Sugerencias de diferenciacion (alumnos que terminan antes, con dificultades, sin recursos)\n\n" +
+      "## PARTE 2 — MATERIAL PARA EL ALUMNO (para imprimir y entregar)\n" +
+      "- Titulo atractivo de la actividad\n" +
+      "- Objetivo en lenguaje simple ('Al terminar esta actividad vas a poder...')\n" +
+      "- Consignas paso a paso numeradas y claras\n" +
+      "- Tablas o checklists que el alumno completa durante la actividad\n" +
+      "- Desafio extra para alumnos avanzados\n" +
+      "- Preguntas de reflexion final con espacio para responder (lineas de puntos)\n" +
+      "- Bitacora del grupo con campos para completar\n\n" +
+      "Usar emojis con moderacion. El documento completo debe poder usarse sin modificaciones." + e,
 
     actividad:
       "Crea una actividad didactica COMPLETA y lista para entregar al alumno sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
