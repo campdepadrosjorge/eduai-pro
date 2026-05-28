@@ -914,6 +914,10 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
   var [subChecked,setSubChecked]=useState(false);
   var [usage,setUsage]=useState(null);
   var [budgetExceeded,setBudgetExceeded]=useState(false);
+  var [showResetPassword,setShowResetPassword]=useState(false);
+  var [newPassword,setNewPassword]=useState("");
+  var [resetLoading,setResetLoading]=useState(false);
+  var [resetDone,setResetDone]=useState(false);
   var [genType,setGenType]=useState("planclase");
   var [genTopic,setGenTopic]=useState("");
   var [genLevel,setGenLevel]=useState("Secundario (4-6)");
@@ -994,7 +998,10 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
 
   useEffect(function(){
     supabase.auth.getSession().then(function(result){setAuthUser(result.data.session?result.data.session.user:null);setAuthLoading(false);});
-    var sub=supabase.auth.onAuthStateChange(function(event,session){setAuthUser(session?session.user:null);});
+    var sub=supabase.auth.onAuthStateChange(function(event,session){
+      setAuthUser(session?session.user:null);
+      if(event==="PASSWORD_RECOVERY") setShowResetPassword(true);
+    });
     return function(){sub.data.subscription.unsubscribe();};
   },[]);
 
@@ -1307,6 +1314,42 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
 
   if(!authUser) return <AuthScreen onAuth={setAuthUser}/>;
 
+  if(showResetPassword) return (
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:C.bg}}>
+      <div style={{width:420}}>
+        <div style={{textAlign:"center",marginBottom:32}}>
+          <i className="ti ti-lock-open" style={{fontSize:52,color:C.accent,display:"block",marginBottom:12}}/>
+          <h1 style={{color:C.accent,fontSize:26,fontWeight:700,margin:"0 0 6px"}}>Nueva contraseña</h1>
+          <p style={{color:C.textMuted,fontSize:15}}>Ingresá tu nueva contraseña</p>
+        </div>
+        <div style={card}>
+          {resetDone?(
+            <div style={{textAlign:"center",padding:"16px 0"}}>
+              <i className="ti ti-check" style={{fontSize:40,color:C.green,display:"block",marginBottom:12}}/>
+              <p style={{fontSize:15,color:C.text,marginBottom:20}}>Contraseña actualizada correctamente.</p>
+              <Btn st={{width:"100%",justifyContent:"center"}} onClick={function(){setShowResetPassword(false);setResetDone(false);setNewPassword("");}}>
+                Ir a la app
+              </Btn>
+            </div>
+          ):(
+            <div>
+              <label style={lbl}>NUEVA CONTRASEÑA</label>
+              <input style={Object.assign({},inp,{marginBottom:20})} type="password" value={newPassword} onChange={function(e){setNewPassword(e.target.value);}} placeholder="Minimo 6 caracteres"/>
+              <Btn st={{width:"100%",justifyContent:"center",fontSize:14,padding:"11px 20px"}} disabled={resetLoading||newPassword.length<6} onClick={async function(){
+                setResetLoading(true);
+                var result=await supabase.auth.updateUser({password:newPassword});
+                if(result.error){alert("Error: "+result.error.message);}
+                else{setResetDone(true);}
+                setResetLoading(false);
+              }}>
+                {resetLoading?"Actualizando...":"Actualizar contraseña"}
+              </Btn>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
   if(budgetExceeded&&authUser.email!==import.meta.env.VITE_ADMIN_EMAIL) return (
     <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:C.bg}}>
       <div style={{width:480,textAlign:"center"}}>
