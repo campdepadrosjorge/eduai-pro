@@ -353,11 +353,6 @@ async function dbCreateTrial(userId) {
   await supabase.from("subscriptions").insert({user_id:userId,type:"individual",status:"active",is_trial:true,max_users:1,current_period_start:new Date().toISOString(),current_period_end:endDate.toISOString()});
 }
 
-const inp = {background:"#fff",border:"1px solid #A8DBA8",borderRadius:4,padding:"9px 13px",color:C.text,fontSize:14,width:"100%",outline:"none",fontFamily:"Quicksand,sans-serif"};
-const sel = {background:"#fff",border:"1px solid #A8DBA8",borderRadius:4,padding:"9px 13px",color:C.text,fontSize:13,outline:"none",fontFamily:"Quicksand,sans-serif"};
-const lbl = {fontSize:11,color:C.textMuted,marginBottom:5,display:"block",fontWeight:600,letterSpacing:.5};
-const card = {background:"#fff",border:"1px solid #A8DBA8",borderRadius:4,padding:"18px 20px",marginBottom:16};
-
 function Btn({children,onClick,v,disabled,st}) {
   if(!v) v="primary"; if(!st) st={}; if(!disabled) disabled=false;
   var base={padding:v==="sm"?"5px 11px":"9px 18px",borderRadius:4,cursor:disabled?"not-allowed":"pointer",fontWeight:600,fontSize:v==="sm"?12:13,fontFamily:"Quicksand,sans-serif",opacity:disabled?.45:1,transition:"opacity .15s",display:"inline-flex",alignItems:"center",gap:2};
@@ -922,12 +917,16 @@ export default function AulaXpro() {
   text:"#111110", textMuted:"#555550", textDim:"#888880",
   blue:"#1d4ed8", green:"#059669", purple:"#7c3aed", red:"#dc2626",
 };
+  var inp = {background:"#fff",border:"1px solid #A8DBA8",borderRadius:4,padding:"9px 13px",color:C.text,fontSize:14,width:"100%",outline:"none",fontFamily:"Quicksand,sans-serif"};
+  var sel = {background:"#fff",border:"1px solid #A8DBA8",borderRadius:4,padding:"9px 13px",color:C.text,fontSize:13,outline:"none",fontFamily:"Quicksand,sans-serif"};
+  var lbl = {fontSize:11,color:C.textMuted,marginBottom:5,display:"block",fontWeight:600,letterSpacing:.5};
+  var card = {background:"#fff",border:"1px solid #A8DBA8",borderRadius:4,padding:"18px 20px",marginBottom:16};
   var [mobileMenu,setMobileMenu]=useState(false);
   var [subjModal,setSubjModal]=useState(false);
   var [sf,setSf]=useState({name:"",level:"Secundario (4-6)",materials:"",bibliography:""});
-var [sfPdfs,setSfPdfs]=useState([]);
-var [pdfLoading,setPdfLoading]=useState(false);
-var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({name:"",level:"Secundario (4-6)",materials:""});
+  var [sfPdfs,setSfPdfs]=useState([]);
+  var [pdfLoading,setPdfLoading]=useState(false);
+  var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({name:"",level:"Secundario (4-6)",materials:""});
   var [library,setLibrary]=useState([]);
   var [bank,setBank]=useState([]);
   var [publicLib,setPublicLib]=useState([]);
