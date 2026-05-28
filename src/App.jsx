@@ -905,22 +905,6 @@ export default function AulaXpro() {
   var [curSid,setCurSid]=useState(null);
   var [view,setView]=useState("dashboard");
   var [bar,setBar]=useState(true);
-  var [darkMode,setDarkMode]=useState(function(){return localStorage.getItem("darkMode")==="true";});
-  var C = darkMode ? {
-  bg:"#0f1117", surf:"#1a1d27", card:"#1a1d27", border:"#2a2d3a",
-  accent:"#26C3D4", accentBg:"#0d2a2e",
-  text:"#e8eaf0", textMuted:"#9499b0", textDim:"#5a5f7a",
-  blue:"#60a5fa", green:"#34d399", purple:"#a78bfa", red:"#f87171",
-} : {
-  bg:"#f0efea", surf:"#ffffff", card:"#ffffff", border:"#d4cfc6",
-  accent:"#0d9488", accentBg:"#e6f7f5",
-  text:"#111110", textMuted:"#555550", textDim:"#888880",
-  blue:"#1d4ed8", green:"#059669", purple:"#7c3aed", red:"#dc2626",
-};
-  var inp = {background:"#fff",border:"1px solid #A8DBA8",borderRadius:4,padding:"9px 13px",color:C.text,fontSize:14,width:"100%",outline:"none",fontFamily:"Quicksand,sans-serif"};
-  var sel = {background:"#fff",border:"1px solid #A8DBA8",borderRadius:4,padding:"9px 13px",color:C.text,fontSize:13,outline:"none",fontFamily:"Quicksand,sans-serif"};
-  var lbl = {fontSize:11,color:C.textMuted,marginBottom:5,display:"block",fontWeight:600,letterSpacing:.5};
-  var card = {background:"#fff",border:"1px solid #A8DBA8",borderRadius:4,padding:"18px 20px",marginBottom:16};
   var [mobileMenu,setMobileMenu]=useState(false);
   var [subjModal,setSubjModal]=useState(false);
   var [sf,setSf]=useState({name:"",level:"Secundario (4-6)",materials:"",bibliography:""});
@@ -1493,13 +1477,7 @@ export default function AulaXpro() {
             {(NAV.find(function(n){return n.id===view;})||{}).label}
           </h1>
           {curSubj&&<div style={{fontSize:12,color:C.textMuted,background:C.bg,padding:"4px 12px",borderRadius:20,border:"1px solid "+C.border,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-book" style={{fontSize:13}}/>{curSubj.name}</div>}
-          <button style={{background:"transparent",border:"1px solid "+C.border,borderRadius:4,padding:"5px 10px",cursor:"pointer",color:C.text,display:"flex",alignItems:"center"}} onClick={function(){
-            var newMode=!darkMode;
-            setDarkMode(newMode);
-            localStorage.setItem("darkMode",String(newMode));
-          }}>
-            <i className={darkMode?"ti ti-sun":"ti ti-moon"} style={{fontSize:16}}/>
-          </button>
+        
           <div style={{position:"relative"}}>
             <button style={{background:"transparent",border:"1px solid "+C.border,borderRadius:4,padding:"5px 10px",cursor:"pointer",color:C.text,display:"flex",alignItems:"center",gap:4,fontFamily:"Quicksand,sans-serif"}} onClick={function(){setShowNotifications(!showNotifications);}}>
               <i className="ti ti-bell" style={{fontSize:16}}/>
