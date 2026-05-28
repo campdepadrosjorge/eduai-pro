@@ -285,6 +285,23 @@ async function dbAddOrUpdateSchool(name, city) {
     await supabase.from("schools").insert({name,city:city||""}).catch(function(){});
   }
 }
+async function dbLoadNotifications(userId) {
+  var r = await supabase.from("project_members")
+    .select("id, project_id, status, invited_at, projects(title)")
+    .eq("user_id", userId)
+    .order("invited_at", {ascending:false});
+  if(r.error) return [];
+  return (r.data||[]).map(function(m){
+    return {
+      id: m.id,
+      type: "project_invite",
+      title: "Te invitaron a un proyecto",
+      message: "Proyecto: " + (m.projects ? m.projects.title : "Sin título"),
+      date: m.invited_at,
+      read: m.status === "active",
+    };
+  });
+}
 async function dbLogUsage(userId, userEmail, type, typeName, subjectName, tokIn, tokOut, isImage) {
   try { await supabase.from("usage_log").insert({user_id:userId,user_email:userEmail,type,type_name:typeName,subject_name:subjectName||"",tokens_input:tokIn||0,tokens_output:tokOut||0,is_image:isImage||false}); } catch {}
 }
@@ -918,6 +935,8 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
   var [newPassword,setNewPassword]=useState("");
   var [resetLoading,setResetLoading]=useState(false);
   var [resetDone,setResetDone]=useState(false);
+  var [notifications,setNotifications]=useState([]);
+  var [showNotifications,setShowNotifications]=useState(false);
   var [genType,setGenType]=useState("planclase");
   var [genTopic,setGenTopic]=useState("");
   var [genLevel,setGenLevel]=useState("Secundario (4-6)");
@@ -1013,6 +1032,7 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
         setSubjects(results[0]);setLibrary(results[1]);setBank(results[2]);setPublicLib(results[3]);setSequences(results[4]);setQuestionItems(results[5]);setProjects(results[6]);
         if(results[0].length) setCurSid(results[0][0].id);
         setDataLoading(false);
+        dbLoadNotifications(authUser.id).then(setNotifications);
         dbCheckSubscription(authUser.id).then(function(sub){
           if(!sub){dbCreateTrial(authUser.id).then(function(){dbCheckSubscription(authUser.id).then(function(ns){setSubscription(ns);setSubChecked(true);dbGetUsage(authUser.id).then(function(u){setUsage(u);});});});}
           else{setSubscription(sub);setSubChecked(true);dbGetUsage(authUser.id).then(function(u){setUsage(u);});}
@@ -1468,6 +1488,38 @@ var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({n
             {(NAV.find(function(n){return n.id===view;})||{}).label}
           </h1>
           {curSubj&&<div style={{fontSize:12,color:C.textMuted,background:C.bg,padding:"4px 12px",borderRadius:20,border:"1px solid "+C.border,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-book" style={{fontSize:13}}/>{curSubj.name}</div>}
+          <div style={{position:"relative"}}>
+            <button style={{background:"transparent",border:"1px solid "+C.border,borderRadius:4,padding:"5px 10px",cursor:"pointer",color:C.text,display:"flex",alignItems:"center",gap:4,fontFamily:"Quicksand,sans-serif"}} onClick={function(){setShowNotifications(!showNotifications);}}>
+              <i className="ti ti-bell" style={{fontSize:16}}/>
+              {notifications.filter(function(n){return !n.read;}).length>0&&(
+                <span style={{background:C.red,color:"#fff",borderRadius:"50%",width:16,height:16,fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  {notifications.filter(function(n){return !n.read;}).length}
+                </span>
+              )}
+            </button>
+            {showNotifications&&(
+              <div style={{position:"absolute",right:0,top:"100%",marginTop:6,width:320,background:C.surf,border:"1px solid "+C.border,borderRadius:4,boxShadow:"0 8px 24px rgba(0,0,0,.1)",zIndex:999}}>
+                <div style={{padding:"12px 16px",borderBottom:"1px solid "+C.border,fontSize:13,fontWeight:700,color:C.text}}>Notificaciones</div>
+                {!notifications.length?(
+                  <div style={{padding:"20px 16px",textAlign:"center",color:C.textDim,fontSize:13}}>Sin notificaciones</div>
+                ):notifications.map(function(n){
+                  return (
+                    <div key={n.id} style={{padding:"12px 16px",borderBottom:"1px solid "+C.border,background:n.read?C.surf:C.accentBg,cursor:"pointer"}} onClick={function(){setView("projects");setShowNotifications(false);}}>
+                      <div style={{display:"flex",alignItems:"flex-start",gap:10}}>
+                        <i className="ti ti-topology-star" style={{fontSize:16,color:C.accent,marginTop:2}}/>
+                        <div>
+                          <div style={{fontSize:13,fontWeight:600,color:C.text}}>{n.title}</div>
+                          <div style={{fontSize:12,color:C.textMuted,marginTop:2}}>{n.message}</div>
+                          <div style={{fontSize:11,color:C.textDim,marginTop:4}}>{new Date(n.date).toLocaleDateString("es-AR")}</div>
+                        </div>
+                        {!n.read&&<span style={{width:8,height:8,borderRadius:"50%",background:C.accent,marginTop:4,flexShrink:0}}/>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
           <Btn v="accent" st={{padding:"5px 13px",fontSize:12}} onClick={function(){setSubjModal(true);}}>
             <i className="ti ti-plus" style={{fontSize:12,marginRight:3}}/>Materia
           </Btn>
