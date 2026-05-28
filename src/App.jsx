@@ -47,55 +47,123 @@ const LEVELS = [
 
 function sysGen(type, subject, level, materials, bibliography) {
   var ctx = "Materia: \"" + subject + "\" | Nivel: " + level + "." +
-    (materials ? "\n\nPrograma:\n" + materials : "") +
-    (bibliography ? "\n\nBibliografia y contenido de referencia:\n" + bibliography.slice(0, 8000) : "");
+    (materials ? "\n\nPrograma de la materia:\n" + materials : "") +
+    (bibliography ? "\n\nBibliografia de referencia:\n" + bibliography.slice(0, 8000) : "");
+  var base = "Sos un docente experto con 20 anos de experiencia en " + subject + " nivel " + level + ", especializado en diseno de materiales educativos de alta calidad para el contexto argentino. " + ctx;
   var p = {
-    planclase:    "Sos experto en planificacion curricular. " + ctx,
-    actividad:    "Sos especialista en diseno instruccional. " + ctx,
-    rubrica:      "Sos experto en evaluacion educativa. " + ctx,
-    evaluacion:   "Sos especialista en evaluacion y psicometria. " + ctx,
-    material:     "Sos experto en comunicacion educativa. " + ctx,
-    presentacion: "Sos especialista en presentaciones educativas. " + ctx,
-    guia:         "Sos experto en aprendizaje autonomo. " + ctx,
-    adaptado:     "Sos especialista en educacion inclusiva y NEE. " + ctx,
+    planclase:    base + "\n\nTu tarea es crear planes de clase EXCEPCIONALES que cualquier docente pueda usar directamente en el aula. Incluí siempre: datos del plan, objetivos con verbos de Bloom, contenidos conceptuales/procedimentales/actitudinales, secuencia didactica detallada con tiempos exactos (inicio/desarrollo/cierre), consignas textuales para los alumnos, preguntas orientadoras, criterios de evaluacion formativa, tarea o actividad de extension. Usa tablas, listas y estructura visual clara.",
+    actividad:   base + "\n\nTu tarea es crear ACTIVIDADES DIDACTICAS completas y listas para usar en el aula. El documento debe poder entregarse directamente al alumno. Incluí siempre: titulo atractivo, objetivo claro, duracion, materiales, contexto/motivacion, desarrollo paso a paso con consignas exactas y detalladas, preguntas de reflexion, desafio extra para alumnos avanzados, criterios de evaluacion, espacio para bitacora o registro del alumno. Usa formato visual con tablas, checkboxes y pasos numerados. Sin emojis excesivos.",
+    rubrica:      base + "\n\nTu tarea es crear RUBRICAS ANALITICAS profesionales listas para usar. Incluí siempre: tabla con 5-6 criterios especificos, 4 niveles de logro (Excelente/Satisfactorio/En proceso/Inicio) con descriptores concretos y observables, puntaje por criterio, escala de conversion a nota, instrucciones de uso para el docente, espacio para comentarios.",
+    evaluacion:   base + "\n\nTu tarea es crear EVALUACIONES COMPLETAS listas para imprimir. Incluí siempre: encabezado con datos del alumno, instrucciones claras por seccion, seccion 1 opcion multiple (5-6 items con 4 opciones), seccion 2 verdadero/falso con justificacion (4-5 items), seccion 3 respuesta breve (3-4 preguntas), seccion 4 desarrollo (1-2 preguntas integradoras), valor de cada seccion, clave de respuestas al final. Formato listo para imprimir.",
+    material:     base + "\n\nTu tarea es crear MATERIALES DIDACTICOS atractivos y completos. Incluí siempre: titulo, introduccion motivadora, desarrollo por subtemas con ejemplos concretos y cercanos a la realidad del alumno, cuadros de conceptos clave, actividades integradas dentro del texto, sintesis visual, glosario, preguntas de autoevaluacion. Usa formato de texto escolar con tablas, recuadros destacados y estructura clara.",
+    presentacion: base + "\n\nTu tarea es crear ESQUEMAS DE PRESENTACION detallados. Genera entre 12 y 18 diapositivas usando EXACTAMENTE este formato para cada una:\n\n## SLIDE [N]: [Titulo]\n[Bullets de contenido, uno por linea comenzando con -]\nNOTAS DEL PRESENTADOR: [Lo que dice el docente, 3-4 oraciones con detalle pedagogico]\n\n---\n\nCada slide debe tener contenido sustancial. Incluí slide de apertura, cierre y preguntas.",
+    guia:         base + "\n\nTu tarea es crear GUIAS DE ESTUDIO completas y autonomas. Incluí siempre: objetivos de aprendizaje, mapa conceptual en texto, preguntas orientadoras antes de cada seccion, desarrollo por unidades con ejemplos, actividades de comprension lectora integradas, cuadros comparativos, autoevaluacion con respuestas, estrategias de repaso y memoria, recursos adicionales sugeridos.",
+    adaptado:     base + "\n\nSos especialista en educacion inclusiva y NEE con experiencia en adaptaciones curriculares. Tu tarea es crear materiales adaptados especificos, practicos y listos para usar con un alumno concreto.",
   };
-  return (p[type] || ctx) + "\n\nResponde en espanol rioplatense con Markdown.";
+  return (p[type] || base) + "\n\nResponde siempre en espanol rioplatense. Usa Markdown con estructura visual clara (tablas, listas, encabezados). El material debe ser de calidad profesional, listo para usar sin modificaciones.";
 }
 
 function userGen(type, topic, diff, extra, subject) {
-  var e = extra ? "\n\nInstrucciones adicionales: " + extra : "";
+  var e = extra ? "\n\nInstrucciones adicionales del docente: " + extra : "";
   var isMakeCode = topic.toLowerCase().includes("micro") || topic.toLowerCase().includes("makecode") ||
     (extra && extra.toLowerCase().includes("makecode")) ||
-    (subject && ((subject.name||"").toLowerCase().includes("robot") || (subject.name||"").toLowerCase().includes("program")));
-  var mk = isMakeCode ? "\n\nIMPORTANTE: Al final agrega '## Codigo MakeCode' con codigo JavaScript para micro:bit en bloque ```javascript." : "";
+    (subject && ((subject.name||"").toLowerCase().includes("robot") || (subject.name||"").toLowerCase().includes("program") || (subject.name||"").toLowerCase().includes("tecnolog")));
+  var mk = isMakeCode ? "\n\nIMPORTANTE: Incluí una seccion '## Codigo MakeCode' con el codigo JavaScript completo para micro:bit dentro de un bloque ```javascript. Explicá cada linea con comentarios." : "";
+  var nivel = subject ? " para alumnos de " + (subject.level||"nivel medio") : "";
+  var materia = subject ? " en el contexto de " + subject.name : "";
   var m = {
-    planclase:   "Plan de clase completo sobre: \"" + topic + "\" | Dificultad: " + diff + "\n\nIncluí: objetivos (verbos Bloom), contenidos, secuencia didactica (inicio/desarrollo/cierre con tiempos), evaluacion formativa." + e,
-    actividad:   "Actividad didactica sobre: \"" + topic + "\" | Dificultad: " + diff + "\n\nIncluí: titulo, objetivos, duracion, materiales, desarrollo completo, consignas exactas, criterios." + mk + e,
-    rubrica:     "Rubrica analitica para: \"" + topic + "\" | Dificultad: " + diff + "\n\nIncluí: tabla con 5-6 criterios, 4 niveles (Excelente/Satisfactorio/En proceso/Inicial), descriptores, puntaje." + e,
-    evaluacion:  "Evaluacion completa sobre: \"" + topic + "\" | Dificultad: " + diff + "\n\n5 opcion multiple, 4 V/F con justificacion, 3 respuesta breve, 1 desarrollo, clave de respuestas." + e,
-    material:    "Material didactico sobre: \"" + topic + "\" | Dificultad: " + diff + "\n\nIntroduccion, desarrollo por subtemas, ejemplos, actividades, sintesis, glosario." + e,
-    presentacion:"Esquema sobre: \"" + topic + "\" | Dificultad: " + diff + "\n\nGenera 12-15 diapositivas con EXACTAMENTE este formato:\n\n## SLIDE [N]: [Titulo]\n[Bullets comenzando con -]\nNOTAS: [Lo que dice el presentador]\n\n---\n\nRepeti para cada slide." + e,
-    guia:        "Guia de estudio sobre: \"" + topic + "\" | Dificultad: " + diff + "\n\nObjetivos, mapa de conceptos, preguntas orientadoras, actividades, autoevaluacion, estrategias de repaso." + e,
-    adaptado: (function(){
-      var neeType = extra && extra.startsWith("NEE:") ? extra.split("\n")[0].replace("NEE:","").trim() : "General";
-      var material = extra && extra.includes("MATERIAL:") ? extra.split("MATERIAL:")[1].trim() : "";
-      var lineamientos = {
-        "Dislexia": "Usa fuente sans-serif. Texto fragmentado en bloques cortos. Sin columnas. Palabras clave en negrita. Oraciones de maximo 15 palabras. Mucho espacio en blanco. Evita parrafos densos. Usa listas con viñetas. Incluye apoyo visual o icono para cada seccion.",
-        "TDAH": "Instrucciones de UN paso a la vez. Actividades de maximo 10 minutos. Incluye pausas activas entre tareas. Usa temporizadores sugeridos. Resalta con color la consigna principal. Agrega elementos de motivacion (retos, puntos, logros). Evita paginas densas.",
-        "TEA": "Lenguaje literal y concreto, sin metaforas ni ironias. Rutina y estructura visual muy clara. Anticipa cada cambio de actividad. Sin ambiguedades. Usa pictogramas o descripciones visuales. Secuencia numerada de pasos. Evita estimulos innecesarios en el texto.",
-        "Discapacidad Visual": "Descripcion verbal detallada de TODOS los elementos visuales. Sin tablas complejas. Estructura lineal y predecible. Sin referencias a colores como unica informacion. Todo el contenido en texto puro accesible. Evita cuadros y graficos sin descripcion.",
-        "Discapacidad Auditiva": "Material 100% escrito, sin referencias a audio o consignas orales. Apoyo visual fuerte. Glosario de terminos clave al inicio. Uso de imagenes, esquemas y mapas conceptuales. Lenguaje claro y directo.",
-        "Baja Vision": "Sugiere fuente minimo 18pt. Alto contraste. Sin informacion transmitida solo por color. Elementos grandes y bien espaciados. Sin detalles pequenos. Formato imprimible en A4 con margen amplio.",
-        "Altas Capacidades": "Mayor complejidad y abstraccion. Conexiones interdisciplinarias. Preguntas de extension que exigen analisis critico. Proyectos autonomos opcionales. Recursos adicionales para profundizar. Desafios abiertos sin respuesta unica.",
-        "Dificultades en Lectoescritura": "Vocabulario simplificado. Oraciones de maximo 10 palabras. Mucho espacio en blanco. Apoyo en imagenes o iconos. Actividades con respuesta corta o seleccion. Evita copias largas. Incluye modelo de respuesta esperada.",
-        "Barreras Idiomaticas": "Lenguaje simple y universal. Glosario basico al inicio. Ejemplos concretos y cotidianos. Evita expresiones regionales o modismos. Incluye traduccion de terminos clave si es posible. Apoya con imagenes o esquemas.",
-      };
-      var lin = lineamientos[neeType] || "Adapta el contenido segun las necesidades del alumno.";
-      var base = material ? "\n\nMATERIAL A ADAPTAR:\n"+material : "";
-      return "Genera contenido educativo adaptado para un alumno con "+neeType+" sobre: \""+topic+"\"\n\nLINEAMIENTOS ESPECIFICOS PARA "+neeType.toUpperCase()+":\n"+lin+"\n\nEstructura la respuesta en:\n1. **Material adaptado completo** (aplicando todos los lineamientos)\n2. **Estrategias especificas para el docente** (como presentarlo, como evaluar, como acompañar)\n3. **Recursos y materiales sugeridos** (herramientas, apps, materiales fisicos)\n4. **Indicadores de logro adaptados** (como saber que el alumno alcanzo el objetivo)"+base;
-    })(),
+    planclase:
+      "Crea un plan de clase completo y detallado sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
+      "El plan debe incluir:\n" +
+      "- Encabezado con todos los datos del plan (materia, nivel, duracion, agrupamiento, fecha)\n" +
+      "- 4-5 objetivos especificos con verbos de Bloom adecuados al nivel\n" +
+      "- Contenidos conceptuales, procedimentales y actitudinales\n" +
+      "- Secuencia didactica DETALLADA con tiempos exactos:\n" +
+      "  * INICIO (tiempo): actividad de apertura, pregunta disparadora, activacion de conocimientos previos\n" +
+      "  * DESARROLLO (tiempo): actividad principal paso a paso, consignas exactas para los alumnos\n" +
+      "  * CIERRE (tiempo): sintesis, puesta en comun, evaluacion formativa\n" +
+      "- Materiales y recursos necesarios\n" +
+      "- Criterios de evaluacion formativa con indicadores observables\n" +
+      "- Tarea o actividad de extension para casa\n" +
+      "- Nota para el docente con sugerencias de diferenciacion" + e,
+
+    actividad:
+      "Crea una actividad didactica COMPLETA y lista para entregar al alumno sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
+      "La actividad debe:\n" +
+      "- Tener un titulo atractivo y motivador\n" +
+      "- Incluir objetivo claro, duracion estimada y materiales necesarios\n" +
+      "- Tener una introduccion/contexto que motive al alumno (maximo 3 lineas)\n" +
+      "- Desarrollar la actividad en PARTES o PASOS numerados con consignas exactas y detalladas\n" +
+      "- Incluir al menos una tabla o checklist que el alumno pueda completar\n" +
+      "- Tener un DESAFIO EXTRA para alumnos que terminan antes\n" +
+      "- Incluir preguntas de reflexion final (minimo 3)\n" +
+      "- Terminar con espacio para bitacora o registro del alumno\n" +
+      "- Incluir NOTA PARA EL DOCENTE con sugerencias pedagogicas en recuadro separado\n" +
+      "- Incluir una rubrica de evaluacion sintetica al final" + mk + e,
+
+    rubrica:
+      "Crea una rubrica analitica COMPLETA y profesional para evaluar: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
+      "La rubrica debe incluir:\n" +
+      "- Tabla principal con 5-6 criterios especificos y observables\n" +
+      "- 4 niveles de logro: Excelente (4) / Satisfactorio (3) / En proceso (2) / Inicio (1)\n" +
+      "- Descriptores concretos y observables para cada criterio en cada nivel\n" +
+      "- Puntaje por criterio y puntaje total\n" +
+      "- Tabla de conversion: puntaje total → nota en escala 1-10\n" +
+      "- Instrucciones de uso para el docente\n" +
+      "- Espacio para calificacion final y comentarios\n" +
+      "- Instrucciones para el alumno (como sera evaluado)" + e,
+
+    evaluacion:
+      "Crea una evaluacion COMPLETA lista para imprimir sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
+      "La evaluacion debe incluir:\n" +
+      "- Encabezado institucional con: Nombre, Apellido, Curso, Fecha, Calificacion (campos en blanco)\n" +
+      "- Instrucciones generales claras\n" +
+      "- SECCION 1 — Opcion multiple (5-6 items, 4 opciones cada uno, valor indicado)\n" +
+      "- SECCION 2 — Verdadero o Falso con justificacion obligatoria (4-5 items)\n" +
+      "- SECCION 3 — Respuesta breve (3-4 preguntas con espacio para responder)\n" +
+      "- SECCION 4 — Desarrollo (1-2 preguntas integradoras con criterios de correccion)\n" +
+      "- Valor de cada seccion claramente indicado\n" +
+      "- CLAVE DE RESPUESTAS completa al final (separada por una linea)" + e,
+
+    material:
+      "Crea un material didactico COMPLETO y atractivo sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
+      "El material debe incluir:\n" +
+      "- Titulo atractivo y subtitulo descriptivo\n" +
+      "- Introduccion motivadora que conecte con la experiencia del alumno\n" +
+      "- Desarrollo organizado en 3-4 subtemas con:\n" +
+      "  * Explicacion clara con ejemplos concretos y actuales\n" +
+      "  * Al menos un recuadro de 'Concepto clave' por subtema\n" +
+      "  * Una actividad breve integrada al texto\n" +
+      "- Cuadro comparativo o tabla de sintesis\n" +
+      "- Sintesis final en forma de mapa conceptual textual\n" +
+      "- Glosario de terminos clave (minimo 8 terminos)\n" +
+      "- Preguntas de autoevaluacion con respuestas al pie" + e,
+
+    presentacion:
+      "Crea un esquema de presentacion COMPLETO sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
+      "Genera entre 14 y 18 diapositivas usando EXACTAMENTE este formato para cada una:\n\n" +
+      "## SLIDE [N]: [Titulo de la diapositiva]\n" +
+      "- [bullet 1 de contenido]\n" +
+      "- [bullet 2 de contenido]\n" +
+      "- [bullet 3 de contenido]\n" +
+      "NOTAS DEL PRESENTADOR: [Lo que dice el docente en voz alta, 3-4 oraciones detalladas con el desarrollo del contenido, ejemplos y transiciones]\n\n" +
+      "---\n\n" +
+      "Incluí: slide de apertura con pregunta disparadora, slides de desarrollo con ejemplos, slide de actividad para hacer con los alumnos, slide de sintesis, slide de cierre con preguntas para reflexionar." + e,
+
+    guia:
+      "Crea una guia de estudio COMPLETA y autonoma sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
+      "La guia debe incluir:\n" +
+      "- Objetivos de aprendizaje claros (lo que vas a poder hacer al terminar)\n" +
+      "- Mapa conceptual en formato textual con relaciones entre conceptos\n" +
+      "- Preguntas orientadoras antes de cada seccion (para activar la lectura activa)\n" +
+      "- Desarrollo organizado por unidades con explicaciones claras\n" +
+      "- Cuadros comparativos y tablas de sintesis\n" +
+      "- Actividades de comprension integradas al texto\n" +
+      "- Autoevaluacion final con respuestas (para que el alumno verifique)\n" +
+      "- Estrategias de repaso y memoria (tecnicas de estudio sugeridas)\n" +
+      "- Recursos adicionales (que buscar, que leer o ver para profundizar)" + e,
   };
-  return m[type] || "Contenido educativo sobre \"" + topic + "\". Dificultad: " + diff + "." + e;
+  return m[type] || "Crea contenido educativo de alta calidad sobre \"" + topic + "\"" + nivel + materia + ". Dificultad: " + diff + "." + e;
 }
 
 function userMM(type, topic, extra) {
@@ -1165,7 +1233,7 @@ export default function AulaXpro() {
     try{
       var sys=sysGen(genType,curSubj.name,genLevel||curSubj.level,curSubj.materials,curSubj.bibliography);
       var usr=userGen(genType,genTopic,genDiff,genExtra,curSubj);
-      var r=await callClaude(sys,[{role:"user",content:usr}]);
+      var r=await callClaude(sys,[{role:"user",content:usr}],6000);
       setGenResult(r);setMakeCodeUrl(generateMakeCodeUrl(r));
       var gt2=GEN_TYPES.find(function(g){return g.id===genType;});
       var tokIn=Math.round((sys.length+usr.length)/4);
