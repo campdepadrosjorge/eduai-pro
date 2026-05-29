@@ -1520,7 +1520,16 @@ export default function AulaXpro() {
           <button style={{background:"none",border:"none",cursor:"pointer",color:C.accent,fontSize:17,minWidth:26,fontFamily:"Quicksand,sans-serif"}} onClick={function(){setBar(!bar);}}>
             {bar?<i className="ti ti-chevron-left" style={{fontSize:16}}/>:<i className="ti ti-chevron-right" style={{fontSize:16}}/>}
           </button>
-          {bar&&<span style={{fontSize:15,fontWeight:700,color:C.accent,whiteSpace:"nowrap"}}>AulaXpro</span>}
+          {bar&&(
+            <div style={{display:"flex",alignItems:"center",gap:7}}>
+              <div style={{width:26,height:26,background:"#0D3559",borderRadius:5,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden",flexShrink:0}}>
+                <div style={{position:"absolute",width:14,height:2,background:"#26C3D4",top:7,left:6,borderRadius:1}}/>
+                <div style={{position:"absolute",width:14,height:2,background:"#79BD9A",top:12,left:6,borderRadius:1}}/>
+                <div style={{position:"absolute",width:8,height:8,background:"#26C3D4",borderRadius:"50%",top:5,right:4,opacity:.7}}/>
+              </div>
+              <span style={{fontSize:15,fontWeight:700,color:"#0D3559",whiteSpace:"nowrap"}}>Aula<span style={{color:"#26C3D4"}}>X</span>pro</span>
+            </div>
+          )}
         </div>
         {bar&&subjects.length>0&&(
           <div style={{padding:"8px 10px 10px"}}>
