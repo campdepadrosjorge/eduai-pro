@@ -194,11 +194,11 @@ function userSequence(topic, nClasses, level, subject, extra) {
     "\n\nPara cada clase usa ESTE FORMATO EXACTO:\n\n## CLASE [N]: [Titulo]\n**Duracion:** [min]\n**Objetivos:** [2-3]\n**Retoma:** [conexion anterior]\n**Inicio (10min):** [apertura]\n**Desarrollo (25min):** [actividad principal]\n**Cierre (10min):** [sintesis]\n**Recursos:** [materiales]\n**Evaluacion:** [como evaluar]\n\n---\n\nProgresion clara de dificultad entre clases." + (extra ? "\n\nInstrucciones adicionales: " + extra : "");
 }
 
-async function callClaude(system, messages, maxTokens) {
+async function callClaude(system, messages, maxTokens, useSearch) {
   if (!maxTokens) maxTokens = 4000;
   var res = await fetch("/api/generate", {
     method:"POST", headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({ system, messages, maxTokens }),
+    body:JSON.stringify({ system, messages, maxTokens, useSearch:!!useSearch }),
   });
   if (!res.ok) { var err = {}; try { err = await res.json(); } catch {} throw new Error(err.error || "Error " + res.status); }
   var data = await res.json();
@@ -1327,13 +1327,16 @@ export default function AulaXpro() {
 
   async function sendChat(){
     var subj=subjects.find(function(s){return s.id===chatSid;})||curSubj;
-    if(!chatIn.trim()||!subj) return;
+    if(!chatIn.trim()) return;
     var msg=chatIn.trim();setChatIn("");
     var hist=chatMsgs.concat([{role:"user",content:msg}]);
     setChatMsgs(hist);setChatLoading(true);
-    var sys="Sos asistente educativo para docentes argentinos en \""+subj.name+"\" ("+subj.level+")."+(subj.materials?"\nPrograma: "+subj.materials:"")+"\nResponde en espanol rioplatense con Markdown.";
+    var sys=subj
+      ? "Sos un asistente experto para docentes. Materia de contexto: \""+subj.name+"\" ("+subj.level+")."+(subj.materials?"\nPrograma: "+subj.materials:"")
+      : "Sos un asistente experto y versatil. Podes responder cualquier tipo de pregunta: educativa, general, de actualidad, clima, noticias, etc.";
+    sys+="\nResponde en espanol rioplatense con Markdown. Si necesitas informacion actualizada, usas la herramienta de busqueda web.";
     try{
-      var r=await callClaude(sys,hist.map(function(m){return{role:m.role,content:m.content};}),2000);
+      var r=await callClaude(sys,hist.map(function(m){return{role:m.role,content:m.content};}),2000,true);
       setChatMsgs(hist.concat([{role:"assistant",content:r}]));
     }catch(e){setChatMsgs(hist.concat([{role:"assistant",content:"Error: "+e.message}]));}
     setChatLoading(false);
