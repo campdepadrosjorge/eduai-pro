@@ -1885,9 +1885,26 @@ export default function AulaXpro() {
                         </div>
                       )}
                     </div>
-                    <div style={{marginTop:16}}>
-                      <label style={lbl}>DESCRIPCION DE LA IMAGEN (opcional)</label>
+                    <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid "+C.border}}>
+                      <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:10}}>IMAGEN PARA EL DOCUMENTO (opcional)</div>
+                      <p style={{fontSize:12,color:C.textDim,marginBottom:10}}>Generá una imagen con IA o subí una desde tu dispositivo.</p>
                       <input style={Object.assign({},inp,{marginBottom:10})} value={actImgDesc} onChange={function(e){setActImgDesc(e.target.value);}} placeholder="Ej: diagrama de la celula eucariota"/>
+                      <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
+                        <Btn v="secondary" st={{fontSize:12,padding:"5px 14px"}} onClick={generateActivityImage} disabled={actImgLoad}>
+                          {actImgLoad?"Generando...":<><i className="ti ti-photo-ai" style={{fontSize:13,marginRight:4}}/>Generar con IA</>}
+                        </Btn>
+                        <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+C.border,borderRadius:4,padding:"5px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:C.text}}>
+                          <i className="ti ti-upload" style={{fontSize:13}}/>Subir imagen
+                          <input type="file" accept="image/*" style={{display:"none"}} onChange={function(e){
+                            var file=e.target.files[0];if(!file) return;
+                            var reader=new FileReader();
+                            reader.onload=function(ev){setActImgBase64(ev.target.result);setActImgUrl(ev.target.result);};
+                            reader.readAsDataURL(file);
+                            e.target.value="";
+                          }}/>
+                        </label>
+                        {actImgErr&&<span style={{color:C.red,fontSize:12}}>{actImgErr}</span>}
+                      </div>
                     </div>
                     <div style={{display:"flex",gap:10,alignItems:"center"}}>
                       <Btn v="secondary" st={{fontSize:12,padding:"5px 14px"}} onClick={generateActivityImage} disabled={actImgLoad}>
