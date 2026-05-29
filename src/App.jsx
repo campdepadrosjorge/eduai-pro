@@ -1906,12 +1906,6 @@ export default function AulaXpro() {
                         {actImgErr&&<span style={{color:C.red,fontSize:12}}>{actImgErr}</span>}
                       </div>
                     </div>
-                    <div style={{display:"flex",gap:10,alignItems:"center"}}>
-                      <Btn v="secondary" st={{fontSize:12,padding:"5px 14px"}} onClick={generateActivityImage} disabled={actImgLoad}>
-                        {actImgLoad?"Generando...":<><i className="ti ti-photo-ai" style={{fontSize:13,marginRight:4}}/>Generar imagen</>}
-                      </Btn>
-                      {actImgErr&&<span style={{color:C.red,fontSize:12}}>{actImgErr}</span>}
-                    </div>
                     {actImgUrl&&(
                       <div style={{marginTop:14}}>
                         <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:10}}>IMAGEN GENERADA</div>
