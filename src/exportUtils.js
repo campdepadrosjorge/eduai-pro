@@ -1,7 +1,7 @@
 // src/exportUtils.js
 import {
   Document, Paragraph, TextRun, Packer, AlignmentType, BorderStyle,
-  Table, TableRow, TableCell, WidthType, ShadingType, LevelFormat
+  Table, TableRow, TableCell, WidthType, ShadingType, LevelFormat, ImageRun
 } from "docx";
  
 const F="Arial", SZ_H1=40, SZ_H2=32, SZ_H3=26, SZ_H4=24, SZ_TXT=22, SZ_SUB=18, SZ_CODE=18;
@@ -224,7 +224,7 @@ function mdToDocx(text) {
   return result;
 }
  
-function buildDoc(topic, typeName, subject, content) {
+function buildDoc(topic, typeName, subject, content, imageBase64) {
   return new Document({
     styles: {
       default: {
@@ -267,6 +267,18 @@ function buildDoc(topic, typeName, subject, content) {
           spacing: { after: 480 },
         }),
         ...mdToDocx(content),
+        ...(imageBase64 ? [
+          new Paragraph({ children: [], spacing: { before: 200 } }),
+          new Paragraph({
+            children: [new ImageRun({
+              data: imageBase64.split(",")[1],
+              transformation: { width: 500, height: 350 },
+              type: "png",
+            })],
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 200, after: 200 },
+          }),
+        ] : []),
       ],
     }],
   });
@@ -322,14 +334,15 @@ function buildPdfHtml(topic, typeName, subject, content) {
   return html;
 }
  
-export async function exportDocx(topic, typeName, subject, content) {
-  const doc = buildDoc(topic, typeName, subject, content);
+export async function exportDocx(topic, typeName, subject, content, imageBase64) {
+  const doc = buildDoc(topic, typeName, subject, content, imageBase64);
   const blob = await Packer.toBlob(doc);
   downloadBlob(blob, `${sanitize(topic)}.docx`);
 }
  
-export function exportPdf(topic, typeName, subject, content) {
+export function exportPdf(topic, typeName, subject, content, imageBase64) {
   const bodyHtml = buildPdfHtml(topic, typeName, subject, content);
+  const imgHtml = imageBase64 ? `<div style="text-align:center;margin:20px 0"><img src="${imageBase64}" style="max-width:100%;border-radius:8px;border:1px solid #ddd" alt="Imagen ilustrativa"/></div>` : "";
   const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -363,7 +376,7 @@ code{background:#e6f7f5;padding:2px 6px;border-radius:3px;font-family:monospace;
 <body>
 <div class="titulo">${topic}</div>
 <div class="meta">${typeName||""}${subject?" · "+subject:""} · AulaXpro</div>
-<p>${bodyHtml}</p>
+<p>${bodyHtml}</p>${imgHtml}
 <script>window.onload=function(){window.print()}<\/script>
 </body>
 </html>`;

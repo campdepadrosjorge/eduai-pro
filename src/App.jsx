@@ -1027,6 +1027,7 @@ export default function AulaXpro() {
   var [actImgUrl,setActImgUrl]=useState(null);
   var [actImgLoad,setActImgLoad]=useState(false);
   var [actImgErr,setActImgErr]=useState("");
+  var [actImgBase64,setActImgBase64]=useState(null);
   var [diffResult,setDiffResult]=useState("");
   var [diffLoading,setDiffLoading]=useState(false);
   var [questionItems,setQuestionItems]=useState([]);
@@ -1267,17 +1268,20 @@ export default function AulaXpro() {
   }
 
   async function callImgApi(description,subject,level){
-    var res=await fetch("/api/generate-image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({description,subject,level})});
-    if(!res.ok){var ej;try{ej=await res.json();}catch{throw new Error("Error del servidor.");}throw new Error(ej.error||"Error al generar imagen.");}
-    var ct=res.headers.get("content-type")||"";
-    if(ct.includes("image")){var bl=await res.blob();return URL.createObjectURL(bl);}
-    var jd=await res.json();return jd.url;
-  }
+  var res=await fetch("/api/generate-image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({description,subject,level})});
+  if(!res.ok){var ej;try{ej=await res.json();}catch{throw new Error("Error del servidor.");}throw new Error(ej.error||"Error al generar imagen.");}
+  var ct=res.headers.get("content-type")||"";
+  var blob;
+  if(ct.includes("image")){blob=await res.blob();}
+  else{var jd=await res.json();var r2=await fetch(jd.url);blob=await r2.blob();}
+  var base64=await new Promise(function(resolve){var reader=new FileReader();reader.onload=function(e){resolve(e.target.result);};reader.readAsDataURL(blob);});
+  return {url:URL.createObjectURL(blob),base64};
+}
 
   async function generateImage(){
     if(!mmTopic.trim()||!curSubj) return;
     setImgLoading(true);setImgUrl(null);setImgError("");
-   try{var url=await callImgApi(mmTopic,curSubj.name,curSubj.level);setImgUrl(url);dbLogUsage(authUser.id,authUser.email,"imagen_ia","Imagen IA Multimedia",curSubj.name,300,0,true);dbAddUsageCost(authUser.id,0.07).then(function(){dbGetUsage(authUser.id).then(function(u){setUsage(u);});});}
+   try{var result=await callImgApi(mmTopic,curSubj.name,curSubj.level);setImgUrl(result.url);dbLogUsage(authUser.id,authUser.email,"imagen_ia","Imagen IA Multimedia",curSubj.name,300,0,true);dbAddUsageCost(authUser.id,0.07).then(function(){dbGetUsage(authUser.id).then(function(u){setUsage(u);});});}
     catch(e){setImgError("Error: "+e.message);}
     setImgLoading(false);
   }
@@ -1285,7 +1289,7 @@ export default function AulaXpro() {
   async function generateActivityImage(){
     if(!genResult||!curSubj) return;
     setActImgLoad(true);setActImgUrl(null);setActImgErr("");
-    try{var desc=actImgDesc||("Educational illustration for: "+genTopic+". Subject: "+curSubj.name);var url=await callImgApi(desc,curSubj.name,genLevel);setActImgUrl(url);dbLogUsage(authUser.id,authUser.email,"imagen","Imagen IA",curSubj.name,300,0,true);dbAddUsageCost(authUser.id,0.07).then(function(){dbGetUsage(authUser.id).then(function(u){setUsage(u);});});}
+    try{var desc=actImgDesc||("Educational illustration for: "+genTopic+". Subject: "+curSubj.name);var result=await callImgApi(desc,curSubj.name,genLevel);setActImgUrl(result.url);setActImgBase64(result.base64);dbLogUsage(authUser.id,authUser.email,"imagen","Imagen IA",curSubj.name,300,0,true);dbAddUsageCost(authUser.id,0.07).then(function(){dbGetUsage(authUser.id).then(function(u){setUsage(u);});});}
     catch(e){setActImgErr("Error: "+e.message);}
     setActImgLoad(false);
   }
@@ -1824,11 +1828,11 @@ export default function AulaXpro() {
                             )}
                           </div>
                         )}
-                        <Btn v="secondary" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportDocx(genTopic,gt?gt.label:"",curSubj?curSubj.name:"",genResult);}}>
+                        <Btn v="secondary" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportDocx(genTopic,gt?gt.label:"",curSubj?curSubj.name:"",genResult,actImgBase64);}}>
                           <i className="ti ti-file-text" style={{fontSize:13,marginRight:4}}/>Word
                         </Btn>
                         {(genType==="evaluacion"||genType==="rubrica"||genType==="planclase")&&(
-                          <Btn v="secondary" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportPdf(genTopic,gt?gt.label:"",curSubj?curSubj.name:"",genResult);}}>
+                          <Btn v="secondary" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportPdf(genTopic,gt?gt.label:"",curSubj?curSubj.name:"",genResult,actImgBase64);}}>
                             <i className="ti ti-file-invoice" style={{fontSize:13,marginRight:4}}/>PDF
                           </Btn>
                         )}
