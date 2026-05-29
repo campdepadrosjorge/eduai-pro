@@ -1527,7 +1527,7 @@ export default function AulaXpro() {
                 <div style={{position:"absolute",width:14,height:2,background:"#79BD9A",top:12,left:6,borderRadius:1}}/>
                 <div style={{position:"absolute",width:8,height:8,background:"#26C3D4",borderRadius:"50%",top:5,right:4,opacity:.7}}/>
               </div>
-              <span style={{fontSize:15,fontWeight:700,color:"#0D3559",whiteSpace:"nowrap"}}>Aula<span style={{color:"#26C3D4"}}>X</span>pro</span>
+              <span style={{fontSize:15,fontWeight:700,color:"#ffffff",whiteSpace:"nowrap"}}>Aula<span style={{color:"#26C3D4"}}>X</span>pro</span>
             </div>
           )}
         </div>
