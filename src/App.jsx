@@ -1359,10 +1359,9 @@ export default function AulaXpro() {
     var hist=chatMsgs.concat([{role:"user",content:msg}]);
     setChatMsgs(hist);setChatLoading(true);
     dbSaveChatMessage(authUser.id,"user",msg,chatSid||curSid);
-    var sys=subj
-      ? "Sos un asistente experto para docentes. Materia de contexto: \""+subj.name+"\" ("+subj.level+")."+(subj.materials?"\nPrograma: "+subj.materials:"")
-      : "Sos un asistente experto y versatil. Podes responder cualquier tipo de pregunta: educativa, general, de actualidad, clima, noticias, etc.";
-    sys+="\nResponde en espanol rioplatense con Markdown. Si necesitas informacion actualizada, usas la herramienta de busqueda web.";
+    var sys="Sos un asistente experto y versatil como Claude. Podes responder cualquier tipo de pregunta: educativa, general, de actualidad, clima, noticias, ciencia, tecnologia, cultura, entretenimiento, o cualquier otro tema."
+      +(subj?" Contexto opcional: el usuario es docente de \""+subj.name+"\" ("+subj.level+")."+(subj.materials?"\nPrograma: "+subj.materials:""):"")
+      +"\nResponde en espanol rioplatense con Markdown. Cuando necesites informacion actualizada usas la busqueda web automaticamente.";
     try{
       var r=await callClaude(sys,hist.map(function(m){return{role:m.role,content:m.content};}),2000,true);
       setChatMsgs(hist.concat([{role:"assistant",content:r}]));
@@ -2070,7 +2069,7 @@ export default function AulaXpro() {
                 <div style={Object.assign({},card,{marginBottom:12,padding:"9px 14px"})}>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
                     <span style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.6,whiteSpace:"nowrap"}}>CONTEXTO:</span>
-                    <select style={Object.assign({},sel,{flex:1})} value={chatSid||curSid||""} onChange={function(e){setChatSid(e.target.value);setChatMsgs([]);}}>
+                    <select style={Object.assign({},sel,{flex:1})} value={chatSid===null?"":chatSid||""} onChange={function(e){setChatSid(e.target.value||null);setChatMsgs([]);dbClearChatHistory(authUser.id);}}>
                       <option value="">Sin materia especifica</option>
                       {subjects.map(function(s){return <option key={s.id} value={s.id}>{s.name+" ("+s.level+")"}</option>;})}
                     </select>
