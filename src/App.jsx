@@ -380,6 +380,26 @@ async function dbLoadNotifications(userId) {
     };
   });
 }
+async function dbSaveChatMessage(userId, role, content, subjectId) {
+  try {
+    await supabase.from("chat_history").insert({user_id:userId, role, content, subject_id:subjectId||null});
+  } catch {}
+}
+
+async function dbLoadChatHistory(userId, limit) {
+  if(!limit) limit = 50;
+  var r = await supabase.from("chat_history")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", {ascending:false})
+    .limit(limit);
+  if(r.error) return [];
+  return (r.data||[]).reverse();
+}
+
+async function dbClearChatHistory(userId) {
+  await supabase.from("chat_history").delete().eq("user_id", userId);
+}
 async function dbLogUsage(userId, userEmail, type, typeName, subjectName, tokIn, tokOut, isImage) {
   try { await supabase.from("usage_log").insert({user_id:userId,user_email:userEmail,type,type_name:typeName,subject_name:subjectName||"",tokens_input:tokIn||0,tokens_output:tokOut||0,is_image:isImage||false}); } catch {}
 }
@@ -1126,7 +1146,14 @@ export default function AulaXpro() {
   },[authUser,curSid]);
 
   useEffect(function(){if(chatRef.current) chatRef.current.scrollIntoView({behavior:"smooth"});},[chatMsgs]);
-
+  useEffect(function(){
+    if(!authUser) return;
+    dbLoadChatHistory(authUser.id).then(function(history){
+      if(history.length>0){
+        setChatMsgs(history.map(function(m){return{role:m.role,content:m.content};}));
+      }
+    });
+  },[authUser]);
   async function signOut(){
     await supabase.auth.signOut();
     setSubjects([]);setLibrary([]);setBank([]);setPublicLib([]);setSequences([]);setCurSid(null);setView("dashboard");
@@ -1331,6 +1358,7 @@ export default function AulaXpro() {
     var msg=chatIn.trim();setChatIn("");
     var hist=chatMsgs.concat([{role:"user",content:msg}]);
     setChatMsgs(hist);setChatLoading(true);
+    dbSaveChatMessage(authUser.id,"user",msg,chatSid||curSid);
     var sys=subj
       ? "Sos un asistente experto para docentes. Materia de contexto: \""+subj.name+"\" ("+subj.level+")."+(subj.materials?"\nPrograma: "+subj.materials:"")
       : "Sos un asistente experto y versatil. Podes responder cualquier tipo de pregunta: educativa, general, de actualidad, clima, noticias, etc.";
@@ -1338,6 +1366,7 @@ export default function AulaXpro() {
     try{
       var r=await callClaude(sys,hist.map(function(m){return{role:m.role,content:m.content};}),2000,true);
       setChatMsgs(hist.concat([{role:"assistant",content:r}]));
+      dbSaveChatMessage(authUser.id,"assistant",r,chatSid||curSid);
     }catch(e){setChatMsgs(hist.concat([{role:"assistant",content:"Error: "+e.message}]));}
     setChatLoading(false);
   }
@@ -2045,8 +2074,11 @@ export default function AulaXpro() {
                       <option value="">Sin materia especifica</option>
                       {subjects.map(function(s){return <option key={s.id} value={s.id}>{s.name+" ("+s.level+")"}</option>;})}
                     </select>
-                    <Btn v="ghost" st={{padding:"5px 11px",fontSize:12}} onClick={function(){setChatMsgs([]);}}>
-                      <i className="ti ti-trash" style={{fontSize:13,marginRight:4}}/>Limpiar
+                    <Btn v="ghost" st={{padding:"5px 11px",fontSize:12}} onClick={function(){
+                      setChatMsgs([]);
+                      dbClearChatHistory(authUser.id);
+                    }}>
+                      <i className="ti ti-trash" style={{fontSize:13,marginRight:4}}/>Limpiar historial
                     </Btn>
                   </div>
                 </div>
