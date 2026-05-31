@@ -419,27 +419,6 @@ async function dbClearChatHistory(userId) {
   await supabase.from("chat_sessions").delete().eq("user_id",userId);
 }
 
-async function dbSaveChatMessage(userId, role, content, subjectId, sessionId) {
-  try {
-    await supabase.from("chat_history").insert({user_id:userId, role, content, subject_id:subjectId||null, session_id:sessionId||null});
-    if(sessionId) await supabase.from("chat_sessions").update({updated_at:new Date().toISOString()}).eq("id",sessionId);
-  } catch(e) {}
-}
-
-async function dbLoadChatHistory(userId, limit) {
-  if(!limit) limit = 50;
-  var r = await supabase.from("chat_history")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", {ascending:false})
-    .limit(limit);
-  if(r.error) return [];
-  return (r.data||[]).reverse();
-}
-
-async function dbClearChatHistory(userId) {
-  await supabase.from("chat_history").delete().eq("user_id", userId);
-}
 async function dbLogUsage(userId, userEmail, type, typeName, subjectName, tokIn, tokOut, isImage) {
   try { await supabase.from("usage_log").insert({user_id:userId,user_email:userEmail,type,type_name:typeName,subject_name:subjectName||"",tokens_input:tokIn||0,tokens_output:tokOut||0,is_image:isImage||false}); } catch(e) {}
 }
