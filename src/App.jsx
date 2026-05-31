@@ -1432,9 +1432,9 @@ export default function AulaXpro() {
         }).catch(function(){});
     }
 
-    var sys="Sos un asistente experto y versatil. Podes responder cualquier tipo de pregunta: educativa, general, de actualidad, clima, noticias, ciencia, tecnologia, cultura, entretenimiento, o cualquier otro tema."
-      +(subj?" Contexto opcional: el usuario es docente de \""+subj.name+"\" ("+subj.level+")."+(subj.materials?"\nPrograma: "+subj.materials:""):"")
-      +"\nResponde en espanol rioplatense con Markdown. Cuando necesites informacion actualizada usas la busqueda web automaticamente.";
+    var sys="Sos un asistente experto y versatil. Responde de forma natural y conversacional, sin usar emojis, sin markdown, sin asteriscos ni simbolos de formato. Texto plano solamente, como si fuera una conversacion normal. Podes responder cualquier tipo de pregunta."
+      +(subj?" Contexto: el usuario es docente de \""+subj.name+"\" ("+subj.level+")."+(subj.materials?"\nPrograma: "+subj.materials:""):"")
+      +"\nResponde en espanol rioplatense. Cuando necesites informacion actualizada usa la busqueda web.";
     try{
       setChatMsgs(hist.concat([{role:"assistant",content:""}]));
       var r=await callClaude(sys,hist.map(function(m){return{role:m.role,content:m.content};}),4000,true,function(partial){
@@ -2196,12 +2196,15 @@ export default function AulaXpro() {
                     </div>
                   ):chatMsgs.map(function(m,i){
                     return (
-                      <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",marginBottom:14}}>
-                        <div style={{maxWidth:"82%",background:m.role==="user"?C.accent:C.card,borderRadius:4,padding:"10px 14px",border:m.role==="user"?"none":"1px solid "+C.border}}>
-                          {m.role==="user"
-                            ?<span style={{fontSize:14,color:"#fff"}}>{m.content}</span>
-                            :<span style={{fontSize:14,color:C.text,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{m.content}</span>}
-                        </div>
+                    <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",marginBottom:16}}>
+                        {m.role==="user"
+                          ?<div style={{maxWidth:"75%",background:C.accent,borderRadius:18,padding:"10px 16px"}}>
+                            <span style={{fontSize:14,color:"#fff"}}>{m.content}</span>
+                          </div>
+                          :<div style={{maxWidth:"85%"}}>
+                            <span style={{fontSize:14,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{m.content}</span>
+                          </div>
+                        }
                       </div>
                     );
                   })}
