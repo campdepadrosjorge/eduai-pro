@@ -1147,16 +1147,13 @@ export default function AulaXpro() {
 
   useEffect(function(){if(chatRef.current) chatRef.current.scrollIntoView({behavior:"smooth"});},[chatMsgs]);
   useEffect(function(){
-    if(!authUser||!authUser.id) return;
-    setTimeout(function(){
-      dbLoadChatHistory(authUser.id,50).then(function(history){
-        console.log("Historial cargado:", history.length, history);
-        if(history.length>0){
-          setChatMsgs(history.map(function(m){return{role:m.role,content:m.content};}));
-        }
-      });
-    },500);
-  },[authUser]);
+    if(!authUser||!authUser.id||view!=="chat") return;
+    dbLoadChatHistory(authUser.id,50).then(function(history){
+      if(history.length>0){
+        setChatMsgs(history.map(function(m){return{role:m.role,content:m.content};}));
+      }
+    });
+  },[authUser,view]);
   async function signOut(){
     await supabase.auth.signOut();
     setSubjects([]);setLibrary([]);setBank([]);setPublicLib([]);setSequences([]);setCurSid(null);setView("dashboard");
