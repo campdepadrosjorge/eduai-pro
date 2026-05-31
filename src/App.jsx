@@ -403,7 +403,7 @@ async function dbSaveChatMessage(userId, role, content, subjectId, sessionId) {
   try {
     await supabase.from("chat_history").insert({user_id:userId, role, content, subject_id:subjectId||null, session_id:sessionId||null});
     if(sessionId) await supabase.from("chat_sessions").update({updated_at:new Date().toISOString()}).eq("id",sessionId);
-  } catch {}
+  } catch(e) {}
 }
 
 async function dbLoadChatHistory(userId, limit, sessionId) {
