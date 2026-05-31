@@ -380,7 +380,44 @@ async function dbLoadNotifications(userId) {
     };
   });
 }
-async function dbSaveChatMessage(userId, role, content, subjectId) {
+async function dbCreateChatSession(userId, title) {
+  var r = await supabase.from("chat_sessions").insert({user_id:userId, title:title||"Nueva conversacion"}).select().single();
+  if(r.error) throw r.error; return r.data;
+}
+
+async function dbUpdateSessionTitle(sessionId, title) {
+  await supabase.from("chat_sessions").update({title, updated_at:new Date().toISOString()}).eq("id",sessionId);
+}
+
+async function dbLoadChatSessions(userId) {
+  var r = await supabase.from("chat_sessions").select("*").eq("user_id",userId).order("updated_at",{ascending:false}).limit(30);
+  if(r.error) return []; return r.data||[];
+}
+
+async function dbDeleteChatSession(sessionId) {
+  await supabase.from("chat_history").delete().eq("session_id",sessionId);
+  await supabase.from("chat_sessions").delete().eq("id",sessionId);
+}
+
+async function dbSaveChatMessage(userId, role, content, subjectId, sessionId) {
+  try {
+    await supabase.from("chat_history").insert({user_id:userId, role, content, subject_id:subjectId||null, session_id:sessionId||null});
+    if(sessionId) await supabase.from("chat_sessions").update({updated_at:new Date().toISOString()}).eq("id",sessionId);
+  } catch {}
+}
+
+async function dbLoadChatHistory(userId, limit, sessionId) {
+  if(!limit) limit = 100;
+  var q = supabase.from("chat_history").select("*").eq("user_id",userId).order("created_at",{ascending:true}).limit(limit);
+  if(sessionId) q = q.eq("session_id",sessionId);
+  var r = await q;
+  if(r.error) return []; return r.data||[];
+}
+
+async function dbClearChatHistory(userId) {
+  await supabase.from("chat_history").delete().eq("user_id",userId);
+  await supabase.from("chat_sessions").delete().eq("user_id",userId);
+}
   try {
     await supabase.from("chat_history").insert({user_id:userId, role, content, subject_id:subjectId||null});
   } catch {}
@@ -1079,6 +1116,9 @@ export default function AulaXpro() {
   var [chatMsgs,setChatMsgs]=useState([]);
   var [chatIn,setChatIn]=useState("");
   var [chatLoading,setChatLoading]=useState(false);
+  var [chatSessions,setChatSessions]=useState([]);
+  var [currentSessionId,setCurrentSessionId]=useState(null);
+  var [chatSessionsLoading,setChatSessionsLoading]=useState(false);
   var chatRef=useRef(null);
   var [corrR,setCorrR]=useState("");
   var [corrW,setCorrW]=useState("");
@@ -1148,9 +1188,16 @@ export default function AulaXpro() {
   useEffect(function(){if(chatRef.current) chatRef.current.scrollIntoView({behavior:"smooth"});},[chatMsgs]);
   useEffect(function(){
     if(!authUser||!authUser.id||view!=="chat") return;
-    dbLoadChatHistory(authUser.id,50).then(function(history){
-      if(history.length>0){
-        setChatMsgs(history.map(function(m){return{role:m.role,content:m.content};}));
+    setChatSessionsLoading(true);
+    dbLoadChatSessions(authUser.id).then(function(sessions){
+      setChatSessions(sessions);
+      setChatSessionsLoading(false);
+      if(sessions.length>0&&!currentSessionId){
+        var latest=sessions[0];
+        setCurrentSessionId(latest.id);
+        dbLoadChatHistory(authUser.id,100,latest.id).then(function(history){
+          setChatMsgs(history.map(function(m){return{role:m.role,content:m.content};}));
+        });
       }
     });
   },[authUser,view]);
@@ -1356,17 +1403,39 @@ export default function AulaXpro() {
     var subj=subjects.find(function(s){return s.id===chatSid;})||curSubj;
     if(!chatIn.trim()) return;
     var msg=chatIn.trim();setChatIn("");
+
+    // Crear sesion si no existe
+    var sessionId=currentSessionId;
+    if(!sessionId){
+      var session=await dbCreateChatSession(authUser.id,"Nueva conversacion");
+      sessionId=session.id;
+      setCurrentSessionId(sessionId);
+      setChatSessions(function(prev){return [session].concat(prev);});
+    }
+
     var hist=chatMsgs.concat([{role:"user",content:msg}]);
     setChatMsgs(hist);setChatLoading(true);
-    dbSaveChatMessage(authUser.id,"user",msg,chatSid||curSid);
-    var sys="Sos un asistente experto y versatil como Claude. Podes responder cualquier tipo de pregunta: educativa, general, de actualidad, clima, noticias, ciencia, tecnologia, cultura, entretenimiento, o cualquier otro tema."
+    dbSaveChatMessage(authUser.id,"user",msg,chatSid||curSid,sessionId);
+
+    // Generar titulo automatico con el primer mensaje
+    if(chatMsgs.length===0){
+      callClaude("Genera un titulo corto de maximo 5 palabras para esta conversacion. Solo el titulo, sin puntos ni comillas.",[{role:"user",content:msg}],100,false)
+        .then(function(title){
+          dbUpdateSessionTitle(sessionId,title.trim().slice(0,60));
+          setChatSessions(function(prev){return prev.map(function(s){return s.id===sessionId?Object.assign({},s,{title:title.trim().slice(0,60)}):s;});});
+        }).catch(function(){});
+    }
+
+    var sys="Sos un asistente experto y versatil. Podes responder cualquier tipo de pregunta: educativa, general, de actualidad, clima, noticias, ciencia, tecnologia, cultura, entretenimiento, o cualquier otro tema."
       +(subj?" Contexto opcional: el usuario es docente de \""+subj.name+"\" ("+subj.level+")."+(subj.materials?"\nPrograma: "+subj.materials:""):"")
       +"\nResponde en espanol rioplatense con Markdown. Cuando necesites informacion actualizada usas la busqueda web automaticamente.";
     try{
       var r=await callClaude(sys,hist.map(function(m){return{role:m.role,content:m.content};}),2000,true);
       setChatMsgs(hist.concat([{role:"assistant",content:r}]));
-      dbSaveChatMessage(authUser.id,"assistant",r,chatSid||curSid);
-    }catch(e){setChatMsgs(hist.concat([{role:"assistant",content:"Error: "+e.message}]));}
+      dbSaveChatMessage(authUser.id,"assistant",r,chatSid||curSid,sessionId);
+    }catch(e){
+      setChatMsgs(hist.concat([{role:"assistant",content:"Error: "+e.message}]));
+    }
     setChatLoading(false);
   }
 
@@ -2061,33 +2130,60 @@ export default function AulaXpro() {
             </div>
           )}
 
-          {!dataLoading&&view==="chat"&&(function(){
-            var chatSubj=subjects.find(function(s){return s.id===chatSid;})||curSubj;
-            var SUGS=["Como explico este concepto de forma simple?","Dame 5 actividades de cierre creativas","Que TIC puedo usar en esta clase?","Diseñame una pregunta diagnostica","Como manejo distintos ritmos de aprendizaje?","Sugeri secuencia de temas para el trimestre"];
-            return (
-              <div style={{display:"flex",flexDirection:"column",height:"calc(100vh - 132px)"}}>
-                <div style={Object.assign({},card,{marginBottom:12,padding:"9px 14px"})}>
+          {!dataLoading&&view==="chat"&&(
+            <div style={{display:"flex",height:"calc(100vh - 132px)",gap:0}}>
+              <div style={{width:isMobile?"0":"240px",minWidth:isMobile?"0":"240px",background:C.surf,borderRight:"1px solid "+C.border,display:"flex",flexDirection:"column",overflow:"hidden",transition:"all .2s"}}>
+                <div style={{padding:"12px 14px",borderBottom:"1px solid "+C.border}}>
+                  <Btn st={{width:"100%",justifyContent:"center",fontSize:12,padding:"8px 0"}} onClick={function(){
+                    setCurrentSessionId(null);setChatMsgs([]);
+                  }}>
+                    <i className="ti ti-plus" style={{fontSize:13,marginRight:4}}/>Nueva conversación
+                  </Btn>
+                </div>
+                <div style={{flex:1,overflowY:"auto",padding:"8px 0"}}>
+                  {chatSessionsLoading?<div style={{padding:"16px",textAlign:"center",color:C.textDim,fontSize:12}}>Cargando...</div>:
+                  !chatSessions.length?<div style={{padding:"16px",textAlign:"center",color:C.textDim,fontSize:12}}>Sin conversaciones</div>:
+                  chatSessions.map(function(s){
+                    return (
+                      <div key={s.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 14px",cursor:"pointer",background:currentSessionId===s.id?C.accentBg:"transparent",borderLeft:currentSessionId===s.id?"2px solid "+C.accent:"2px solid transparent"}}
+                        onClick={function(){
+                          setCurrentSessionId(s.id);
+                          dbLoadChatHistory(authUser.id,100,s.id).then(function(history){
+                            setChatMsgs(history.map(function(m){return{role:m.role,content:m.content};}));
+                          });
+                        }}>
+                        <div style={{flex:1,overflow:"hidden"}}>
+                          <div style={{fontSize:12,fontWeight:600,color:currentSessionId===s.id?C.accent:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.title||"Nueva conversación"}</div>
+                          <div style={{fontSize:10,color:C.textDim,marginTop:2}}>{new Date(s.updated_at).toLocaleDateString("es-AR")}</div>
+                        </div>
+                        <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.textDim,padding:"2px 4px",opacity:0,transition:"opacity .15s"}} className="del-session"
+                          onClick={function(e){e.stopPropagation();dbDeleteChatSession(s.id).then(function(){setChatSessions(function(prev){return prev.filter(function(x){return x.id!==s.id;});});if(currentSessionId===s.id){setCurrentSessionId(null);setChatMsgs([]);}});}}>
+                          <i className="ti ti-trash" style={{fontSize:13}}/>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div style={{flex:1,display:"flex",flexDirection:"column",minWidth:0}}>
+                <div style={Object.assign({},card,{marginBottom:8,padding:"9px 14px"})}>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
                     <span style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.6,whiteSpace:"nowrap"}}>CONTEXTO:</span>
-                    <select style={Object.assign({},sel,{flex:1})} value={chatSid===null?"":chatSid||""} onChange={function(e){setChatSid(e.target.value||null);setChatMsgs([]);dbClearChatHistory(authUser.id);}}>
-                      <option value="">Sin materia especifica</option>
+                    <select style={Object.assign({},sel,{flex:1})} value={chatSid===null?"":chatSid||""} onChange={function(e){setChatSid(e.target.value||null);}}>
+                      <option value="">Sin materia específica</option>
                       {subjects.map(function(s){return <option key={s.id} value={s.id}>{s.name+" ("+s.level+")"}</option>;})}
                     </select>
-                    <Btn v="ghost" st={{padding:"5px 11px",fontSize:12}} onClick={function(){
-                      setChatMsgs([]);
-                      dbClearChatHistory(authUser.id);
-                    }}>
-                      <i className="ti ti-trash" style={{fontSize:13,marginRight:4}}/>Limpiar historial
-                    </Btn>
                   </div>
                 </div>
-                <div style={Object.assign({},card,{flex:1,overflow:"auto",padding:"14px 18px",minHeight:0})}>
+                <div style={Object.assign({},card,{flex:1,overflow:"auto",padding:"14px 18px",minHeight:0,marginBottom:0})}>
                   {!chatMsgs.length?(
                     <div style={{textAlign:"center",padding:"28px 0",color:C.textDim}}>
                       <i className="ti ti-message" style={{fontSize:36,display:"block",marginBottom:10,color:C.textDim}}/>
-                      <p style={{fontSize:14,marginBottom:18}}>Chat contextualizado a tu materia</p>
+                      <p style={{fontSize:14,marginBottom:18}}>Preguntame lo que quieras</p>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,maxWidth:500,margin:"0 auto"}}>
-                        {SUGS.map(function(s){return <button key={s} style={{background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"9px 11px",color:C.textMuted,cursor:"pointer",textAlign:"left",fontSize:12,fontFamily:"Quicksand,sans-serif"}} onClick={function(){setChatIn(s);}}>{s}</button>;})}
+                        {["Como explico este concepto de forma simple?","Dame 5 actividades de cierre creativas","Como esta el clima hoy en Buenos Aires?","Cuales son las ultimas noticias de educacion?","Que peliculas se estrenan esta semana?","Como manejo distintos ritmos de aprendizaje?"].map(function(s){
+                          return <button key={s} style={{background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"9px 11px",color:C.textMuted,cursor:"pointer",textAlign:"left",fontSize:12,fontFamily:"Quicksand,sans-serif"}} onClick={function(){setChatIn(s);}}>{s}</button>;
+                        })}
                       </div>
                     </div>
                   ):chatMsgs.map(function(m,i){
@@ -2103,14 +2199,14 @@ export default function AulaXpro() {
                   <div ref={chatRef}/>
                 </div>
                 <div style={{display:"flex",gap:10,marginTop:10}}>
-                  <input style={Object.assign({},inp,{flex:1,padding:"10px 14px"})} value={chatIn} onChange={function(e){setChatIn(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter"&&!e.shiftKey) sendChat();}} placeholder="Escribe tu consulta... (Enter para enviar)"/>
+                  <input style={Object.assign({},inp,{flex:1,padding:"10px 14px"})} value={chatIn} onChange={function(e){setChatIn(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter"&&!e.shiftKey) sendChat();}} placeholder="Preguntame lo que quieras... (Enter para enviar)"/>
                   <Btn onClick={sendChat} disabled={chatLoading||!chatIn.trim()} st={{padding:"10px 22px"}}>
                     <i className="ti ti-send" style={{fontSize:14,marginRight:4}}/>Enviar
                   </Btn>
                 </div>
               </div>
-            );
-          })()}
+            </div>
+          )}
 
           {!dataLoading&&view==="corrector"&&(
             <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:18}}>
