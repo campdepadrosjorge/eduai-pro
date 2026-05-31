@@ -1150,6 +1150,7 @@ export default function AulaXpro() {
     if(!authUser||!authUser.id) return;
     setTimeout(function(){
       dbLoadChatHistory(authUser.id,50).then(function(history){
+        console.log("Historial cargado:", history.length, history);
         if(history.length>0){
           setChatMsgs(history.map(function(m){return{role:m.role,content:m.content};}));
         }
