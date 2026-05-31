@@ -2172,7 +2172,9 @@ export default function AulaXpro() {
                     return (
                       <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",marginBottom:14}}>
                         <div style={{maxWidth:"82%",background:m.role==="user"?C.accent:C.card,borderRadius:4,padding:"10px 14px",border:m.role==="user"?"none":"1px solid "+C.border}}>
-                          {m.role==="user"?<span style={{fontSize:14,color:"#fff"}}>{m.content}</span>:<MDView text={m.content} maxH={9999}/>}
+                          {m.role==="user"
+                            ?<span style={{fontSize:14,color:"#fff"}}>{m.content}</span>
+                            :<span style={{fontSize:14,color:C.text,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{m.content}</span>}
                         </div>
                       </div>
                     );
