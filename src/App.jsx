@@ -200,7 +200,7 @@ async function callClaude(system, messages, maxTokens, useSearch) {
     method:"POST", headers:{"Content-Type":"application/json"},
     body:JSON.stringify({ system, messages, maxTokens, useSearch:!!useSearch }),
   });
-  if (!res.ok) { var err = {}; try { err = await res.json(); } catch {} throw new Error(err.error || "Error " + res.status); }
+  if (!res.ok) { var err = {}; try { err = await res.json(); } catch(e) {} throw new Error(err.error || "Error " + res.status); }
   var data = await res.json();
   return data.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("");
 }
@@ -420,7 +420,7 @@ async function dbClearChatHistory(userId) {
 }
   try {
     await supabase.from("chat_history").insert({user_id:userId, role, content, subject_id:subjectId||null});
-  } catch {}
+  } catch(e) {}
 }
 
 async function dbLoadChatHistory(userId, limit) {
@@ -438,7 +438,7 @@ async function dbClearChatHistory(userId) {
   await supabase.from("chat_history").delete().eq("user_id", userId);
 }
 async function dbLogUsage(userId, userEmail, type, typeName, subjectName, tokIn, tokOut, isImage) {
-  try { await supabase.from("usage_log").insert({user_id:userId,user_email:userEmail,type,type_name:typeName,subject_name:subjectName||"",tokens_input:tokIn||0,tokens_output:tokOut||0,is_image:isImage||false}); } catch {}
+  try { await supabase.from("usage_log").insert({user_id:userId,user_email:userEmail,type,type_name:typeName,subject_name:subjectName||"",tokens_input:tokIn||0,tokens_output:tokOut||0,is_image:isImage||false}); } catch(e) {}
 }
 async function dbGetUsage(userId) {
   var r = await supabase.from("subscriptions")
