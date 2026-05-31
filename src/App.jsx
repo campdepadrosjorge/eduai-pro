@@ -1147,12 +1147,14 @@ export default function AulaXpro() {
 
   useEffect(function(){if(chatRef.current) chatRef.current.scrollIntoView({behavior:"smooth"});},[chatMsgs]);
   useEffect(function(){
-    if(!authUser) return;
-    dbLoadChatHistory(authUser.id).then(function(history){
-      if(history.length>0){
-        setChatMsgs(history.map(function(m){return{role:m.role,content:m.content};}));
-      }
-    });
+    if(!authUser||!authUser.id) return;
+    setTimeout(function(){
+      dbLoadChatHistory(authUser.id,50).then(function(history){
+        if(history.length>0){
+          setChatMsgs(history.map(function(m){return{role:m.role,content:m.content};}));
+        }
+      });
+    },500);
   },[authUser]);
   async function signOut(){
     await supabase.auth.signOut();
