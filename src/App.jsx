@@ -194,15 +194,39 @@ function userSequence(topic, nClasses, level, subject, extra) {
     "\n\nPara cada clase usa ESTE FORMATO EXACTO:\n\n## CLASE [N]: [Titulo]\n**Duracion:** [min]\n**Objetivos:** [2-3]\n**Retoma:** [conexion anterior]\n**Inicio (10min):** [apertura]\n**Desarrollo (25min):** [actividad principal]\n**Cierre (10min):** [sintesis]\n**Recursos:** [materiales]\n**Evaluacion:** [como evaluar]\n\n---\n\nProgresion clara de dificultad entre clases." + (extra ? "\n\nInstrucciones adicionales: " + extra : "");
 }
 
-async function callClaude(system, messages, maxTokens, useSearch) {
+async function callClaude(system, messages, maxTokens, useSearch, onStream) {
   if (!maxTokens) maxTokens = 4000;
+  var useStreaming = typeof onStream === "function";
   var res = await fetch("/api/generate", {
     method:"POST", headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({ system, messages, maxTokens, useSearch:!!useSearch }),
+    body:JSON.stringify({ system, messages, maxTokens, useSearch:!!useSearch, stream:useStreaming }),
   });
   if (!res.ok) { var err = {}; try { err = await res.json(); } catch(e) {} throw new Error(err.error || "Error " + res.status); }
-  var data = await res.json();
-  return data.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("");
+  if (!useStreaming) {
+    var data = await res.json();
+    return data.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("");
+  }
+  var reader = res.body.getReader();
+  var decoder = new TextDecoder();
+  var fullText = "";
+  while(true) {
+    var result = await reader.read();
+    if(result.done) break;
+    var chunk = decoder.decode(result.value, {stream:true});
+    var lines = chunk.split("\n");
+    for(var i=0;i<lines.length;i++) {
+      var line = lines[i];
+      if(!line.startsWith("data: ")) continue;
+      var data2 = line.slice(6);
+      if(data2 === "[DONE]") break;
+      try {
+        var parsed = JSON.parse(data2);
+        if(parsed.text) { fullText += parsed.text; onStream(fullText); }
+        if(parsed.error) throw new Error(parsed.error);
+      } catch(e) {}
+    }
+  }
+  return fullText;
 }
 
 async function dbLoadPublicLib() {
@@ -1412,8 +1436,10 @@ export default function AulaXpro() {
       +(subj?" Contexto opcional: el usuario es docente de \""+subj.name+"\" ("+subj.level+")."+(subj.materials?"\nPrograma: "+subj.materials:""):"")
       +"\nResponde en espanol rioplatense con Markdown. Cuando necesites informacion actualizada usas la busqueda web automaticamente.";
     try{
-      var r=await callClaude(sys,hist.map(function(m){return{role:m.role,content:m.content};}),2000,true);
-      setChatMsgs(hist.concat([{role:"assistant",content:r}]));
+      setChatMsgs(hist.concat([{role:"assistant",content:""}]));
+      var r=await callClaude(sys,hist.map(function(m){return{role:m.role,content:m.content};}),4000,true,function(partial){
+        setChatMsgs(hist.concat([{role:"assistant",content:partial}]));
+      });
       dbSaveChatMessage(authUser.id,"assistant",r,chatSid||curSid,sessionId);
     }catch(e){
       setChatMsgs(hist.concat([{role:"assistant",content:"Error: "+e.message}]));
