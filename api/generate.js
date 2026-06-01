@@ -37,7 +37,29 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    let response;
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "anthropic-beta": "web-search-2025-03-05",
+        },
+        body: JSON.stringify(body),
+      });
+      
+      if (response.status !== 429) break;
+      
+      attempts++;
+      if (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+      }
+    }
       method: "POST",
       headers: {
         "Content-Type": "application/json",
