@@ -1,7 +1,27 @@
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW = 60 * 1000;
+const RATE_LIMIT_MAX = 10;
+
+function checkRateLimit(identifier) {
+  if (!identifier) return true;
+  const now = Date.now();
+  const userLimits = rateLimitMap.get(identifier) || [];
+  const recent = userLimits.filter(t => now - t < RATE_LIMIT_WINDOW);
+  if (recent.length >= RATE_LIMIT_MAX) return false;
+  recent.push(now);
+  rateLimitMap.set(identifier, recent);
+  return true;
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const { system, messages, maxTokens = 4000, useSearch = false, stream = false } = req.body;
+
+  const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || req.socket?.remoteAddress || "unknown";
+  if (!checkRateLimit(ip)) {
+    return res.status(429).json({ error: "Demasiadas solicitudes. Espera un minuto antes de continuar." });
+  }
   if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: "messages requeridos" });
 
   const body = {

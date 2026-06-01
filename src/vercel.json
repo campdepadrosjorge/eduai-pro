@@ -1,0 +1,16 @@
+{
+  "functions": {
+    "api/generate.js": {
+      "maxDuration": 60
+    },
+    "api/generate-image.js": {
+      "maxDuration": 60
+    },
+    "api/process-pdf.js": {
+      "maxDuration": 60
+    },
+    "api/extract-text.js": {
+      "maxDuration": 60
+    }
+  }
+}
