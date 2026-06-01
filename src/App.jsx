@@ -194,7 +194,7 @@ function userSequence(topic, nClasses, level, subject, extra) {
     "\n\nPara cada clase usa ESTE FORMATO EXACTO:\n\n## CLASE [N]: [Titulo]\n**Duracion:** [min]\n**Objetivos:** [2-3]\n**Retoma:** [conexion anterior]\n**Inicio (10min):** [apertura]\n**Desarrollo (25min):** [actividad principal]\n**Cierre (10min):** [sintesis]\n**Recursos:** [materiales]\n**Evaluacion:** [como evaluar]\n\n---\n\nProgresion clara de dificultad entre clases." + (extra ? "\n\nInstrucciones adicionales: " + extra : "");
 }
 
-async function callClaude(system, messages, maxTokens, useSearch, onStream) {
+async function callClaude(system, messages, maxTokens, useSearch, onStream, userId) {
   if (!maxTokens) maxTokens = 4000;
   var useStreaming = typeof onStream === "function";
   var res = await fetch("/api/generate", {
@@ -709,6 +709,7 @@ function AdminPanel({authUser,supabaseClient}) {
   var [statsLoading,setStatsLoading]=useState(true);
   var [instName,setInstName]=useState("");
   var [instMaxUsers,setInstMaxUsers]=useState(10);
+  var [instDays,setInstDays]=useState(30);
   var [instFile,setInstFile]=useState(null);
   var [instLoading,setInstLoading]=useState(false);
   var [instResult,setInstResult]=useState(null);
@@ -745,7 +746,7 @@ function AdminPanel({authUser,supabaseClient}) {
         var row=rows[i];
         if(row[0]) users.push({email:String(row[0]).trim(),name:row[1]?String(row[1]).trim():""});
       }
-      var res=await fetch("/api/invite-users",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({users,institution_name:instName,plan_id:"bcdbe285413b4acbbd187fc2fe6d52dc",max_users:instMaxUsers})});
+      var res=await fetch("/api/invite-users",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({users,institution_name:instName,plan_id:"bcdbe285413b4acbbd187fc2fe6d52dc",max_users:instMaxUsers,days:instDays})});
       var data=await res.json();
       setInstResult(data);
     } catch(e){setInstResult({error:e.message});}
@@ -813,6 +814,16 @@ function AdminPanel({authUser,supabaseClient}) {
           <div>
             <label style={lbl}>MAX USUARIOS</label>
             <input style={inp} type="number" value={instMaxUsers} onChange={function(e){setInstMaxUsers(parseInt(e.target.value)||10);}}/>
+          </div>
+          <div>
+            <label style={lbl}>DURACION (dias)</label>
+            <select style={Object.assign({},sel,{width:"100%"})} value={instDays} onChange={function(e){setInstDays(parseInt(e.target.value));}}>
+              <option value={30}>30 dias (piloto)</option>
+              <option value={60}>60 dias</option>
+              <option value={90}>90 dias</option>
+              <option value={180}>6 meses</option>
+              <option value={365}>1 año</option>
+            </select>
           </div>
         </div>
         <div style={{marginBottom:12}}>
