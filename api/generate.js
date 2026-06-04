@@ -60,15 +60,6 @@ export default async function handler(req, res) {
         await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
       }
     }
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "anthropic-beta": "web-search-2025-03-05",
-      },
-      body: JSON.stringify(body),
-    });
 
     if (!stream) {
       const data = await response.json();
