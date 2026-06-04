@@ -169,4 +169,7 @@ export const TOURS = {
     {
       selector: "[data-tour='students-list']",
       title: "Lista de Alumnos",
-      text: "Agrega alumnos uno por uno o importa un Excel. A
+      text: "Agrega alumnos uno por uno o importa un Excel. Al hacer clic en un alumno ves su historial, promedio y devoluciones.",
+      position: "right",
+    },
+  ],
