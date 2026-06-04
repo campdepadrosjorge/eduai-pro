@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import supabase from "./supabase.js";
 import { exportDocx, exportPdf, exportZip } from "./exportUtils.js";
-import { useTour, TourTooltip, TourLaunchButton } from "./TourSystem.jsx";
+import { useTour, TourTooltip, TourLaunchButton, WelcomeModal } from "./TourSystem.jsx";
 import { generatePptx } from "./pptxUtils.js";
 
 const NAV = [
@@ -1732,7 +1732,7 @@ export default function AulaXpro() {
               </div>
             )}
           </div>
-          <TourLaunchButton currentView={view} onLaunch={launchTour} />
+          <TourLaunchButton currentView={view} onLaunch={launchTour} showLabel={true} />
           <Btn v="accent" st={{padding:"5px 13px",fontSize:12}} onClick={function(){setSubjModal(true);}}>
             <i className="ti ti-plus" style={{fontSize:12,marginRight:3}}/>Materia
           </Btn>
@@ -3150,7 +3150,14 @@ export default function AulaXpro() {
         </div>
       )}
 
-    <TourTooltip
+    {authUser && (
+        <WelcomeModal
+          userId={authUser.id}
+          onStartTour={() => launchTour("dashboard")}
+          onDismiss={() => {}}
+        />
+      )}
+      <TourTooltip
         activeTour={activeTour}
         onNext={nextStep}
         onPrev={prevStep}
