@@ -13,9 +13,16 @@ export default async function handler(req, res) {
       .from("subscriptions")
       .select("user_id, status, current_period_end, is_trial, institution_name")
       .eq("status", "active")
-      .order("current_period_end", {ascending: true});
+      .order("current_period_end", {ascending: false});
 
-    var subs = subsResult.data || [];
+    // Deduplicar por user_id, quedarse con la suscripcion que vence mas tarde
+    var subsMap = {};
+    (subsResult.data || []).forEach(function(sub) {
+      if (!subsMap[sub.user_id] || new Date(sub.current_period_end) > new Date(subsMap[sub.user_id].current_period_end)) {
+        subsMap[sub.user_id] = sub;
+      }
+    });
+    var subs = Object.values(subsMap);
 
     var authResult = await supabase.auth.admin.listUsers({ perPage: 1000 });
     var authUsers = authResult.data ? authResult.data.users : [];
