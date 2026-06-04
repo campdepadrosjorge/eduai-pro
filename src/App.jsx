@@ -1792,7 +1792,7 @@ export default function AulaXpro() {
               <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:12,marginBottom:20}}>
                 {[{l:"Materias",v:subjects.length,i:"ti-books",c:C.blue},{l:"Biblioteca",v:library.length,i:"ti-folder",c:C.green},{l:"Banco",v:bank.length,i:"ti-database",c:C.accent},{l:"Biblioteca Publica",v:publicLib.length,i:"ti-world",c:C.purple}].map(function(x){
                   return (
-                    <div key={x.l} style={{background:"#CFF09E",border:"1px solid #A8DBA8",borderRadius:4,padding:"18px 20px"}}style={Object.assign({},card,{marginBottom:0})}>
+                    <div key={x.l} style={Object.assign({},card,{marginBottom:0})}>
                       <i className={"ti "+x.i} style={{fontSize:22,marginBottom:8,color:x.c,display:"block"}}/>
                       <div style={{fontSize:28,fontWeight:700,color:x.c}}>{x.v}</div>
                       <div style={{fontSize:12,color:C.textDim,marginTop:2}}>{x.l}</div>
