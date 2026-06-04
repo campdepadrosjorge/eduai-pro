@@ -762,29 +762,13 @@ function AdminPanel({authUser,supabaseClient}) {
   async function loadPilotUsers() {
     setPilotLoading(true);
     try {
-      var subsResult = await supabaseClient
-        .from("subscriptions")
-        .select("user_id, status, current_period_end, is_trial, institution_name")
-        .eq("status", "active")
-        .order("current_period_end", {ascending:true});
-      
-      var subs = subsResult.data || [];
-      var authResult = await supabaseClient.auth.admin.listUsers();
-      var authUsers = authResult.data ? authResult.data.users : [];
-      
-      var merged = subs.map(function(sub) {
-        var authUser = authUsers.find(function(u) { return u.id === sub.user_id; });
-        var daysLeft = Math.ceil((new Date(sub.current_period_end) - new Date()) / (1000*60*60*24));
-        return {
-          user_id: sub.user_id,
-          email: authUser ? authUser.email : "Desconocido",
-          days_left: daysLeft,
-          period_end: sub.current_period_end,
-          is_trial: sub.is_trial,
-          institution: sub.institution_name || "",
-        };
+      var res = await fetch("/api/get-pilot-users", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
       });
-      setPilotUsers(merged);
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setPilotUsers(data.users || []);
     } catch(e) { alert("Error: "+e.message); }
     setPilotLoading(false);
   }
