@@ -214,20 +214,101 @@ export function TourTooltip({ activeTour, onNext, onPrev, onClose }) {
 }
 
 // ─── Botón ? en el topbar ─────────────────────────────────────────────────────
-export function TourLaunchButton({ currentView, onLaunch }) {
+export function TourLaunchButton({ currentView, onLaunch, showLabel }) {
   if (!TOURS[currentView]) return null;
   return (
     <button
       onClick={() => onLaunch(currentView)}
-      title="Ver guía de esta sección"
+      title="Ver guia de esta seccion"
       style={{
-        background: "transparent", border: "1px solid #d4cfc6",
-        borderRadius: 4, padding: "5px 10px", cursor: "pointer",
-        color: "#555550", display: "flex", alignItems: "center", gap: 4,
-        fontFamily: "Quicksand, sans-serif", fontSize: 12, fontWeight: 600,
+        background: "#e6f7f5", border: "1px solid #0d9488",
+        borderRadius: 4, padding: "5px 12px", cursor: "pointer",
+        color: "#0d9488", display: "flex", alignItems: "center", gap: 6,
+        fontFamily: "Quicksand, sans-serif", fontSize: 12, fontWeight: 700,
       }}
     >
-      <i className="ti ti-help-circle" style={{ fontSize: 16 }} />
+      <i className="ti ti-help-circle" style={{ fontSize: 15 }} />
+      {showLabel && <span>Guia</span>}
     </button>
+  );
+}
+// ─── Modal de bienvenida ──────────────────────────────────────────────────────
+export function WelcomeModal({ userId, onStartTour, onDismiss }) {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase
+      .from("tour_progress")
+      .select("section")
+      .eq("user_id", userId)
+      .eq("section", "welcome")
+      .then(({ data }) => {
+        if (!data || data.length === 0) setShow(true);
+      });
+  }, [userId]);
+
+  async function handleAction(startTour) {
+    await supabase
+      .from("tour_progress")
+      .upsert({ user_id: userId, section: "welcome" }, { onConflict: "user_id,section" });
+    setShow(false);
+    if (startTour) onStartTour();
+    else onDismiss();
+  }
+
+  if (!show) return null;
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      zIndex: 99995, fontFamily: "Quicksand, sans-serif",
+    }}>
+      <div style={{
+        background: "#ffffff", borderRadius: 10, padding: "36px 40px",
+        width: 480, maxWidth: "92vw", textAlign: "center",
+        boxShadow: "0 16px 48px rgba(0,0,0,0.2)",
+      }}>
+        <div style={{
+          width: 64, height: 64, borderRadius: "50%",
+          background: "#e6f7f5", display: "flex", alignItems: "center",
+          justifyContent: "center", margin: "0 auto 20px",
+        }}>
+          <i className="ti ti-school" style={{ fontSize: 32, color: "#0d9488" }} />
+        </div>
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: "#111110", margin: "0 0 10px" }}>
+          Bienvenido a AulaXpro
+        </h2>
+        <p style={{ fontSize: 14, color: "#555550", lineHeight: 1.6, margin: "0 0 28px" }}>
+          Tu asistente docente con IA. Tenes un tour interactivo disponible que explica cada funcion de la plataforma paso a paso.
+        </p>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+          <button
+            onClick={() => handleAction(false)}
+            style={{
+              padding: "10px 22px", borderRadius: 5, border: "1px solid #d4cfc6",
+              background: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 600,
+              fontFamily: "Quicksand, sans-serif", color: "#555550",
+            }}
+          >
+            Explorar solo
+          </button>
+          <button
+            onClick={() => handleAction(true)}
+            style={{
+              padding: "10px 22px", borderRadius: 5, border: "none",
+              background: "#0d9488", color: "#fff", cursor: "pointer",
+              fontSize: 13, fontWeight: 700, fontFamily: "Quicksand, sans-serif",
+            }}
+          >
+            Iniciar tour guiado
+          </button>
+        </div>
+        <p style={{ fontSize: 11, color: "#888880", marginTop: 16 }}>
+          Siempre podes relanzar el tour desde el boton ? en la barra superior.
+        </p>
+      </div>
+    </div>
   );
 }
