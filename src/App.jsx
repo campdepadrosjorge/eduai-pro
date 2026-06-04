@@ -1337,7 +1337,9 @@ export default function AulaXpro() {
     try{
       var sys=sysGen(genType,curSubj.name,genLevel||curSubj.level,curSubj.materials,curSubj.bibliography);
       var usr=userGen(genType,genTopic,genDiff,genExtra,curSubj);
-      var r=await callClaude(sys,[{role:"user",content:usr}],6000);
+      var r=await callClaude(sys,[{role:"user",content:usr}],6000,false,function(partial){
+        setGenResult(partial);
+      });
       setGenResult(r);setMakeCodeUrl(generateMakeCodeUrl(r));
       var gt2=GEN_TYPES.find(function(g){return g.id===genType;});
       var tokIn=Math.round((sys.length+usr.length)/4);
@@ -1934,8 +1936,7 @@ export default function AulaXpro() {
                     </div>
                   )}
                 </div>
-                {genLoading&&<div style={card}><Spin/></div>}
-                {genResult&&!genLoading&&(
+            {genResult&&(
                   <div style={card}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,flexWrap:"wrap",gap:8}}>
                       <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8}}>RESULTADO GENERADO</div>
