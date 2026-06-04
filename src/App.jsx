@@ -718,6 +718,10 @@ function AdminPanel({authUser,supabaseClient}) {
   var [selectedInst,setSelectedInst]=useState("");
   var [instUsers,setInstUsers]=useState([]);
   var [instUsersLoading,setInstUsersLoading]=useState(false);
+  var [pilotUsers,setPilotUsers]=useState([]);
+  var [pilotLoading,setPilotLoading]=useState(false);
+  var [extendDays,setExtendDays]=useState(30);
+  var [extendLoading,setExtendLoading]=useState(null);
   var [singleEmail,setSingleEmail]=useState("");
   var [singleName,setSingleName]=useState("");
   var [singleDays,setSingleDays]=useState(30);
@@ -754,6 +758,68 @@ function AdminPanel({authUser,supabaseClient}) {
       if(!data.error) {setSingleEmail("");setSingleName("");}
     } catch(e){setSingleResult({error:e.message});}
     setSingleLoading(false);
+  }
+  async function loadPilotUsers() {
+    setPilotLoading(true);
+    try {
+      var subsResult = await supabaseClient
+        .from("subscriptions")
+        .select("user_id, status, current_period_end, is_trial, institution_name")
+        .eq("status", "active")
+        .order("current_period_end", {ascending:true});
+      
+      var subs = subsResult.data || [];
+      var authResult = await supabaseClient.auth.admin.listUsers();
+      var authUsers = authResult.data ? authResult.data.users : [];
+      
+      var merged = subs.map(function(sub) {
+        var authUser = authUsers.find(function(u) { return u.id === sub.user_id; });
+        var daysLeft = Math.ceil((new Date(sub.current_period_end) - new Date()) / (1000*60*60*24));
+        return {
+          user_id: sub.user_id,
+          email: authUser ? authUser.email : "Desconocido",
+          days_left: daysLeft,
+          period_end: sub.current_period_end,
+          is_trial: sub.is_trial,
+          institution: sub.institution_name || "",
+        };
+      });
+      setPilotUsers(merged);
+    } catch(e) { alert("Error: "+e.message); }
+    setPilotLoading(false);
+  }
+
+  async function extendUser(userId, days) {
+    setExtendLoading(userId);
+    try {
+      var sub = await supabaseClient
+        .from("subscriptions")
+        .select("current_period_end")
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .single();
+      
+      var currentEnd = new Date(sub.data.current_period_end);
+      var now = new Date();
+      var base = currentEnd > now ? currentEnd : now;
+      var newEnd = new Date(base);
+      newEnd.setDate(newEnd.getDate() + days);
+      
+      await supabaseClient
+        .from("subscriptions")
+        .update({ current_period_end: newEnd.toISOString() })
+        .eq("user_id", userId)
+        .eq("status", "active");
+      
+      setPilotUsers(function(prev) {
+        return prev.map(function(u) {
+          if(u.user_id !== userId) return u;
+          var daysLeft = Math.ceil((newEnd - new Date()) / (1000*60*60*24));
+          return Object.assign({}, u, { days_left: daysLeft, period_end: newEnd.toISOString() });
+        });
+      });
+    } catch(e) { alert("Error: "+e.message); }
+    setExtendLoading(null);
   }
   async function processExcel() {
     if(!instFile||!instName) return;
@@ -824,6 +890,58 @@ function AdminPanel({authUser,supabaseClient}) {
             </div>
           );
         })}
+      </div>
+      <div style={Object.assign({},card,{marginBottom:16})}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <div style={{fontSize:15,fontWeight:700,color:C.text,display:"flex",alignItems:"center",gap:8}}>
+            <i className="ti ti-users" style={{fontSize:16,color:C.accent}}/>Usuarios del Piloto
+          </div>
+          <div style={{display:"flex",gap:8,alignItems:"center"}}>
+            <select style={Object.assign({},sel)} value={extendDays} onChange={function(e){setExtendDays(parseInt(e.target.value));}}>
+              {[7,15,30,60,90].map(function(d){return <option key={d} value={d}>+{d} dias</option>;})}
+            </select>
+            <Btn v="secondary" st={{fontSize:12,padding:"5px 14px"}} onClick={loadPilotUsers} disabled={pilotLoading}>
+              {pilotLoading?"Cargando...":<><i className="ti ti-refresh" style={{fontSize:13,marginRight:4}}/>Actualizar</>}
+            </Btn>
+          </div>
+        </div>
+        {!pilotUsers.length?(
+          <div style={{textAlign:"center",padding:"24px 0",color:C.textDim,fontSize:13}}>
+            Hace clic en Actualizar para ver los usuarios activos.
+          </div>
+        ):(
+          <div style={{overflowX:"auto"}}>
+            <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+              <thead>
+                <tr style={{borderBottom:"1px solid "+C.border}}>
+                  {["Email","Institucion","Dias restantes","Vence",""].map(function(h){
+                    return <th key={h} style={{textAlign:"left",padding:"6px 10px",color:C.textMuted,fontWeight:600}}>{h}</th>;
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {pilotUsers.map(function(u){
+                  var clr = u.days_left<=3?C.red:u.days_left<=7?C.accent:C.green;
+                  return (
+                    <tr key={u.user_id} style={{borderBottom:"1px solid "+C.bg}}>
+                      <td style={{padding:"8px 10px",color:C.text}}>{u.email}</td>
+                      <td style={{padding:"8px 10px",color:C.textDim}}>{u.institution||"—"}</td>
+                      <td style={{padding:"8px 10px"}}>
+                        <span style={{fontWeight:700,color:clr}}>{u.days_left>0?u.days_left+" dias":"Vencido"}</span>
+                      </td>
+                      <td style={{padding:"8px 10px",color:C.textDim}}>{new Date(u.period_end).toLocaleDateString("es-AR")}</td>
+                      <td style={{padding:"8px 10px"}}>
+                        <Btn v="sm" disabled={extendLoading===u.user_id} onClick={function(){extendUser(u.user_id,extendDays);}}>
+                          {extendLoading===u.user_id?"...":<><i className="ti ti-clock-plus" style={{fontSize:12,marginRight:3}}/>Extender</>}
+                        </Btn>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
       <div style={Object.assign({},card,{marginBottom:16})}>
         <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
