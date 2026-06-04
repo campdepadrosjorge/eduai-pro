@@ -1785,9 +1785,11 @@ export default function AulaXpro() {
                   <h2 style={{fontSize:22,fontWeight:700,color:C.text,margin:0}}>{"Bienvenido, "+userName}</h2>
                   <p style={{color:C.textDim,fontSize:13,margin:"4px 0 0"}}>Que creamos hoy para tus alumnos?</p>
                 </div>
-                <Btn data-tour="add-subject-btn" onClick={function(){setSubjModal(true);}}>
-                 <i className="ti ti-plus" style={{fontSize:13,marginRight:4}}/>Nueva Materia
+              <div data-tour="add-subject-btn" style={{display:"inline-block"}}>
+               <Btn onClick={function(){setSubjModal(true);}}>
+               <i className="ti ti-plus" style={{fontSize:13,marginRight:4}}/>Nueva Materia
                </Btn>
+               </div>
               </div>
               <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:12,marginBottom:20}}>
                 {[{l:"Materias",v:subjects.length,i:"ti-books",c:C.blue},{l:"Biblioteca",v:library.length,i:"ti-folder",c:C.green},{l:"Banco",v:bank.length,i:"ti-database",c:C.accent},{l:"Biblioteca Publica",v:publicLib.length,i:"ti-world",c:C.purple}].map(function(x){
