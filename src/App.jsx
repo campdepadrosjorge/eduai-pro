@@ -718,6 +718,11 @@ function AdminPanel({authUser,supabaseClient}) {
   var [selectedInst,setSelectedInst]=useState("");
   var [instUsers,setInstUsers]=useState([]);
   var [instUsersLoading,setInstUsersLoading]=useState(false);
+  var [singleEmail,setSingleEmail]=useState("");
+  var [singleName,setSingleName]=useState("");
+  var [singleDays,setSingleDays]=useState(30);
+  var [singleLoading,setSingleLoading]=useState(false);
+  var [singleResult,setSingleResult]=useState(null);
 
   useEffect(function(){
     if(!isAdmin) return;
@@ -733,6 +738,23 @@ function AdminPanel({authUser,supabaseClient}) {
       });
   },[isAdmin]);
 
+  async function addSingleUser() {
+    if(!singleEmail.trim()) return;
+    setSingleLoading(true);setSingleResult(null);
+    try {
+      var res=await fetch("/api/invite-users",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+        users:[{email:singleEmail.trim(),name:singleName.trim()}],
+        institution_name:"Piloto individual",
+        plan_id:"bcdbe285413b4acbbd187fc2fe6d52dc",
+        max_users:1,
+        days:singleDays
+      })});
+      var data=await res.json();
+      setSingleResult(data);
+      if(!data.error) {setSingleEmail("");setSingleName("");}
+    } catch(e){setSingleResult({error:e.message});}
+    setSingleLoading(false);
+  }
   async function processExcel() {
     if(!instFile||!instName) return;
     setInstLoading(true);setInstResult(null);
@@ -802,6 +824,44 @@ function AdminPanel({authUser,supabaseClient}) {
             </div>
           );
         })}
+      </div>
+      <div style={Object.assign({},card,{marginBottom:16})}>
+        <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
+          <i className="ti ti-user-plus" style={{fontSize:16,color:C.accent}}/>Agregar Usuario Individual
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+          <div>
+            <label style={lbl}>EMAIL *</label>
+            <input style={inp} value={singleEmail} onChange={function(e){setSingleEmail(e.target.value);}} placeholder="docente@escuela.edu.ar"/>
+          </div>
+          <div>
+            <label style={lbl}>NOMBRE</label>
+            <input style={inp} value={singleName} onChange={function(e){setSingleName(e.target.value);}} placeholder="Prof. Garcia"/>
+          </div>
+        </div>
+        <div style={{marginBottom:14}}>
+          <label style={lbl}>DURACION</label>
+          <div style={{display:"flex",gap:6}}>
+            {[7,15,30,60,90].map(function(d){
+              return (
+                <button key={d} style={{flex:1,padding:"7px 0",borderRadius:4,border:"1px solid "+(singleDays===d?C.accent:C.border),background:singleDays===d?C.accentBg:"transparent",color:singleDays===d?C.accent:C.textMuted,cursor:"pointer",fontWeight:600,fontSize:12,fontFamily:"Quicksand,sans-serif"}} onClick={function(){setSingleDays(d);}}>
+                  {d}d
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <Btn disabled={singleLoading||!singleEmail.trim()} onClick={addSingleUser}>
+          {singleLoading?"Procesando...":<><i className="ti ti-user-plus" style={{fontSize:13,marginRight:4}}/>Agregar usuario</>}
+        </Btn>
+        {singleResult&&(
+          <div style={{marginTop:12,padding:"10px 14px",background:C.bg,borderRadius:4,fontSize:13,border:"1px solid "+C.border}}>
+            {singleResult.error
+              ?<span style={{color:C.red}}>Error: {singleResult.error}</span>
+              :<span style={{color:C.green}}>Usuario agregado correctamente. Creados: {singleResult.created} / Ya existia: {singleResult.already_exists}</span>
+            }
+          </div>
+        )}
       </div>
       <div style={Object.assign({},card,{marginBottom:16})}>
         <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
