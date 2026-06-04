@@ -1785,9 +1785,9 @@ export default function AulaXpro() {
                   <h2 style={{fontSize:22,fontWeight:700,color:C.text,margin:0}}>{"Bienvenido, "+userName}</h2>
                   <p style={{color:C.textDim,fontSize:13,margin:"4px 0 0"}}>Que creamos hoy para tus alumnos?</p>
                 </div>
-                <Btn onClick={function(){setSubjModal(true);}}>
-                  <i className="ti ti-plus" style={{fontSize:13,marginRight:4}}/>Nueva Materia
-                </Btn>
+                <Btn data-tour="add-subject-btn" onClick={function(){setSubjModal(true);}}>
+                 <i className="ti ti-plus" style={{fontSize:13,marginRight:4}}/>Nueva Materia
+               </Btn>
               </div>
               <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:12,marginBottom:20}}>
                 {[{l:"Materias",v:subjects.length,i:"ti-books",c:C.blue},{l:"Biblioteca",v:library.length,i:"ti-folder",c:C.green},{l:"Banco",v:bank.length,i:"ti-database",c:C.accent},{l:"Biblioteca Publica",v:publicLib.length,i:"ti-world",c:C.purple}].map(function(x){
@@ -1811,7 +1811,7 @@ export default function AulaXpro() {
                     </Btn>
                   </div>
                 ):(
-                  <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>
+                  <div data-tour="subjects-grid" style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>
                     {subjects.map(function(sub){
                       return (
                         <div key={sub.id} style={{background:C.bg,border:"2px solid "+(curSid===sub.id?C.accent:C.border),borderRadius:4,padding:14,cursor:"pointer"}} onClick={function(){setCurSid(sub.id);}}>
@@ -1838,7 +1838,7 @@ export default function AulaXpro() {
               </div>
               <div style={card}>
                 <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:14}}>ACCESO RAPIDO</div>
-                <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:10}}>
+                <div data-tour="quick-access" style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:10}}>
                   {[{v:"generator",i:"ti-bolt",l:"Generador IA",c:C.accent},{v:"chat",i:"ti-message",l:"Chat Docente",c:C.blue},{v:"multimedia",i:"ti-photo",l:"Multimedia",c:C.green},{v:"corrector",i:"ti-checklist",l:"Corrector TPs",c:C.purple}].map(function(x){
                     return (
                       <button key={x.v} style={{background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"13px 8px",cursor:"pointer",textAlign:"center",fontFamily:"Quicksand,sans-serif"}} onClick={function(){setView(x.v);}}>
@@ -1855,7 +1855,7 @@ export default function AulaXpro() {
           {!dataLoading&&view==="generator"&&(
             <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"258px 1fr",gap:18}}>
               <div>
-                <div style={card}>
+                <div data-tour="gen-types" style={card}>
                   <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:12}}>TIPO DE CONTENIDO</div>
                   {GEN_TYPES.map(function(g){
                     return (
@@ -1867,7 +1867,7 @@ export default function AulaXpro() {
                     );
                   })}
                 </div>
-                <div style={card}>
+                <div data-tour="gen-params" style={card}>
                   <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:12}}>PARAMETROS</div>
                   <label style={lbl}>NIVEL</label>
                   <select style={Object.assign({},sel,{width:"100%",marginBottom:12})} value={genLevel} onChange={function(e){setGenLevel(e.target.value);}}>
@@ -1882,7 +1882,7 @@ export default function AulaXpro() {
                 </div>
               </div>
               <div>
-                <div style={card}>
+                <div data-tour="gen-form" style={card}>
                   <div style={{display:"flex",alignItems:"center",gap:13,marginBottom:18}}>
                     {gt&&<i className={"ti "+gt.icon} style={{fontSize:30,color:gt.color}}/>}
                     <div>
@@ -1988,7 +1988,7 @@ export default function AulaXpro() {
                         </a>
                       </div>
                     )}
-                    <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid "+C.border}}>
+                    <div data-tour="gen-diff" style={{marginTop:16,paddingTop:16,borderTop:"1px solid "+C.border}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                         <div>
                           <div style={{fontSize:13,fontWeight:700,color:C.text}}>Diferenciacion automatica</div>
@@ -2059,7 +2059,7 @@ export default function AulaXpro() {
 
           {!dataLoading&&view==="multimedia"&&(
            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"248px 1fr",gap:18}}>
-              <div style={card}>
+              <div data-tour="mm-types" style={card}>
                 <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:12}}>TIPO</div>
                 {MM_TYPES.map(function(m){
                   return (
@@ -2075,7 +2075,7 @@ export default function AulaXpro() {
                 })}
               </div>
               <div>
-                <div style={card}>
+                <div data-tour="mm-form" style={card}>
                   <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
                     {mt&&<i className={"ti "+mt.icon} style={{fontSize:28,color:C.accent}}/>}
                     <div>
@@ -2154,7 +2154,7 @@ export default function AulaXpro() {
 
           {!dataLoading&&view==="chat"&&(
             <div style={{display:"flex",height:"calc(100vh - 132px)",gap:0}}>
-              <div style={{width:isMobile?"0":"240px",minWidth:isMobile?"0":"240px",background:C.surf,borderRight:"1px solid "+C.border,display:"flex",flexDirection:"column",overflow:"hidden",transition:"all .2s"}}>
+              <div data-tour="chat-sessions" style={{width:isMobile?"0":"240px",minWidth:isMobile?"0":"240px",background:C.surf,borderRight:"1px solid "+C.border,display:"flex",flexDirection:"column",overflow:"hidden",transition:"all .2s"}}>
                 <div style={{padding:"12px 14px",borderBottom:"1px solid "+C.border}}>
                   <Btn st={{width:"100%",justifyContent:"center",fontSize:12,padding:"8px 0"}} onClick={function(){
                     setCurrentSessionId(null);setChatMsgs([]);
@@ -2188,7 +2188,7 @@ export default function AulaXpro() {
                 </div>
               </div>
               <div style={{flex:1,display:"flex",flexDirection:"column",minWidth:0}}>
-                <div style={Object.assign({},card,{marginBottom:8,padding:"9px 14px"})}>
+                <div data-tour="chat-context" style={Object.assign({},card,{marginBottom:8,padding:"9px 14px"})}>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
                     <span style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.6,whiteSpace:"nowrap"}}>CONTEXTO:</span>
                     <select style={Object.assign({},sel,{flex:1})} value={chatSid===null?"":chatSid||""} onChange={function(e){setChatSid(e.target.value||null);}}>
@@ -2225,7 +2225,7 @@ export default function AulaXpro() {
                   {chatLoading&&<div style={{textAlign:"center",padding:"12px 0"}}><Spin/></div>}
                   <div ref={chatRef}/>
                 </div>
-                <div style={{display:"flex",gap:10,marginTop:10}}>
+                <div data-tour="chat-input" style={{display:"flex",gap:10,marginTop:10}}>
                   <input style={Object.assign({},inp,{flex:1,padding:"10px 14px"})} value={chatIn} onChange={function(e){setChatIn(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter"&&!e.shiftKey) sendChat();}} placeholder="Preguntame lo que quieras... (Enter para enviar)"/>
                   <Btn onClick={sendChat} disabled={chatLoading||!chatIn.trim()} st={{padding:"10px 22px"}}>
                     <i className="ti ti-send" style={{fontSize:14,marginRight:4}}/>Enviar
@@ -2237,7 +2237,7 @@ export default function AulaXpro() {
 
           {!dataLoading&&view==="corrector"&&(
             <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:18}}>
-              <div style={card}>
+              <div data-tour="corr-rubric" style={card}>
                 <h3 style={{margin:"0 0 5px",fontSize:18,fontWeight:700,color:C.text}}>Corrector de TPs</h3>
                 <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Pega la rubrica y el trabajo del alumno para una correccion completa.</p>
                 <label style={lbl}>RUBRICA *</label>
@@ -2253,7 +2253,7 @@ export default function AulaXpro() {
                 )}
                 <label style={lbl}>TRABAJO DEL ALUMNO *</label>
                 <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
-                  <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+C.border,borderRadius:4,padding:"7px 14px",cursor:imgExtractLoading?"not-allowed":"pointer",fontSize:12,fontWeight:600,color:C.text,opacity:imgExtractLoading?.6:1}}>
+                  <label data-tour="corr-photo" style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+C.border,borderRadius:4,padding:"7px 14px",cursor:imgExtractLoading?"not-allowed":"pointer",fontSize:12,fontWeight:600,color:C.text,opacity:imgExtractLoading?.6:1}}>
                     <i className="ti ti-camera" style={{fontSize:14}}/>
                     {imgExtractLoading?"Extrayendo texto...":"Fotografiar examen"}
                     <input type="file" accept="image/*" capture="environment" style={{display:"none"}} disabled={imgExtractLoading} onChange={async function(e){
@@ -2278,7 +2278,7 @@ export default function AulaXpro() {
                   {corrW&&<span style={{fontSize:11,color:C.green,display:"flex",alignItems:"center",gap:3}}><i className="ti ti-check" style={{fontSize:12}}/>Texto extraido</span>}
                 </div>
                 <textarea style={Object.assign({},inp,{height:175,resize:"vertical",marginBottom:18})} value={corrW} onChange={function(e){setCorrW(e.target.value);}} placeholder="Pega el texto del trabajo o fotografialo con el boton de arriba..."/>
-                <div style={{marginTop:20,paddingTop:16,borderTop:"1px solid "+C.border}}>
+                <div data-tour="corr-batch" style={{marginTop:20,paddingTop:16,borderTop:"1px solid "+C.border}}>
                   <label style={Object.assign({},lbl,{marginBottom:8})}>CORRECCION EN BATCH (Excel)</label>
                   <p style={{fontSize:12,color:C.textDim,marginBottom:10}}>Subi un Excel con columna A = Nombre del alumno, columna B = Texto del trabajo. La IA corrige todos y guarda las notas en Mis Alumnos automaticamente.</p>
                   <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+C.border,borderRadius:4,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:C.text,marginBottom:10}}>
@@ -2358,11 +2358,11 @@ export default function AulaXpro() {
 
           {!dataLoading&&view==="library"&&(
             <div>
-              <div style={{display:"flex",gap:12,marginBottom:18,flexWrap:"wrap",alignItems:"center"}}>
+              <div data-tour="lib-filters" style={{display:"flex",gap:12,marginBottom:18,flexWrap:"wrap",alignItems:"center"}}>
                 <h2 style={{margin:0,fontSize:19,fontWeight:700,flex:1,color:C.text,display:"flex",alignItems:"center",gap:8}}>
                   <i className="ti ti-books" style={{fontSize:18,color:C.accent}}/>{"Biblioteca ("+library.length+")"}
                 </h2>
-                {library.length>0&&<Btn v="secondary" st={{fontSize:12,padding:"5px 14px"}} onClick={function(){exportZip(library);}}>
+                {library.length>0&&<Btn data-tour="lib-export" v="secondary" st={{fontSize:12,padding:"5px 14px"}} onClick={function(){exportZip(library);}}>
                   <i className="ti ti-archive" style={{fontSize:13,marginRight:4}}/>Exportar todo (.zip)
                 </Btn>}
                 <input style={Object.assign({},inp,{width:185})} value={libSearch} onChange={function(e){setLibSearch(e.target.value);}} placeholder="Buscar..."/>
@@ -2428,7 +2428,7 @@ export default function AulaXpro() {
           {!dataLoading&&view==="smartbank"&&(
             <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"320px 1fr",gap:18}}>
               <div>
-                <div style={card}>
+                <div data-tour="smartbank-import" style={card}>
                   <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:12}}>IMPORTAR DEL BANCO</div>
                   <p style={{fontSize:12,color:C.textDim,marginBottom:12}}>Selecciona una evaluacion del banco para extraer sus preguntas automaticamente.</p>
                   {!bank.length?<p style={{fontSize:13,color:C.textDim}}>No hay evaluaciones en el banco todavia.</p>:bank.map(function(item){
@@ -2452,7 +2452,7 @@ export default function AulaXpro() {
                 </div>
               </div>
               <div>
-                <div style={card}>
+                <div data-tour="smartbank-list" style={card}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
                     <div>
                       <div style={{fontSize:15,fontWeight:700,color:C.text}}>{"Banco inteligente ("+questionItems.length+" preguntas)"}</div>
@@ -2568,7 +2568,7 @@ export default function AulaXpro() {
           {!dataLoading&&view==="sequences"&&(
             <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"280px 1fr",gap:18}}>
               <div>
-                <div style={card}>
+                <div data-tour="seq-form" style={card}>
                   <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:14}}>NUEVA SECUENCIA</div>
                   <label style={lbl}>TEMA *</label>
                   <input style={Object.assign({},inp,{marginBottom:12})} value={seqForm.topic} onChange={function(e){setSeqForm(Object.assign({},seqForm,{topic:e.target.value}));}} placeholder="Ej: La celula eucariota"/>
@@ -2599,7 +2599,7 @@ export default function AulaXpro() {
                   <textarea style={Object.assign({},inp,{height:70,resize:"vertical",marginBottom:12})} value={seqForm.extra||""} onChange={function(e){setSeqForm(Object.assign({},seqForm,{extra:e.target.value}));}} placeholder="Ej: enfoque en trabajo grupal, incluir uso de tecnologia, adaptar para alumnos con NEE..."/>
                   {!curSubj&&<p style={{fontSize:12,color:C.red,marginTop:8}}>Selecciona una materia primero.</p>}
                 </div>
-                <div style={card}>
+                <div data-tour="seq-list" style={card}>
                   <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:12}}>{"GUARDADAS ("+sequences.length+")"}</div>
                   {!sequences.length?<p style={{fontSize:13,color:C.textDim}}>No hay secuencias todavia.</p>:
                     sequences.map(function(s){
@@ -2654,7 +2654,7 @@ export default function AulaXpro() {
           {!dataLoading&&view==="students"&&(
             <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"260px 1fr",gap:18}}>
               <div>
-                <div style={card}>
+                <div data-tour="students-list" style={card}>
                   <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:12}}>{"ALUMNOS — "+(curSubj?curSubj.name:"Sin materia")}</div>
                   {!curSubj?(
                     <p style={{fontSize:13,color:C.textDim}}>Selecciona una materia primero.</p>
