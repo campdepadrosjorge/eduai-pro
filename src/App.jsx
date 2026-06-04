@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import supabase from "./supabase.js";
 import { exportDocx, exportPdf, exportZip } from "./exportUtils.js";
+import { useTour, TourTooltip, TourLaunchButton } from "./TourSystem.jsx";
 import { generatePptx } from "./pptxUtils.js";
 
 const NAV = [
@@ -1169,6 +1170,7 @@ export default function AulaXpro() {
     return function(){window.removeEventListener("resize",handleResize);};
   },[]);
   var curSubj=subjects.find(function(s){return s.id===curSid;})||null;
+  var { activeTour, launchTour, closeTour, nextStep, prevStep } = useTour(authUser ? authUser.id : null, view);
 
   useEffect(function(){
     supabase.auth.getSession().then(function(result){setAuthUser(result.data.session?result.data.session.user:null);setAuthLoading(false);});
@@ -1730,6 +1732,7 @@ export default function AulaXpro() {
               </div>
             )}
           </div>
+          <TourLaunchButton currentView={view} onLaunch={launchTour} />
           <Btn v="accent" st={{padding:"5px 13px",fontSize:12}} onClick={function(){setSubjModal(true);}}>
             <i className="ti ti-plus" style={{fontSize:12,marginRight:3}}/>Materia
           </Btn>
@@ -3147,6 +3150,12 @@ export default function AulaXpro() {
         </div>
       )}
 
+    <TourTooltip
+        activeTour={activeTour}
+        onNext={nextStep}
+        onPrev={prevStep}
+        onClose={closeTour}
+      />
     </div>
   );
 }
