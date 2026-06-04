@@ -805,6 +805,49 @@ function AdminPanel({authUser,supabaseClient}) {
       </div>
       <div style={Object.assign({},card,{marginBottom:16})}>
         <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
+          <i className="ti ti-user-plus" style={{fontSize:16,color:C.accent}}/>Agregar Usuario Individual
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+          <div>
+            <label style={lbl}>EMAIL *</label>
+            <input style={inp} value={singleEmail} onChange={function(e){setSingleEmail(e.target.value);}} placeholder="docente@escuela.edu.ar"/>
+          </div>
+          <div>
+            <label style={lbl}>NOMBRE</label>
+            <input style={inp} value={singleName} onChange={function(e){setSingleName(e.target.value);}} placeholder="Prof. Garcia"/>
+          </div>
+        </div>
+        <div style={{marginBottom:14}}>
+          <label style={lbl}>DURACION</label>
+          <div style={{display:"flex",gap:6}}>
+            {[7,15,30,60,90].map(function(d){
+              return (
+                <button key={d} style={{flex:1,padding:"7px 0",borderRadius:4,border:"1px solid "+(singleDays===d?C.accent:C.border),background:singleDays===d?C.accentBg:"transparent",color:singleDays===d?C.accent:C.textMuted,cursor:"pointer",fontWeight:600,fontSize:12,fontFamily:"Quicksand,sans-serif"}} onClick={function(){setSingleDays(d);}}>
+                  {d}d
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <Btn disabled={singleLoading||!singleEmail.trim()} onClick={addSingleUser}>
+          {singleLoading?"Procesando...":<><i className="ti ti-user-plus" style={{fontSize:13,marginRight:4}}/>Agregar usuario</>}
+        </Btn>
+        {singleResult&&(
+          <div style={{marginTop:12,padding:"10px 14px",background:C.bg,borderRadius:4,fontSize:13,border:"1px solid "+C.border}}>
+            {singleResult.error
+              ?<span style={{color:C.red}}>Error: {singleResult.error}</span>
+              :<div>
+                <div style={{color:C.green,marginBottom:4}}>Creados: {singleResult.created} / Ya existia: {singleResult.already_exists} / Fallidos: {singleResult.failed}</div>
+                {singleResult.details&&singleResult.details.failed&&singleResult.details.failed.length>0&&(
+                  <div style={{color:C.red,fontSize:12}}>{singleResult.details.failed.map(function(f){return f.email+": "+f.error;}).join(", ")}</div>
+                )}
+              </div>
+            }
+          </div>
+        )}
+      </div>
+      <div style={Object.assign({},card,{marginBottom:16})}>
+        <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
           <i className="ti ti-school" style={{fontSize:16,color:C.accent}}/>Carga Institucional
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
