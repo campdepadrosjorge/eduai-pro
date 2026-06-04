@@ -859,7 +859,9 @@ function AdminPanel({authUser,supabaseClient}) {
             {singleResult.error
               ?<span style={{color:C.red}}>Error: {singleResult.error}</span>
                :<div>
-                <div style={{color:C.green,marginBottom:4}}>Creados: {singleResult.created} / Ya existia: {singleResult.already_exists} / Fallidos: {singleResult.failed}</div>
+                <div style={{color:C.green,marginBottom:4}}>
+  {singleResult.created>0?"Usuario invitado correctamente. Se envio un email para que active su cuenta.":singleResult.already_exists>0?"El usuario ya tenia cuenta. Suscripcion actualizada correctamente.":"Proceso completado. Si el email es valido el usuario recibira la invitacion."}
+</div>
                 {singleResult.details&&singleResult.details.failed&&singleResult.details.failed.length>0&&(
                   <div style={{color:C.red,fontSize:12}}>{singleResult.details.failed.map(function(f){return f.email+": "+f.error;}).join(", ")}</div>
                 )}
