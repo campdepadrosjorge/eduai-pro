@@ -1,59 +1,56 @@
-// src/tourData.js
 export const TOURS = {
   dashboard: [
     {
       selector: null,
-      title: "¡Bienvenido a AulaXpro! 👋",
-      text: "Esta es tu pantalla de inicio. Desde acá podés ver un resumen de tus materias, biblioteca y accesos rapidos a las funciones principales.",
+      title: "Bienvenido a AulaXpro",
+      text: "Esta es tu pantalla de inicio. Desde aca podes ver un resumen de tus materias, biblioteca y accesos rapidos a las funciones principales.",
       position: "center",
     },
     {
       selector: "[data-tour='subjects-grid']",
       title: "Tus Materias",
-      text: "Cada materia que cargues puede tener su programa, nivel y bibliografia en PDF. La IA usa ese contexto para generar material mas preciso.",
+      text: "Cada materia puede tener su programa, nivel y bibliografia en PDF. La IA usa ese contexto para generar material mas preciso.",
       position: "bottom",
     },
     {
       selector: "[data-tour='quick-access']",
       title: "Acceso Rapido",
-      text: "Los 4 botones de acceso rapido te llevan directo a las funciones que mas vas a usar: Generador, Chat, Multimedia y Corrector.",
+      text: "Los 4 botones te llevan directo a las funciones principales: Generador, Chat, Multimedia y Corrector.",
       position: "top",
     },
     {
       selector: "[data-tour='add-subject-btn']",
       title: "Crea tu primera materia",
-      text: "Hace clic aca para crear una materia. Podes cargar el programa completo y PDFs de bibliografia para que la IA tenga contexto real.",
+      text: "Hace clic aca para crear una materia. Podes cargar el programa completo y PDFs de bibliografia.",
       position: "bottom",
     },
   ],
-
   generator: [
     {
       selector: "[data-tour='gen-types']",
       title: "Tipos de Contenido",
-      text: "Elegi que queres generar: Actividad Completa, Rubrica, Evaluacion, Material Didactico, Presentacion, Guia de Estudio o Contenido NEE.",
+      text: "Elegí que queres generar: Actividad Completa, Rubrica, Evaluacion, Material Didactico, Presentacion, Guia de Estudio o Contenido NEE.",
       position: "right",
     },
     {
       selector: "[data-tour='gen-params']",
       title: "Nivel y Dificultad",
-      text: "Selecciona el nivel educativo y la dificultad. Esto afecta el vocabulario, la complejidad de las consignas y los ejemplos que usa la IA.",
+      text: "Selecciona el nivel educativo y la dificultad. Esto afecta el vocabulario y la complejidad de las consignas.",
       position: "right",
     },
     {
       selector: "[data-tour='gen-form']",
       title: "Tema y configuracion",
-      text: "Escribi el tema especifico. En 'Instrucciones adicionales' podes pedir: grupos de 4, enfoque por proyectos, incluir tecnologia, etc.",
+      text: "Escribi el tema especifico. En instrucciones adicionales podes pedir: grupos de 4, enfoque por proyectos, incluir tecnologia, etc.",
       position: "left",
     },
     {
       selector: "[data-tour='gen-diff']",
       title: "Diferenciacion Automatica",
-      text: "Con un clic generas 3 versiones: Básica, Estandar y Avanzada. Ideal para atender distintos ritmos de aprendizaje en el aula.",
+      text: "Con un clic generás 3 versiones: Basica, Estandar y Avanzada. Ideal para atender distintos ritmos de aprendizaje.",
       position: "top",
     },
   ],
-
   multimedia: [
     {
       selector: "[data-tour='mm-types']",
@@ -64,11 +61,10 @@ export const TOURS = {
     {
       selector: "[data-tour='mm-form']",
       title: "Genera tu contenido",
-      text: "Ingresa el tema y las instrucciones opcionales. Para imagenes, describi lo que queres: 'diagrama del ciclo del agua', 'mapa conceptual de la celula', etc.",
+      text: "Ingresa el tema y las instrucciones opcionales. Para imagenes, describe lo que queres: diagrama del ciclo del agua, mapa conceptual de la celula, etc.",
       position: "left",
     },
   ],
-
   chat: [
     {
       selector: "[data-tour='chat-sessions']",
@@ -85,11 +81,10 @@ export const TOURS = {
     {
       selector: "[data-tour='chat-input']",
       title: "Chat con busqueda web",
-      text: "Este chat tiene acceso a internet en tiempo real. Podes preguntar sobre por ejemplo noticias, clima, o combinar búsqueda web con preguntas pedagogicas.",
+      text: "Este chat tiene acceso a internet en tiempo real. Podes preguntar sobre noticias, clima, o combinar busqueda web con preguntas pedagogicas.",
       position: "top",
     },
   ],
-
   corrector: [
     {
       selector: "[data-tour='corr-rubric']",
@@ -100,17 +95,16 @@ export const TOURS = {
     {
       selector: "[data-tour='corr-photo']",
       title: "Fotografiar Examen",
-      text: "¿El alumno entrego en papel? Sacale una foto desde aca. AulaXpro extrae el texto de la imagen y lo usa para la correccion automatica.",
+      text: "El alumno entrego en papel? Sacale una foto desde aca. Claude extrae el texto de la imagen y lo usa para la correccion automatica.",
       position: "bottom",
     },
     {
       selector: "[data-tour='corr-batch']",
       title: "Correccion en Batch",
-      text: "Subi un Excel con Nombre (col A) y texto del trabajo (col B). La IA corrige todos en secuencia y guarda las notas en 'Mis Alumnos' automaticamente.",
+      text: "Subi un Excel con Nombre en col A y texto del trabajo en col B. La IA corrige todos y guarda las notas en Mis Alumnos automaticamente.",
       position: "top",
     },
   ],
-
   library: [
     {
       selector: "[data-tour='lib-filters']",
@@ -125,21 +119,19 @@ export const TOURS = {
       position: "bottom",
     },
   ],
-
   bank: [
     {
       selector: null,
       title: "Banco de Preguntas",
-      text: "Aca se guardan las evaluaciones que marcaste como 'Banco'. Desde el Banco Inteligente podés extraer preguntas individuales para reutilizarlas.",
+      text: "Aca se guardan las evaluaciones que marcaste como Banco. Desde el Banco Inteligente podes extraer preguntas individuales para reutilizarlas.",
       position: "center",
     },
   ],
-
   smartbank: [
     {
       selector: "[data-tour='smartbank-import']",
       title: "Importar del Banco",
-      text: "Selecciona una evaluación guardada y Claude extrae todas las preguntas clasificadas por tema, tipo y dificultad.",
+      text: "Selecciona una evaluacion guardada y Claude extrae todas las preguntas clasificadas por tema, tipo y dificultad.",
       position: "right",
     },
     {
@@ -149,12 +141,11 @@ export const TOURS = {
       position: "left",
     },
   ],
-
   sequences: [
     {
       selector: "[data-tour='seq-form']",
       title: "Generar Secuencia Didactica",
-      text: "Ingresa el tema y elegi entre 4, 6 u 8 clases. La IA genera una progresion con objetivos, inicio/desarrollo/cierre y evaluacion para cada clase.",
+      text: "Ingresa el tema y elegi entre 4, 6 u 8 clases. La IA genera una progresion con objetivos, inicio, desarrollo, cierre y evaluacion para cada clase.",
       position: "right",
     },
     {
@@ -164,7 +155,6 @@ export const TOURS = {
       position: "right",
     },
   ],
-
   students: [
     {
       selector: "[data-tour='students-list']",
@@ -173,3 +163,28 @@ export const TOURS = {
       position: "right",
     },
   ],
+  publiclib: [
+    {
+      selector: null,
+      title: "Biblioteca Publica",
+      text: "Contenido compartido por docentes de toda la plataforma. Podes guardar cualquier material en tu Biblioteca personal o exportarlo a Word.",
+      position: "center",
+    },
+  ],
+  projects: [
+    {
+      selector: null,
+      title: "Proyectos Colaborativos",
+      text: "Crea proyectos interdisciplinarios e invita colegas por email. Cada docente genera contenido desde su materia y todo queda centralizado.",
+      position: "center",
+    },
+  ],
+  pricing: [
+    {
+      selector: null,
+      title: "Planes y Precios",
+      text: "Tenes 7 dias de prueba gratuita. Los planes institucionales permiten cargar multiples docentes desde un Excel con duracion configurable.",
+      position: "center",
+    },
+  ],
+};
