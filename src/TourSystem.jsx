@@ -71,15 +71,20 @@ export function useTour(userId, currentView) {
 export function TourTooltip({ activeTour, onNext, onPrev, onClose }) {
   const [targetRect, setTargetRect] = useState(null);
 
-  useEffect(() => {
+ useEffect(() => {
     if (!activeTour) { setTargetRect(null); return; }
     const step = TOURS[activeTour.section]?.[activeTour.stepIndex];
     if (!step || !step.selector) { setTargetRect(null); return; }
     const el = document.querySelector(step.selector);
     if (!el) { setTargetRect(null); return; }
-    const rect = el.getBoundingClientRect();
-    setTargetRect(rect);
-    el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    // Esperar a que el scroll termine antes de calcular la posición
+    setTimeout(() => {
+      const rect = el.getBoundingClientRect();
+      setTargetRect(rect);
+    }, 400);
   }, [activeTour]);
 
   if (!activeTour) return null;
