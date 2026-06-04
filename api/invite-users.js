@@ -65,7 +65,7 @@ export default async function handler(req, res) {
 
       // Agregar colegio a tabla schools
       if (institutionName) {
-        await supabase.from("schools").upsert({ name: institutionName }, { onConflict: "name" }).catch(function(){});
+        try { await supabase.from("schools").upsert({ name: institutionName }, { onConflict: "name" }); } catch(e) {}
       }
 
       results.created.push(user.email);
