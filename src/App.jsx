@@ -858,7 +858,16 @@ function AdminPanel({authUser,supabaseClient}) {
           <div style={{marginTop:12,padding:"10px 14px",background:C.bg,borderRadius:4,fontSize:13,border:"1px solid "+C.border}}>
             {singleResult.error
               ?<span style={{color:C.red}}>Error: {singleResult.error}</span>
+<<<<<<< HEAD
               :<span style={{color:C.green}}>Usuario agregado correctamente. Creados: {singleResult.created} / Ya existia: {singleResult.already_exists}</span>
+=======
+              :<div>
+                <div style={{color:C.green,marginBottom:4}}>Creados: {singleResult.created} / Ya existia: {singleResult.already_exists} / Fallidos: {singleResult.failed}</div>
+                {singleResult.details&&singleResult.details.failed&&singleResult.details.failed.length>0&&(
+                  <div style={{color:C.red,fontSize:12}}>{singleResult.details.failed.map(function(f){return f.email+": "+f.error;}).join(", ")}</div>
+                )}
+              </div>
+>>>>>>> main
             }
           </div>
         )}
