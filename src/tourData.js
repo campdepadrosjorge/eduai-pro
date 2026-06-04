@@ -2,7 +2,7 @@ export const TOURS = {
   dashboard: [
     {
       selector: null,
-      title: "Bienvenido a AulaXpro",
+      title: "Bienvenido a AulaXpro!",
       text: "Esta es tu pantalla de inicio. Desde aca podes ver un resumen de tus materias, biblioteca y accesos rapidos a las funciones principales.",
       position: "center",
     },
