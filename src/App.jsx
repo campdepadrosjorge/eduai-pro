@@ -1148,14 +1148,12 @@ function AuthScreen({onAuth}) {
     if(result.error){setError(result.error.message);}
     else{
       if(school) dbAddOrUpdateSchool(school,"").catch(function(){});
-      // Enviar email de bienvenida
       fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,name})}).catch(function(){});
       if(result.data.session){onAuth(result.data.user);}
       else{setConfirmed(true);}
     }
-  setLoading(false);
+    setLoading(false);
   }
-}
 
 export default function AulaXpro() {
   var [authUser,setAuthUser]=useState(null);
