@@ -1141,22 +1141,104 @@ function AuthScreen({onAuth}) {
     setLoading(false);
   }
 
- async function handleRegister() {
+  async function handleRegister() {
     if(!email||!password||!name) return;
     setLoading(true);setError("");
     var result=await supabase.auth.signUp({email,password,options:{data:{name,school:school||""}}});
     if(result.error){setError(result.error.message);}
     else{
       if(school) dbAddOrUpdateSchool(school,"").catch(function(){});
-     
       if(result.data.session){onAuth(result.data.user);}
       else{setConfirmed(true);}
-   }
+    }
     setLoading(false);
   }
+
+  if(confirmed) return (
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:C.bg}}>
+      <div style={{width:420,textAlign:"center"}}>
+        <i className="ti ti-mail" style={{fontSize:52,color:C.accent,display:"block",marginBottom:16}}/>
+        <h2 style={{color:C.accent,fontSize:24,fontWeight:700,margin:"0 0 12px"}}>Revisa tu email</h2>
+        <p style={{color:C.textMuted,fontSize:15,marginBottom:8}}>Te enviamos un link a {email}</p>
+        <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.accent,fontSize:14,fontFamily:"Quicksand,sans-serif",fontWeight:600,marginTop:24}} onClick={function(){setConfirmed(false);setMode("login");}}>Ir a iniciar sesion</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:C.bg}}>
+      <div style={{width:420}}>
+        <div style={{textAlign:"center",marginBottom:32}}>
+          <i className="ti ti-school" style={{fontSize:52,color:C.accent,display:"block",marginBottom:12}}/>
+          <h1 style={{color:C.accent,fontSize:30,fontWeight:700,margin:"0 0 6px"}}>AulaXpro</h1>
+          <p style={{color:C.textMuted,fontSize:15}}>Tu asistente docente con IA</p>
+        </div>
+        <div style={card}>
+          <div style={{display:"flex",gap:4,marginBottom:22,background:C.bg,borderRadius:4,padding:4}}>
+            {[{id:"login",label:"Iniciar sesion"},{id:"register",label:"Registrarse"}].map(function(t){
+              return <button key={t.id} style={{flex:1,padding:"7px 0",borderRadius:4,border:"none",cursor:"pointer",fontFamily:"Quicksand,sans-serif",fontWeight:600,fontSize:13,background:mode===t.id?C.card:"transparent",color:mode===t.id?C.text:C.textDim}} onClick={function(){setMode(t.id);setError("");}}>{t.label}</button>;
+            })}
+          </div>
+          {mode==="register"&&(
+            <div>
+              <label style={lbl}>NOMBRE</label>
+              <input style={Object.assign({},inp,{marginBottom:12})} value={name} onChange={function(e){setName(e.target.value);}} placeholder="Prof. Garcia"/>
+              <label style={lbl}>COLEGIO (opcional)</label>
+              <div style={{position:"relative",marginBottom:12}}>
+                <input style={inp} value={school} onChange={async function(e){
+                  setSchool(e.target.value);
+                  if(e.target.value.length>=2){
+                    var suggestions=await dbSearchSchools(e.target.value);
+                    setSchoolSuggestions(suggestions);
+                  } else {
+                    setSchoolSuggestions([]);
+                  }
+                }} placeholder="Ej: Colegio San Martin"/>
+                {schoolSuggestions.length>0&&(
+                  <div style={{position:"absolute",top:"100%",left:0,right:0,background:C.surf,border:"1px solid "+C.border,borderRadius:4,zIndex:100,boxShadow:"0 4px 12px rgba(0,0,0,.1)"}}>
+                    {schoolSuggestions.map(function(s){
+                      return (
+                        <div key={s.id} style={{padding:"9px 13px",cursor:"pointer",fontSize:13,color:C.text,borderBottom:"1px solid "+C.border}} onClick={function(){setSchool(s.name);setSchoolSuggestions([]);}}>
+                          {s.name}{s.city?" — "+s.city:""}
+                        </div>
+                      );
+                    })}
+                    <div style={{padding:"8px 13px",cursor:"pointer",fontSize:12,color:C.textDim}} onClick={function(){setSchoolSuggestions([]);}}>
+                      Usar "{school}" como nuevo colegio
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          <label style={lbl}>EMAIL</label>
+          <input style={Object.assign({},inp,{marginBottom:12})} type="email" value={email} onChange={function(e){setEmail(e.target.value);}} placeholder="docente@escuela.edu.ar"/>
+          <label style={lbl}>CONTRASENA</label>
+          <input style={Object.assign({},inp,{marginBottom:20})} type="password" value={password} onChange={function(e){setPass(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter") mode==="login"?handleLogin():handleRegister();}} placeholder="Minimo 6 caracteres"/>
+          {error&&<div style={{color:C.red,fontSize:13,background:"#fee2e2",padding:"9px 13px",borderRadius:4,marginBottom:14}}>{error}</div>}
+          {mode==="login"&&(
+            <div style={{textAlign:"right",marginBottom:14}}>
+              <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.accent,fontSize:12,fontFamily:"Quicksand,sans-serif",fontWeight:600}} onClick={async function(){
+                if(!email){setError("Ingresa tu email primero.");return;}
+                setLoading(true);
+                var result=await supabase.auth.resetPasswordForEmail(email,{redirectTo:"https://app.aulaxpro.com/reset-password"});
+                if(result.error){setError(result.error.message);}
+                else{setError("");alert("Te enviamos un email para restablecer tu contrasena. Revisa tu bandeja.");}
+                setLoading(false);
+              }}>Olvidaste tu contrasena?</button>
+            </div>
+          )}
+          <Btn st={{width:"100%",padding:"11px 20px",fontSize:14,justifyContent:"center"}} disabled={loading} onClick={mode==="login"?handleLogin:handleRegister}>
+            {loading?"Procesando...":mode==="login"?"Entrar":"Crear cuenta"}
+          </Btn>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function AulaXpro() {
+  
   var [authUser,setAuthUser]=useState(null);
   var [authLoading,setAuthLoading]=useState(true);
   var [subjects,setSubjects]=useState([]);
