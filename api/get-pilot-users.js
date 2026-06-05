@@ -24,7 +24,8 @@ export default async function handler(req, res) {
     });
     var subs = Object.values(subsMap);
 
-    var authResult = await supabase.auth.admin.listUsers({ perPage: 1000 });
+   var authResult = await supabase.auth.admin.listUsers({ perPage: 1000 });
+    if (authResult.error) throw new Error("listUsers error: " + authResult.error.message);
     var authUsers = authResult.data ? authResult.data.users : [];
 
     var merged = subs.map(function(sub) {
