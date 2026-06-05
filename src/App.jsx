@@ -776,25 +776,32 @@ function AdminPanel({authUser,supabaseClient}) {
   async function extendUser(userId, days) {
     setExtendLoading(userId);
     try {
-      var sub = await supabaseClient
+      var subResult = await supabaseClient
         .from("subscriptions")
         .select("current_period_end")
         .eq("user_id", userId)
         .eq("status", "active")
-        .single();
-      
-      var currentEnd = new Date(sub.data.current_period_end);
+        .order("current_period_end", {ascending: false})
+        .limit(1);
+
+      if (!subResult.data || subResult.data.length === 0) {
+        alert("No se encontro suscripcion activa para este usuario.");
+        setExtendLoading(null);
+        return;
+      }
+
+      var currentEnd = new Date(subResult.data[0].current_period_end);
       var now = new Date();
       var base = currentEnd > now ? currentEnd : now;
       var newEnd = new Date(base);
       newEnd.setDate(newEnd.getDate() + days);
-      
+
       await supabaseClient
         .from("subscriptions")
         .update({ current_period_end: newEnd.toISOString() })
         .eq("user_id", userId)
         .eq("status", "active");
-      
+
       setPilotUsers(function(prev) {
         return prev.map(function(u) {
           if(u.user_id !== userId) return u;
