@@ -1153,8 +1153,10 @@ function AuthScreen({onAuth}) {
       if(result.data.session){onAuth(result.data.user);}
       else{setConfirmed(true);}
     }
-    setLoading(false);
+  setLoading(false);
   }
+}
+
 export default function AulaXpro() {
   var [authUser,setAuthUser]=useState(null);
   var [authLoading,setAuthLoading]=useState(true);
