@@ -11,6 +11,9 @@
     },
     "api/extract-text.js": {
       "maxDuration": 60
+    },
+    "api/get-pilot-users.js": {
+      "maxDuration": 60
     }
   }
 }
