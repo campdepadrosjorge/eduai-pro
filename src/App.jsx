@@ -1151,9 +1151,10 @@ function AuthScreen({onAuth}) {
       fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,name})}).catch(function(){});
       if(result.data.session){onAuth(result.data.user);}
       else{setConfirmed(true);}
-    }
+   }
     setLoading(false);
   }
+}
 
 export default function AulaXpro() {
   var [authUser,setAuthUser]=useState(null);
