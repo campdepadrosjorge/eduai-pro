@@ -1277,7 +1277,7 @@ export default function AulaXpro() {
     return function(){sub.data.subscription.unsubscribe();};
   },[]);
 
-  useEffect(function(){
+ useEffect(function(){
     if(!authUser) return;
     setDataLoading(true);
     Promise.all([dbLoadSubjects(authUser.id),dbLoadLibrary(authUser.id),dbLoadBank(authUser.id),dbLoadPublicLib(),dbLoadSequences(authUser.id),dbLoadQuestionItems(authUser.id),dbLoadProjects(authUser.id)])
@@ -1287,11 +1287,17 @@ export default function AulaXpro() {
         setDataLoading(false);
         dbLoadNotifications(authUser.id).then(setNotifications);
         dbCheckSubscription(authUser.id).then(function(sub){
-          if(!sub){dbCreateTrial(authUser.id).then(function(){dbCheckSubscription(authUser.id).then(function(ns){setSubscription(ns);setSubChecked(true);dbGetUsage(authUser.id).then(function(u){setUsage(u);});});});}
-          else{setSubscription(sub);setSubChecked(true);dbGetUsage(authUser.id).then(function(u){setUsage(u);});}
-        });
-      }).catch(function(){setDataLoading(false);});
-  },[authUser]);
+          if(!sub){
+            // Usuario nuevo — crear trial y mandar email de bienvenida
+            dbCreateTrial(authUser.id).then(function(){
+              dbCheckSubscription(authUser.id).then(function(ns){
+                setSubscription(ns);setSubChecked(true);
+                dbGetUsage(authUser.id).then(function(u){setUsage(u);});
+              });
+            });
+            var userName=(authUser.user_metadata&&authUser.user_metadata.name)||"";
+            fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:authUser.email,name:userName})}).catch(function(){});
+          }
 
   useEffect(function(){
     if(!authUser||!curSid) return;
