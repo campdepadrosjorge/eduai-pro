@@ -64,8 +64,9 @@ function sysGen(type, subject, level, materials, bibliography) {
   return (p[type] || base) + "\n\nResponde siempre en espanol rioplatense. Usa Markdown con estructura visual clara (tablas, listas, encabezados). El material debe ser de calidad profesional, listo para usar sin modificaciones.";
 }
 
-function userGen(type, topic, diff, extra, subject) {
-  var e = extra ? "\n\nInstrucciones adicionales del docente: " + extra : "";
+function userGen(type, topic, diff, extra, subject, docText) {
+  var docCtx = docText ? "\n\nDOCUMENTO DE CONTEXTO (usá este material como base para generar el contenido, respetando su enfoque, vocabulario y nivel):\n" + docText.slice(0, 8000) : "";
+  var e = (extra ? "\n\nInstrucciones adicionales del docente: " + extra : "") + docCtx;
   var isMakeCode = topic.toLowerCase().includes("micro") || topic.toLowerCase().includes("makecode") ||
     (extra && extra.toLowerCase().includes("makecode")) ||
     (subject && ((subject.name||"").toLowerCase().includes("robot") || (subject.name||"").toLowerCase().includes("program") || (subject.name||"").toLowerCase().includes("tecnolog")));
@@ -1238,7 +1239,7 @@ function AuthScreen({onAuth}) {
 }
 
 export default function AulaXpro() {
-  
+
   var [authUser,setAuthUser]=useState(null);
   var [authLoading,setAuthLoading]=useState(true);
   var [subjects,setSubjects]=useState([]);
@@ -1275,6 +1276,9 @@ export default function AulaXpro() {
   var [genLoading,setGenLoading]=useState(false);
   var [genSaved,setGenSaved]=useState(false);
   var [genErr,setGenErr]=useState("");
+  var [genDocText,setGenDocText]=useState("");
+  var [genDocName,setGenDocName]=useState("");
+  var [genDocLoading,setGenDocLoading]=useState(false);
   var [makeCodeUrl,setMakeCodeUrl]=useState(null);
   var [actImgUrl,setActImgUrl]=useState(null);
   var [actImgLoad,setActImgLoad]=useState(false);
@@ -1522,7 +1526,7 @@ useEffect(function(){
     setGenLoading(true);setGenResult("");setGenSaved(false);setGenErr("");setMakeCodeUrl(null);setActImgUrl(null);
     try{
       var sys=sysGen(genType,curSubj.name,genLevel||curSubj.level,curSubj.materials,curSubj.bibliography);
-      var usr=userGen(genType,genTopic,genDiff,genExtra,curSubj);
+      var usr=userGen(genType,genTopic,genDiff,genExtra,curSubj,genDocText);
       var r=await callClaude(sys,[{role:"user",content:usr}],6000,false,function(partial){
         setGenResult(partial);
       });
@@ -2050,7 +2054,7 @@ useEffect(function(){
                   {GEN_TYPES.map(function(g){
                     return (
                       <button key={g.id} style={{display:"flex",alignItems:"center",gap:9,width:"100%",padding:"8px 10px",borderRadius:4,border:"none",cursor:"pointer",marginBottom:3,background:genType===g.id?C.accentBg:"transparent",color:genType===g.id?C.accent:C.textMuted,textAlign:"left",fontFamily:"Quicksand,sans-serif",fontSize:13,borderLeft:genType===g.id?"2px solid "+C.accent:"2px solid transparent"}}
-                        onClick={function(){setGenType(g.id);setGenResult("");setGenSaved(false);setGenErr("");setMakeCodeUrl(null);setActImgUrl(null);}}>
+                        onClick={function(){setGenType(g.id);setGenResult("");setGenSaved(false);setGenErr("");setMakeCodeUrl(null);setActImgUrl(null);setGenDocText("");setGenDocName("");}}>
                         <i className={"ti "+g.icon} style={{fontSize:16}}/>
                         <span style={{fontWeight:genType===g.id?700:400}}>{g.label}</span>
                       </button>
@@ -2090,7 +2094,37 @@ useEffect(function(){
                       <label style={lbl}>TEMA ESPECIFICO *</label>
                       <input style={Object.assign({},inp,{marginBottom:12})} value={genTopic} onChange={function(e){setGenTopic(e.target.value);}} placeholder="Ej: La Primera Guerra Mundial"/>
                       <label style={lbl}>INSTRUCCIONES ADICIONALES (opcional)</label>
-                      <textarea style={Object.assign({},inp,{height:70,resize:"vertical",marginBottom:12})} value={genExtra} onChange={function(e){setGenExtra(e.target.value);}} placeholder="Ej: grupos de 4, enfoque por proyectos..."/>
+                     <textarea style={Object.assign({},inp,{height:70,resize:"vertical",marginBottom:12})} value={genExtra} onChange={function(e){setGenExtra(e.target.value);}} placeholder="Ej: grupos de 4, enfoque por proyectos..."/>
+                      <label style={lbl}>DOCUMENTO DE CONTEXTO (opcional)</label>
+                      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
+                        <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+(genDocText?C.accent:C.border),borderRadius:4,padding:"7px 14px",cursor:genDocLoading?"not-allowed":"pointer",fontSize:12,fontWeight:600,color:genDocText?C.accent:C.text,opacity:genDocLoading?.6:1}}>
+                          <i className={genDocLoading?"ti ti-loader":"ti ti-file-upload"} style={{fontSize:14}}/>
+                          {genDocLoading?"Procesando...":genDocText?genDocName:"Adjuntar PDF o texto"}
+                          <input type="file" accept=".pdf,.txt" style={{display:"none"}} disabled={genDocLoading} onChange={async function(e){
+                            var file=e.target.files[0]; if(!file) return;
+                            setGenDocLoading(true);
+                            try{
+                              if(file.type==="application/pdf"){
+                                var result=await processPdf(file);
+                                setGenDocText(result.text);
+                                setGenDocName(file.name);
+                              } else {
+                                var text=await file.text();
+                                setGenDocText(text.slice(0,8000));
+                                setGenDocName(file.name);
+                              }
+                            }catch(err){alert("Error al procesar el archivo: "+err.message);}
+                            setGenDocLoading(false);
+                            e.target.value="";
+                          }}/>
+                        </label>
+                        {genDocText&&(
+                          <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.textDim,display:"flex",alignItems:"center",gap:4,fontSize:12,fontFamily:"Quicksand,sans-serif"}} onClick={function(){setGenDocText("");setGenDocName("");}}>
+                            <i className="ti ti-x" style={{fontSize:13}}/>Quitar
+                          </button>
+                        )}
+                        {genDocText&&<span style={{fontSize:11,color:C.green,display:"flex",alignItems:"center",gap:3}}><i className="ti ti-check" style={{fontSize:12}}/>{Math.round(genDocText.length/1000)+"k caracteres cargados"}</span>}
+                      </div>
                       {genType==="adaptado"&&(
                         <div style={{marginBottom:18}}>
                           <label style={lbl}>TIPO DE NEE *</label>
