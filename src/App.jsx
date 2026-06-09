@@ -2102,6 +2102,7 @@ useEffect(function(){
                           {genDocLoading?"Procesando...":genDocText?genDocName:"Adjuntar PDF o texto"}
                           <input type="file" accept=".pdf,.txt" style={{display:"none"}} disabled={genDocLoading} onChange={async function(e){
                             var file=e.target.files[0]; if(!file) return;
+                            if(file.type==="application/pdf" && file.size > 3*1024*1024){alert("El PDF es demasiado grande. El límite es 3MB. Intentá con un PDF más pequeño o pegá el texto directamente en las instrucciones adicionales.");return;}
                             setGenDocLoading(true);
                             try{
                               if(file.type==="application/pdf"){
