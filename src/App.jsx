@@ -1354,7 +1354,7 @@ export default function AulaXpro() {
   var { activeTour, launchTour, closeTour, nextStep, prevStep } = useTour(authUser ? authUser.id : null, view);
 
   useEffect(function(){
-    supabase.auth.getSession().then(function(result){setAuthUser(result.data.session?result.data.session.user:null);setAuthLoading(false);});
+    supabase.auth.getSession().then(function(result){setAuthUser(result.data.session?result.data.session.user:null);setAuthLoading(false);var params=new URLSearchParams(window.location.search);if(params.get("section")==="pricing") setView("pricing");});
     var sub=supabase.auth.onAuthStateChange(function(event,session){
       setAuthUser(session?session.user:null);
       if(event==="PASSWORD_RECOVERY") setShowResetPassword(true);

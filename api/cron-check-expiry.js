@@ -65,7 +65,7 @@ const uniqueSubs = Object.values(subs.reduce(function(acc, sub) {
                 <p style="color:#555550;font-size:14px;margin:0">— Tu biblioteca, banco de preguntas y secuencias guardadas</p>
               </div>
               <div style="text-align:center;margin-bottom:32px">
-                <a href="https://app.aulaxpro.com" style="background:#0d9488;color:#ffffff;padding:14px 32px;border-radius:6px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block">
+                <a href="https://app.aulaxpro.com?section=pricing" style="background:#0d9488;color:#ffffff;padding:14px 32px;border-radius:6px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block">
                   Renovar mi plan
                 </a>
               </div>
