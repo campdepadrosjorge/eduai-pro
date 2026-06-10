@@ -861,8 +861,9 @@ function AdminPanel({authUser,supabaseClient}) {
   var totalTokOut=stats.reduce(function(a,s){return a+(s.tokens_output||0);},0);
   var costText=((totalTokIn*0.000003)+(totalTokOut*0.000015)+(totalImg*0.07)).toFixed(2);
   var userMap={};
-  stats.forEach(function(s){if(!userMap[s.user_email])userMap[s.user_email]={email:s.user_email,gens:0,imgs:0};if(s.is_image)userMap[s.user_email].imgs++;else userMap[s.user_email].gens++;});
+  stats.forEach(function(s){if(!userMap[s.user_email])userMap[s.user_email]={email:s.user_email,gens:0,imgs:0,lastActivity:null};if(s.is_image)userMap[s.user_email].imgs++;else userMap[s.user_email].gens++;var d=new Date(s.created_at);if(!userMap[s.user_email].lastActivity||d>userMap[s.user_email].lastActivity)userMap[s.user_email].lastActivity=d;});
   var users=Object.values(userMap).sort(function(a,b){return(b.gens+b.imgs)-(a.gens+a.imgs);});
+  var usersByActivity=Object.values(userMap).slice().sort(function(a,b){return (a.lastActivity?a.lastActivity.getTime():0)-(b.lastActivity?b.lastActivity.getTime():0);});
   var typeMap={};
   stats.filter(function(s){return!s.is_image;}).forEach(function(s){typeMap[s.type_name]=(typeMap[s.type_name]||0)+1;});
   var types=Object.entries(typeMap).sort(function(a,b){return b[1]-a[1];});
@@ -1055,6 +1056,42 @@ function AdminPanel({authUser,supabaseClient}) {
                 </div>
               );
             })}
+          </div>
+        )}
+      </div>
+      <div style={Object.assign({},card,{marginBottom:16})}>
+        <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:4,display:"flex",alignItems:"center",gap:8}}>
+          <i className="ti ti-activity" style={{fontSize:16,color:C.accent}}/>Retencion de usuarios
+        </div>
+        <p style={{fontSize:12,color:C.textDim,marginBottom:14}}>Ordenados por inactividad. Los usuarios sin actividad reciente aparecen primero.</p>
+        {!usersByActivity.length?(
+          <p style={{color:C.textDim,fontSize:13}}>Sin datos aun.</p>
+        ):(
+          <div style={{overflowX:"auto"}}>
+            <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+              <thead>
+                <tr style={{borderBottom:"1px solid "+C.border}}>
+                  {["Usuario","Ultima actividad","Dias inactivo","Estado"].map(function(h){
+                    return <th key={h} style={{textAlign:"left",padding:"6px 10px",color:C.textMuted,fontWeight:600}}>{h}</th>;
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {usersByActivity.map(function(u){
+                  var daysInactive=u.lastActivity?Math.floor((new Date()-u.lastActivity)/(1000*60*60*24)):null;
+                  var clr=daysInactive===null?C.textDim:daysInactive>7?C.red:daysInactive>3?C.blue:C.green;
+                  var estado=daysInactive===null?"Sin actividad":daysInactive>7?"Inactivo":daysInactive>3?"En riesgo":"Activo";
+                  return (
+                    <tr key={u.email} style={{borderBottom:"1px solid "+C.bg}}>
+                      <td style={{padding:"8px 10px",color:C.text}}>{u.email.split("@")[0]}</td>
+                      <td style={{padding:"8px 10px",color:C.textDim}}>{u.lastActivity?u.lastActivity.toLocaleDateString("es-AR"):"—"}</td>
+                      <td style={{padding:"8px 10px",color:clr,fontWeight:700}}>{daysInactive===null?"—":daysInactive+" dias"}</td>
+                      <td style={{padding:"8px 10px"}}><span style={{fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:20,background:clr+"22",color:clr}}>{estado}</span></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
