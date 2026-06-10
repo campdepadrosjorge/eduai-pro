@@ -1251,7 +1251,7 @@ export default function AulaXpro() {
   var [sf,setSf]=useState({name:"",level:"Secundario (4-6)",materials:"",bibliography:""});
   var [sfPdfs,setSfPdfs]=useState([]);
   var [pdfLoading,setPdfLoading]=useState(false);
-  var [editingSubject,setEditingSubject]=useState(null);var [sf,setSf]=useState({name:"",level:"Secundario (4-6)",materials:""});
+  var [editingSubject,setEditingSubject]=useState(null);
   var [library,setLibrary]=useState([]);
   var [bank,setBank]=useState([]);
   var [publicLib,setPublicLib]=useState([]);
