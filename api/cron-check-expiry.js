@@ -19,13 +19,18 @@ export default async function handler(req, res) {
       }
     });
 
-    const subs = await subRes.json();
-    if (!subs || !subs.length) return res.status(200).json({ message: "Sin vencimientos en 3 dias", count: 0 });
+   const subs = await subRes.json();
+if (!subs || !subs.length) return res.status(200).json({ message: "Sin vencimientos en 3 dias", count: 0 });
+
+const uniqueSubs = Object.values(subs.reduce(function(acc, sub) {
+  if (!acc[sub.user_id]) acc[sub.user_id] = sub;
+  return acc;
+}, {}));
 
     var sent = 0;
     var failed = 0;
 
-    for (const sub of subs) {
+    for (const sub of uniqueSubs) {
       try {
         const userRes = await fetch(process.env.SUPABASE_URL + "/auth/v1/admin/users/" + sub.user_id, {
           headers: {
