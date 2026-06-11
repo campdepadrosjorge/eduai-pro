@@ -23,3 +23,21 @@ export function userComunicado(destinatario, asunto, detalles, tono) {
     "- Espacio para la firma del equipo directivo\n\n" +
     "Usá un formato limpio y profesional. No agregues información que no fue provista.";
 }
+export function sysActa() {
+  return "Sos el equipo directivo de una institución educativa redactando un acta formal. Escribís en español rioplatense, con lenguaje claro, objetivo e institucional. Las actas son documentos formales: registran de manera ordenada y precisa lo tratado, sin opiniones personales ni adornos. Respondé en Markdown. No inventes datos que no te dieron (nombres, fechas, cargos): si falta un dato importante, dejá un espacio para completar con formato [COMPLETAR: ...]. Tomá las notas en bruto del directivo y convertilas en un acta profesional y bien estructurada.";
+}
+
+export function userActa(tipo, datos, temas, acuerdos) {
+  return "Redactá un acta formal y completa a partir de las notas provistas.\n\n" +
+    "TIPO DE ACTA: " + tipo + "\n" +
+    "FECHA Y PARTICIPANTES: " + datos + "\n" +
+    "TEMAS TRATADOS (notas en bruto del directivo):\n" + temas + "\n" +
+    (acuerdos ? "ACUERDOS / CONCLUSIONES indicados:\n" + acuerdos + "\n" : "") +
+    "\nEl acta debe incluir:\n" +
+    "- Título del acta según su tipo\n" +
+    "- Encabezado con lugar, fecha, hora y participantes (usá los datos provistos)\n" +
+    "- Desarrollo ordenado de los temas tratados, redactados de forma formal y objetiva a partir de las notas\n" +
+    "- Sección de acuerdos, decisiones o conclusiones (si no se indicaron explícitamente, inferilos del desarrollo)\n" +
+    "- Cierre formal con espacio para firmas de los participantes\n\n" +
+    "Mantené un tono institucional y objetivo. No agregues información que no fue provista.";
+}

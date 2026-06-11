@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { exportDocx, exportPdf } from "./exportUtils.js";
-import { sysComunicado, userComunicado } from "./directivoPrompts.js";
+import { sysComunicado, userComunicado, sysActa, userActa } from "./directivoPrompts.js";
 
 const C = {
   bg:"#f0efea", surf:"#ffffff", card:"#ffffff", border:"#d4cfc6",
@@ -71,6 +71,24 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
   var [comResult,setComResult] = useState("");
   var [comLoading,setComLoading] = useState(false);
   var [comErr,setComErr] = useState("");
+  // Estado actas
+  var [actTipo,setActTipo] = useState("Reunión de personal");
+  var [actDatos,setActDatos] = useState("");
+  var [actTemas,setActTemas] = useState("");
+  var [actAcuerdos,setActAcuerdos] = useState("");
+  var [actResult,setActResult] = useState("");
+  var [actLoading,setActLoading] = useState(false);
+  var [actErr,setActErr] = useState("");
+
+  async function generarActa(){
+    if(!actTemas.trim()) return;
+    setActLoading(true);setActResult("");setActErr("");
+    try{
+      var r = await callClaude(sysActa(), [{role:"user",content:userActa(actTipo,actDatos,actTemas,actAcuerdos)}], 3500);
+      setActResult(r);
+    }catch(e){setActErr("Error: "+e.message);}
+    setActLoading(false);
+  }
 
   async function generarComunicado(){
     if(!comAsunto.trim()) return;
@@ -159,7 +177,50 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
             </div>
           )}
 
-          {view!=="comunicados"&&(
+          {view==="actas"&&(
+            <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:18}}>
+              <div style={card}>
+                <h3 style={{margin:"0 0 4px",fontSize:17,fontWeight:700,color:C.text}}>Generar acta</h3>
+                <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Tirá tus notas de la reunión y la IA arma el acta formal.</p>
+                <label style={lbl}>TIPO DE ACTA</label>
+                <select style={Object.assign({},sel,{width:"100%",marginBottom:12})} value={actTipo} onChange={function(e){setActTipo(e.target.value);}}>
+                  {["Reunión de personal","Reunión con familias","Acto escolar","Entrevista","Otra"].map(function(t){return <option key={t}>{t}</option>;})}
+                </select>
+                <label style={lbl}>FECHA Y PARTICIPANTES</label>
+                <input style={Object.assign({},inp,{marginBottom:12})} value={actDatos} onChange={function(e){setActDatos(e.target.value);}} placeholder="Ej: 24/06/2026, equipo docente de primaria"/>
+                <label style={lbl}>TEMAS TRATADOS *</label>
+                <textarea style={Object.assign({},inp,{height:130,resize:"vertical",marginBottom:12})} value={actTemas} onChange={function(e){setActTemas(e.target.value);}} placeholder="Escribí tus notas en bruto de lo que se trató..."/>
+                <label style={lbl}>ACUERDOS / CONCLUSIONES (opcional)</label>
+                <textarea style={Object.assign({},inp,{height:80,resize:"vertical",marginBottom:18})} value={actAcuerdos} onChange={function(e){setActAcuerdos(e.target.value);}} placeholder="Si no los completás, la IA los infiere de lo tratado."/>
+                <Btn onClick={generarActa} disabled={actLoading||!actTemas.trim()} st={{width:"100%",justifyContent:"center"}}>
+                  {actLoading?"Generando...":"Generar acta"}
+                </Btn>
+                {actErr&&<div style={{marginTop:12,color:C.red,fontSize:13,background:"#fee2e2",padding:"10px 14px",borderRadius:4}}>{actErr}</div>}
+              </div>
+              <div>
+                {actResult?(
+                  <div style={card}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                      <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8}}>ACTA GENERADA</div>
+                      <div style={{display:"flex",gap:8}}>
+                        <Btn v="ghost" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportDocx(actTipo,"Acta","",actResult);}}>Word</Btn>
+                        <Btn v="ghost" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportPdf(actTipo,"Acta","",actResult);}}>PDF</Btn>
+                      </div>
+                    </div>
+                    <MDView text={actResult}/>
+                  </div>
+                ):(
+                  <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
+                    <i className="ti ti-file-description" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
+                    <h3 style={{color:C.textMuted,marginBottom:8}}>El acta aparecerá acá</h3>
+                    <p style={{fontSize:13}}>Completá el formulario y generá el acta.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {(view==="informes"||view==="acompanamiento")&&(
             <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
               <i className="ti ti-tools" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
               <h3 style={{color:C.textMuted,marginBottom:8}}>Próximamente</h3>
