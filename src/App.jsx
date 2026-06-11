@@ -3,6 +3,7 @@ import supabase from "./supabase.js";
 import { exportDocx, exportPdf, exportZip } from "./exportUtils.js";
 import { useTour, TourTooltip, TourLaunchButton, WelcomeModal } from "./TourSystem.jsx";
 import { generatePptx } from "./pptxUtils.js";
+import DirectivoDashboard from "./DirectivoDashboard.jsx";
 
 const NAV = [
   { id:"dashboard",  label:"Inicio",              icon:"ti-layout-dashboard" },
@@ -1165,6 +1166,7 @@ function AuthScreen({onAuth}) {
   var [password,setPass]=useState("");
   var [name,setName]=useState("");
   var [school,setSchool]=useState("");
+  var [role,setRole]=useState("docente");
   var [schoolSuggestions,setSchoolSuggestions]=useState([]);
   var [loading,setLoading]=useState(false);
   var [error,setError]=useState("");
@@ -1182,7 +1184,7 @@ function AuthScreen({onAuth}) {
   async function handleRegister() {
     if(!email||!password||!name) return;
     setLoading(true);setError("");
-    var result=await supabase.auth.signUp({email,password,options:{data:{name,school:school||""}}});
+    var result=await supabase.auth.signUp({email,password,options:{data:{name,school:school||"",role}}});
     if(result.error){setError(result.error.message);}
     else{
       if(school) dbAddOrUpdateSchool(school,"").catch(function(){});
@@ -1219,6 +1221,12 @@ function AuthScreen({onAuth}) {
           </div>
           {mode==="register"&&(
             <div>
+              <label style={lbl}>SOY</label>
+              <div style={{display:"flex",gap:8,marginBottom:12}}>
+                {[{id:"docente",label:"Docente"},{id:"directivo",label:"Directivo"}].map(function(r){
+                  return <button key={r.id} type="button" style={{flex:1,padding:"9px 0",borderRadius:4,border:"1px solid "+(role===r.id?C.accent:C.border),background:role===r.id?C.accentBg:"transparent",color:role===r.id?C.accent:C.textMuted,cursor:"pointer",fontWeight:role===r.id?700:400,fontSize:13,fontFamily:"Quicksand,sans-serif"}} onClick={function(){setRole(r.id);}}>{r.label}</button>;
+                })}
+              </div>
               <label style={lbl}>NOMBRE</label>
               <input style={Object.assign({},inp,{marginBottom:12})} value={name} onChange={function(e){setName(e.target.value);}} placeholder="Prof. Garcia"/>
               <label style={lbl}>COLEGIO (opcional)</label>
@@ -1282,6 +1290,7 @@ export default function AulaXpro() {
   var [subjects,setSubjects]=useState([]);
   var [curSid,setCurSid]=useState(null);
   var [view,setView]=useState("dashboard");
+  var [verComoDocente,setVerComoDocente]=useState(false);
   var [bar,setBar]=useState(true);
   var [mobileMenu,setMobileMenu]=useState(false);
   var [subjModal,setSubjModal]=useState(false);
@@ -1764,6 +1773,9 @@ useEffect(function(){
   );
 
   if(!authUser) return <AuthScreen onAuth={setAuthUser}/>;
+  if(authUser && authUser.user_metadata && authUser.user_metadata.role==="directivo" && !verComoDocente && !showResetPassword){
+    return <DirectivoDashboard authUser={authUser} onVerComoDocente={function(){setVerComoDocente(true);}} onSignOut={signOut}/>;
+  }
 
   if(showResetPassword) return (
     <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:C.bg}}>
