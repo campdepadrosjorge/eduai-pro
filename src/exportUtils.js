@@ -397,4 +397,71 @@ export async function exportZip(items) {
   const blob = await zip.generateAsync({ type: "blob" });
   downloadBlob(blob, "AulaXpro_Biblioteca.zip");
 }
- 
+ export async function exportInformeMarcado(nombreAlumno, textoOriginal, sugerencias) {
+  const children = [];
+
+  // Título
+  children.push(new Paragraph({
+    children: [new TextRun({ text: "Informe revisado: " + nombreAlumno, bold: true, size: SZ_H1, font: F, color: "1a2640" })],
+    spacing: { after: 200 },
+  }));
+
+  // Aviso
+  children.push(new Paragraph({
+    children: [new TextRun({ text: "Documento con sugerencias del equipo directivo. Las observaciones están resaltadas al final.", italics: true, size: SZ_SUB, font: F, color: "888888" })],
+    spacing: { after: 300 },
+    border: { bottom: { color: "0d9488", space: 4, style: BorderStyle.SINGLE, size: 12 } },
+  }));
+
+  // Texto original del informe
+  children.push(new Paragraph({
+    children: [new TextRun({ text: "INFORME ORIGINAL", bold: true, size: SZ_H3, font: F, color: "0d5c8c" })],
+    spacing: { before: 200, after: 150 },
+  }));
+
+  textoOriginal.split("\n").forEach(function(linea) {
+    if (linea.trim()) {
+      children.push(new Paragraph({
+        children: [new TextRun({ text: linea, size: SZ_TXT, font: F, color: "222222" })],
+        spacing: { after: 100 },
+      }));
+    }
+  });
+
+  // Sugerencias
+  children.push(new Paragraph({
+    children: [new TextRun({ text: "SUGERENCIAS PARA CORREGIR", bold: true, size: SZ_H3, font: F, color: "0d5c8c" })],
+    spacing: { before: 400, after: 150 },
+    border: { top: { color: "0d9488", space: 4, style: BorderStyle.SINGLE, size: 12 } },
+  }));
+
+  if (!sugerencias || !sugerencias.length) {
+    children.push(new Paragraph({
+      children: [new TextRun({ text: "El informe no requiere modificaciones. Está listo para enviar a las familias.", size: SZ_TXT, font: F, color: "059669" })],
+      spacing: { after: 100 },
+    }));
+  } else {
+    sugerencias.forEach(function(s, i) {
+      // Fragmento citado
+      children.push(new Paragraph({
+        children: [
+          new TextRun({ text: (i+1) + ". Sobre: ", bold: true, size: SZ_TXT, font: F, color: "1a2640" }),
+          new TextRun({ text: "\u201C" + (s.fragmento || "") + "\u201D", italics: true, size: SZ_TXT, font: F, color: "555555", shading: { type: ShadingType.CLEAR, fill: "fff3cd" } }),
+        ],
+        spacing: { before: 150, after: 60 },
+      }));
+      // Sugerencia
+      children.push(new Paragraph({
+        children: [
+          new TextRun({ text: "Sugerencia: ", bold: true, size: SZ_TXT, font: F, color: "0d7a60" }),
+          new TextRun({ text: s.sugerencia || "", size: SZ_TXT, font: F, color: "222222" }),
+        ],
+        spacing: { after: 120 },
+      }));
+    });
+  }
+
+  const doc = new Document({ sections: [{ children: children }] });
+  const blob = await Packer.toBlob(doc);
+  downloadBlob(blob, sanitize(nombreAlumno) + " - revisado.docx");
+}

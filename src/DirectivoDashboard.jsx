@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { exportDocx, exportPdf } from "./exportUtils.js";
-import { sysComunicado, userComunicado, sysActa, userActa } from "./directivoPrompts.js";
+import { exportDocx, exportPdf, exportInformeMarcado } from "./exportUtils.js";
+import { sysComunicado, userComunicado, sysActa, userActa, sysCorreccionInforme, userCorreccionInforme } from "./directivoPrompts.js";
 
 const C = {
   bg:"#f0efea", surf:"#ffffff", card:"#ffffff", border:"#d4cfc6",
@@ -88,6 +88,35 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
       setActResult(r);
     }catch(e){setActErr("Error: "+e.message);}
     setActLoading(false);
+  }
+// Estado correccion de informes
+  var [infNivel,setInfNivel] = useState("Sala de 5 años");
+  var [infPrioridad,setInfPrioridad] = useState("");
+  var [infFile,setInfFile] = useState(null);
+  var [infLoading,setInfLoading] = useState(false);
+  var [infErr,setInfErr] = useState("");
+  var [infResult,setInfResult] = useState(null);
+
+  async function corregirInforme(){
+    if(!infFile) return;
+    setInfLoading(true);setInfErr("");setInfResult(null);
+    try{
+      var mammoth = await import("mammoth");
+      var buffer = await infFile.arrayBuffer();
+      var extraction = await mammoth.extractRawText({arrayBuffer:buffer});
+      var texto = extraction.value;
+      if(!texto || !texto.trim()) throw new Error("No se pudo extraer texto del documento.");
+
+      var sys = sysCorreccionInforme();
+      var usr = userCorreccionInforme(infNivel, texto, infPrioridad);
+      var r = await callClaude(sys, [{role:"user",content:usr}], 3000);
+      var clean = r.replace(/```json\n?/g,"").replace(/```\n?/g,"").trim();
+      var sugerencias = JSON.parse(clean);
+
+      var nombreAlumno = infFile.name.replace(/\.(docx|doc)$/i,"");
+      setInfResult({nombre:nombreAlumno, texto:texto, sugerencias:sugerencias});
+    }catch(e){setInfErr("Error: "+e.message);}
+    setInfLoading(false);
   }
 
   async function generarComunicado(){
@@ -220,7 +249,56 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
             </div>
           )}
 
-          {(view==="informes"||view==="acompanamiento")&&(
+          {view==="informes"&&(
+            <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:18}}>
+              <div style={card}>
+                <h3 style={{margin:"0 0 4px",fontSize:17,fontWeight:700,color:C.text}}>Corregir informe</h3>
+                <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Subí un informe en Word (.docx) y la IA marca sugerencias para que la docente corrija.</p>
+                <label style={lbl}>NIVEL / SALA</label>
+                <input style={Object.assign({},inp,{marginBottom:12})} value={infNivel} onChange={function(e){setInfNivel(e.target.value);}} placeholder="Ej: Sala de 5 años"/>
+                <label style={lbl}>PRESTAR ATENCIÓN A (opcional)</label>
+                <textarea style={Object.assign({},inp,{height:70,resize:"vertical",marginBottom:12})} value={infPrioridad} onChange={function(e){setInfPrioridad(e.target.value);}} placeholder="Ej: cuidar el tono al describir dificultades"/>
+                <label style={lbl}>INFORME (.docx) *</label>
+                <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+(infFile?C.accent:C.border),borderRadius:4,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:infFile?C.accent:C.text,marginBottom:18}}>
+                  <i className="ti ti-file-upload" style={{fontSize:14}}/>
+                  {infFile?infFile.name:"Subir documento"}
+                  <input type="file" accept=".docx" style={{display:"none"}} onChange={function(e){setInfFile(e.target.files[0]);setInfResult(null);setInfErr("");}}/>
+                </label>
+                <Btn onClick={corregirInforme} disabled={infLoading||!infFile} st={{width:"100%",justifyContent:"center"}}>
+                  {infLoading?"Revisando...":"Revisar informe"}
+                </Btn>
+                {infErr&&<div style={{marginTop:12,color:C.red,fontSize:13,background:"#fee2e2",padding:"10px 14px",borderRadius:4}}>{infErr}</div>}
+              </div>
+              <div>
+                {infResult?(
+                  <div style={card}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                      <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8}}>{infResult.sugerencias.length?infResult.sugerencias.length+" SUGERENCIAS":"SIN CAMBIOS NECESARIOS"}</div>
+                      <Btn v="ghost" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportInformeMarcado(infResult.nombre,infResult.texto,infResult.sugerencias);}}>Descargar .docx marcado</Btn>
+                    </div>
+                    {!infResult.sugerencias.length?(
+                      <div style={{color:C.green,fontSize:14,padding:"8px 0"}}>El informe está bien. No requiere modificaciones.</div>
+                    ):infResult.sugerencias.map(function(s,i){
+                      return (
+                        <div key={i} style={{borderBottom:"1px solid "+C.border,padding:"12px 0"}}>
+                          <div style={{fontSize:13,color:C.textMuted,fontStyle:"italic",marginBottom:6,background:"#fff3cd",padding:"6px 10px",borderRadius:4}}>"{s.fragmento}"</div>
+                          <div style={{fontSize:13,color:C.text}}><span style={{fontWeight:700,color:C.accent}}>Sugerencia: </span>{s.sugerencia}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ):(
+                  <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
+                    <i className="ti ti-report" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
+                    <h3 style={{color:C.textMuted,marginBottom:8}}>Las sugerencias aparecerán acá</h3>
+                    <p style={{fontSize:13}}>Subí un informe y la IA lo revisa.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {view==="acompanamiento"&&(
             <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
               <i className="ti ti-tools" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
               <h3 style={{color:C.textMuted,marginBottom:8}}>Próximamente</h3>
