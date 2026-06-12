@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { exportDocx, exportPdf, exportInformeMarcado } from "./exportUtils.js";
-import { sysComunicado, userComunicado, sysActa, userActa, sysCorreccionInforme, userCorreccionInforme } from "./directivoPrompts.js";
+import { sysComunicado, userComunicado, sysActa, userActa, sysCorreccionInforme, userCorreccionInforme, sysAcompanamiento, userAcompanamiento } from "./directivoPrompts.js";
 
 const C = {
   bg:"#f0efea", surf:"#ffffff", card:"#ffffff", border:"#d4cfc6",
@@ -167,6 +167,25 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
       await exportMod.exportInformesZip(informes);
     }catch(e){setInfZipErr("Error: "+e.message);}
     setInfZipLoading(false);
+  }
+
+  // Estado acompañamiento docente
+  var [acoTipo,setAcoTipo] = useState("completo");
+  var [acoFoco,setAcoFoco] = useState("Gestión del aula");
+  var [acoContexto,setAcoContexto] = useState("");
+  var [acoSituacion,setAcoSituacion] = useState("");
+  var [acoResult,setAcoResult] = useState("");
+  var [acoLoading,setAcoLoading] = useState(false);
+  var [acoErr,setAcoErr] = useState("");
+
+  async function generarAcompanamiento(){
+    if(!acoSituacion.trim()) return;
+    setAcoLoading(true);setAcoResult("");setAcoErr("");
+    try{
+      var r = await callClaude(sysAcompanamiento(), [{role:"user",content:userAcompanamiento(acoTipo,acoFoco,acoContexto,acoSituacion)}], 4000);
+      setAcoResult(r);
+    }catch(e){setAcoErr("Error: "+e.message);}
+    setAcoLoading(false);
   }
 
   async function generarComunicado(){
@@ -378,10 +397,50 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
           )}
 
           {view==="acompanamiento"&&(
-            <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
-              <i className="ti ti-tools" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
-              <h3 style={{color:C.textMuted,marginBottom:8}}>Próximamente</h3>
-              <p style={{fontSize:13}}>Esta herramienta se va a habilitar en una próxima actualización.</p>
+            <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:18}}>
+              <div style={card}>
+                <h3 style={{margin:"0 0 4px",fontSize:17,fontWeight:700,color:C.text}}>Acompañamiento docente</h3>
+                <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Describí la situación del docente y obtené un plan concreto y formativo.</p>
+                <label style={lbl}>QUÉ NECESITÁS</label>
+                <select style={Object.assign({},sel,{width:"100%",marginBottom:12})} value={acoTipo} onChange={function(e){setAcoTipo(e.target.value);}}>
+                  <option value="completo">Plan de acompañamiento completo</option>
+                  <option value="conversacion">Guion para conversación de devolución</option>
+                  <option value="observacion">Pauta de observación de clase</option>
+                  <option value="estrategias">Estrategias puntuales</option>
+                </select>
+                <label style={lbl}>ÁREA DE FOCO</label>
+                <select style={Object.assign({},sel,{width:"100%",marginBottom:12})} value={acoFoco} onChange={function(e){setAcoFoco(e.target.value);}}>
+                  {["Gestión del aula","Planificación","Vínculo con alumnos","Estrategias didácticas","Evaluación","Trabajo con familias","Integración al equipo","Otra"].map(function(f){return <option key={f}>{f}</option>;})}
+                </select>
+                <label style={lbl}>CONTEXTO DEL DOCENTE (opcional)</label>
+                <input style={Object.assign({},inp,{marginBottom:12})} value={acoContexto} onChange={function(e){setAcoContexto(e.target.value);}} placeholder="Ej: Docente novel, primer año"/>
+                <label style={lbl}>SITUACIÓN *</label>
+                <textarea style={Object.assign({},inp,{height:140,resize:"vertical",marginBottom:18})} value={acoSituacion} onChange={function(e){setAcoSituacion(e.target.value);}} placeholder="Describí lo que observás: fortalezas, dificultades, lo que pasa en el aula..."/>
+                <Btn onClick={generarAcompanamiento} disabled={acoLoading||!acoSituacion.trim()} st={{width:"100%",justifyContent:"center"}}>
+                  {acoLoading?"Generando...":"Generar plan"}
+                </Btn>
+                {acoErr&&<div style={{marginTop:12,color:C.red,fontSize:13,background:"#fee2e2",padding:"10px 14px",borderRadius:4}}>{acoErr}</div>}
+              </div>
+              <div>
+                {acoResult?(
+                  <div style={card}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                      <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8}}>PLAN GENERADO</div>
+                      <div style={{display:"flex",gap:8}}>
+                        <Btn v="ghost" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportDocx("Acompañamiento docente","Acompañamiento","",acoResult);}}>Word</Btn>
+                        <Btn v="ghost" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportPdf("Acompañamiento docente","Acompañamiento","",acoResult);}}>PDF</Btn>
+                      </div>
+                    </div>
+                    <MDView text={acoResult}/>
+                  </div>
+                ):(
+                  <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
+                    <i className="ti ti-users-group" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
+                    <h3 style={{color:C.textMuted,marginBottom:8}}>El plan aparecerá acá</h3>
+                    <p style={{fontSize:13}}>Describí la situación y generá el plan de acompañamiento.</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

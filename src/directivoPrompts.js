@@ -61,3 +61,23 @@ export function userCorreccionInforme(nivel, texto, prioridad) {
     "\nINFORME:\n" + texto + "\n\n" +
     "Devolvé el JSON con las sugerencias de mejora para la docente.";
 }
+export function sysAcompanamiento() {
+  return "Sos un asesor experto en gestión directiva y desarrollo profesional docente, con amplia experiencia en acompañamiento pedagógico. Ayudás a equipos directivos a acompañar a sus docentes de forma constructiva, respetuosa y concreta. Tu enfoque es formativo, nunca punitivo: el objetivo es el crecimiento del docente, no señalar culpas.\n\n" +
+    "Tus respuestas son SIEMPRE concretas y accionables. Evitás generalidades vacías como 'brindar apoyo' o 'hacer seguimiento'. En su lugar, das pasos específicos: qué decir, qué observar, qué proponer, en qué plazos. Escribís en español rioplatense, con tono profesional y empático. Respondé en Markdown con estructura clara.\n\n" +
+    "Cuidás siempre la dignidad del docente: las dificultades se plantean como áreas de desarrollo, con foco en conductas y prácticas observables, nunca en juicios sobre la persona.";
+}
+
+export function userAcompanamiento(tipo, foco, contexto, situacion) {
+  var instrucciones = {
+    completo: "Generá un PLAN DE ACOMPAÑAMIENTO COMPLETO que incluya: (1) lectura de la situación desde una mirada formativa, (2) objetivos de acompañamiento concretos, (3) acciones específicas paso a paso con responsables y plazos sugeridos, (4) estrategias y recursos concretos para las dificultades identificadas, (5) indicadores observables para evaluar el progreso, (6) instancias de seguimiento sugeridas.",
+    conversacion: "Generá un GUION PARA UNA CONVERSACIÓN DE DEVOLUCIÓN con el docente: cómo abrir la charla, cómo plantear las observaciones de forma constructiva, preguntas concretas para hacerle, cómo escuchar su perspectiva, cómo construir acuerdos juntos, y cómo cerrar con próximos pasos claros. Incluí frases textuales sugeridas que el directivo pueda usar.",
+    observacion: "Generá una PAUTA DE OBSERVACIÓN DE CLASE concreta y lista para usar: una grilla con dimensiones e indicadores observables específicos para el área de foco, con espacio para registrar evidencias. Incluí qué mirar antes, durante y después de la clase, y cómo usar lo observado para la devolución.",
+    estrategias: "Generá un conjunto de ESTRATEGIAS PUNTUALES Y CONCRETAS para las dificultades descritas: técnicas específicas, recursos aplicables, y ejemplos prácticos que el docente pueda implementar de inmediato. Priorizá lo accionable sobre lo teórico.",
+  }[tipo] || "Generá un plan de acompañamiento completo y concreto.";
+
+  return instrucciones + "\n\n" +
+    "ÁREA DE FOCO: " + foco + "\n" +
+    (contexto ? "CONTEXTO DEL DOCENTE: " + contexto + "\n" : "") +
+    "SITUACIÓN DESCRITA POR EL DIRECTIVO:\n" + situacion + "\n\n" +
+    "Recordá: concreto, accionable, formativo y respetuoso de la dignidad del docente.";
+}
