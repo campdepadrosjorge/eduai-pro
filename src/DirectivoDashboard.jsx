@@ -20,15 +20,39 @@ const DIR_NAV = [
   { id:"acompanamiento", label:"Acompañamiento Docente", icon:"ti-users-group" },
 ];
 
-async function callClaude(system, messages, maxTokens) {
+async function callClaude(system, messages, maxTokens, onStream) {
   if (!maxTokens) maxTokens = 4000;
+  var useStreaming = typeof onStream === "function";
   var res = await fetch("/api/generate", {
     method:"POST", headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({ system, messages, maxTokens, stream:false }),
+    body:JSON.stringify({ system, messages, maxTokens, stream:useStreaming }),
   });
   if (!res.ok) { var err = {}; try { err = await res.json(); } catch(e) {} throw new Error(err.error || "Error " + res.status); }
-  var data = await res.json();
-  return data.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("");
+  if (!useStreaming) {
+    var data = await res.json();
+    return data.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("");
+  }
+  var reader = res.body.getReader();
+  var decoder = new TextDecoder();
+  var fullText = "";
+  while(true) {
+    var result = await reader.read();
+    if(result.done) break;
+    var chunk = decoder.decode(result.value, {stream:true});
+    var lines = chunk.split("\n");
+    for(var i=0;i<lines.length;i++) {
+      var line = lines[i];
+      if(!line.startsWith("data: ")) continue;
+      var data2 = line.slice(6);
+      if(data2 === "[DONE]") break;
+      try {
+        var parsed = JSON.parse(data2);
+        if(parsed.text) { fullText += parsed.text; onStream(fullText); }
+        if(parsed.error) throw new Error(parsed.error);
+      } catch(e) {}
+    }
+  }
+  return fullText;
 }
 
 function MDView({text,maxH}) {
@@ -84,7 +108,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
     if(!actTemas.trim()) return;
     setActLoading(true);setActResult("");setActErr("");
     try{
-      var r = await callClaude(sysActa(), [{role:"user",content:userActa(actTipo,actDatos,actTemas,actAcuerdos)}], 3500);
+      var r = await callClaude(sysActa(), [{role:"user",content:userActa(actTipo,actDatos,actTemas,actAcuerdos)}], 3500, function(partial){setActResult(partial);});
       setActResult(r);
     }catch(e){setActErr("Error: "+e.message);}
     setActLoading(false);
@@ -182,7 +206,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
     if(!acoSituacion.trim()) return;
     setAcoLoading(true);setAcoResult("");setAcoErr("");
     try{
-      var r = await callClaude(sysAcompanamiento(), [{role:"user",content:userAcompanamiento(acoTipo,acoFoco,acoContexto,acoSituacion)}], 4000);
+      var r = await callClaude(sysAcompanamiento(), [{role:"user",content:userAcompanamiento(acoTipo,acoFoco,acoContexto,acoSituacion)}], 4000, function(partial){setAcoResult(partial);});
       setAcoResult(r);
     }catch(e){setAcoErr("Error: "+e.message);}
     setAcoLoading(false);
@@ -192,7 +216,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
     if(!comAsunto.trim()) return;
     setComLoading(true);setComResult("");setComErr("");
     try{
-      var r = await callClaude(sysComunicado(), [{role:"user",content:userComunicado(comDest,comAsunto,comDetalles,comTono)}], 3000);
+      var r = await callClaude(sysComunicado(), [{role:"user",content:userComunicado(comDest,comAsunto,comDetalles,comTono)}], 3000, function(partial){setComResult(partial);});
       setComResult(r);
     }catch(e){setComErr("Error: "+e.message);}
     setComLoading(false);
