@@ -479,3 +479,34 @@ export async function exportInformesZip(informes) {
   const zipBlob = await zip.generateAsync({ type: "blob" });
   downloadBlob(zipBlob, "informes-revisados.zip");
 }
+async function buildInformeCorregidoBlob(nombreAlumno, textoCorregido) {
+  const children = [];
+  textoCorregido.split("\n").forEach(function(linea) {
+    if (linea.trim()) {
+      children.push(new Paragraph({
+        children: [new TextRun({ text: linea, size: SZ_TXT, font: F, color: "222222" })],
+        spacing: { after: 120 },
+      }));
+    } else {
+      children.push(new Paragraph({ children: [new TextRun({ text: "", size: SZ_TXT, font: F })] }));
+    }
+  });
+  const doc = new Document({ sections: [{ children: children }] });
+  return await Packer.toBlob(doc);
+}
+
+export async function exportInformeCorregido(nombreAlumno, textoCorregido) {
+  const blob = await buildInformeCorregidoBlob(nombreAlumno, textoCorregido);
+  downloadBlob(blob, sanitize(nombreAlumno) + " - corregido.docx");
+}
+
+export async function exportInformesCorregidosZip(informes) {
+  const { default: JSZip } = await import("jszip");
+  const zip = new JSZip();
+  for (const inf of informes) {
+    const blob = await buildInformeCorregidoBlob(inf.nombre, inf.textoCorregido);
+    zip.file(sanitize(inf.nombre) + " - corregido.docx", blob);
+  }
+  const zipBlob = await zip.generateAsync({ type: "blob" });
+  downloadBlob(zipBlob, "informes-corregidos.zip");
+}

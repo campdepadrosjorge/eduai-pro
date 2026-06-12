@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { exportDocx, exportPdf, exportInformeMarcado } from "./exportUtils.js";
+import { exportDocx, exportPdf, exportInformeCorregido } from "./exportUtils.js";
 import { sysComunicado, userComunicado, sysActa, userActa, sysCorreccionInforme, userCorreccionInforme, sysAcompanamiento, userAcompanamiento } from "./directivoPrompts.js";
 
 const C = {
@@ -133,12 +133,10 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
 
       var sys = sysCorreccionInforme();
       var usr = userCorreccionInforme(infNivel, texto, infPrioridad);
-      var r = await callClaude(sys, [{role:"user",content:usr}], 3000);
-      var clean = r.replace(/```json\n?/g,"").replace(/```\n?/g,"").trim();
-      var sugerencias = JSON.parse(clean);
+      var r = await callClaude(sys, [{role:"user",content:usr}], 4000);
 
       var nombreAlumno = infFile.name.replace(/\.(docx|doc)$/i,"");
-      setInfResult({nombre:nombreAlumno, texto:texto, sugerencias:sugerencias});
+      setInfResult({nombre:nombreAlumno, textoOriginal:texto, textoCorregido:r.trim()});
     }catch(e){setInfErr("Error: "+e.message);}
     setInfLoading(false);
   }
@@ -175,12 +173,10 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
           var texto = extraction.value;
           if(!texto || !texto.trim()) continue;
 
-          var r = await callClaude(sysCorreccionInforme(), [{role:"user",content:userCorreccionInforme(infNivel, texto, infPrioridad)}], 3000);
-          var clean = r.replace(/```json\n?/g,"").replace(/```\n?/g,"").trim();
-          var sugerencias = JSON.parse(clean);
+          var r = await callClaude(sysCorreccionInforme(), [{role:"user",content:userCorreccionInforme(infNivel, texto, infPrioridad)}], 4000);
 
           var nombre = docxFiles[i].name.split("/").pop().replace(/\.docx$/i,"");
-          informes.push({nombre:nombre, texto:texto, sugerencias:sugerencias});
+          informes.push({nombre:nombre, textoCorregido:r.trim()});
           setInfZipDone(informes.length);
         }catch(e){ /* salteamos el que falle y seguimos */ }
       }
@@ -188,7 +184,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
       if(!informes.length) throw new Error("No se pudo procesar ningún informe del ZIP.");
 
       var exportMod = await import("./exportUtils.js");
-      await exportMod.exportInformesZip(informes);
+      await exportMod.exportInformesCorregidosZip(informes);
     }catch(e){setInfZipErr("Error: "+e.message);}
     setInfZipLoading(false);
   }
@@ -395,19 +391,10 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                 {infResult?(
                   <div style={card}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-                      <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8}}>{infResult.sugerencias.length?infResult.sugerencias.length+" SUGERENCIAS":"SIN CAMBIOS NECESARIOS"}</div>
-                      <Btn v="ghost" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportInformeMarcado(infResult.nombre,infResult.texto,infResult.sugerencias);}}>Descargar .docx marcado</Btn>
+                      <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8}}>INFORME CORREGIDO</div>
+                      <Btn v="ghost" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportInformeCorregido(infResult.nombre,infResult.textoCorregido);}}>Descargar .docx corregido</Btn>
                     </div>
-                    {!infResult.sugerencias.length?(
-                      <div style={{color:C.green,fontSize:14,padding:"8px 0"}}>El informe está bien. No requiere modificaciones.</div>
-                    ):infResult.sugerencias.map(function(s,i){
-                      return (
-                        <div key={i} style={{borderBottom:"1px solid "+C.border,padding:"12px 0"}}>
-                          <div style={{fontSize:13,color:C.textMuted,fontStyle:"italic",marginBottom:6,background:"#fff3cd",padding:"6px 10px",borderRadius:4}}>"{s.fragmento}"</div>
-                          <div style={{fontSize:13,color:C.text}}><span style={{fontWeight:700,color:C.accent}}>Sugerencia: </span>{s.sugerencia}</div>
-                        </div>
-                      );
-                    })}
+                    <div style={{background:"#f9f9f7",border:"1px solid "+C.border,borderRadius:4,padding:"15px 19px",maxHeight:560,overflow:"auto",fontSize:14,lineHeight:1.7,whiteSpace:"pre-wrap",color:C.text}}>{infResult.textoCorregido}</div>
                   </div>
                 ):(
                   <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
