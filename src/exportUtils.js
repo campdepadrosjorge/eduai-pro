@@ -397,7 +397,7 @@ export async function exportZip(items) {
   const blob = await zip.generateAsync({ type: "blob" });
   downloadBlob(blob, "AulaXpro_Biblioteca.zip");
 }
- export async function exportInformeMarcado(nombreAlumno, textoOriginal, sugerencias) {
+ async function buildInformeMarcadoBlob(nombreAlumno, textoOriginal, sugerencias) {
   const children = [];
 
   // Título
@@ -462,6 +462,20 @@ export async function exportZip(items) {
   }
 
   const doc = new Document({ sections: [{ children: children }] });
-  const blob = await Packer.toBlob(doc);
+  return await Packer.toBlob(doc);
+}
+
+export async function exportInformeMarcado(nombreAlumno, textoOriginal, sugerencias) {
+  const blob = await buildInformeMarcadoBlob(nombreAlumno, textoOriginal, sugerencias);
   downloadBlob(blob, sanitize(nombreAlumno) + " - revisado.docx");
+}
+export async function exportInformesZip(informes) {
+  const { default: JSZip } = await import("jszip");
+  const zip = new JSZip();
+  for (const inf of informes) {
+    const blob = await buildInformeMarcadoBlob(inf.nombre, inf.texto, inf.sugerencias);
+    zip.file(sanitize(inf.nombre) + " - revisado.docx", blob);
+  }
+  const zipBlob = await zip.generateAsync({ type: "blob" });
+  downloadBlob(zipBlob, "informes-revisados.zip");
 }

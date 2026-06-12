@@ -118,6 +118,56 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
     }catch(e){setInfErr("Error: "+e.message);}
     setInfLoading(false);
   }
+// Estado correccion por lote (ZIP)
+  var [infZip,setInfZip] = useState(null);
+  var [infZipLoading,setInfZipLoading] = useState(false);
+  var [infZipProgress,setInfZipProgress] = useState(0);
+  var [infZipTotal,setInfZipTotal] = useState(0);
+  var [infZipErr,setInfZipErr] = useState("");
+  var [infZipDone,setInfZipDone] = useState(0);
+
+  async function corregirLote(){
+    if(!infZip) return;
+    setInfZipLoading(true);setInfZipErr("");setInfZipProgress(0);setInfZipDone(0);
+    try{
+      var JSZip = (await import("jszip")).default;
+      var mammoth = await import("mammoth");
+      var zip = await JSZip.loadAsync(infZip);
+
+      var docxFiles = [];
+      zip.forEach(function(path, file){
+        if(/\.docx$/i.test(path) && !path.startsWith("__MACOSX") && !file.dir) docxFiles.push(file);
+      });
+
+      if(!docxFiles.length) throw new Error("El ZIP no contiene archivos .docx");
+      setInfZipTotal(docxFiles.length);
+
+      var informes = [];
+      for(var i=0;i<docxFiles.length;i++){
+        setInfZipProgress(i+1);
+        try{
+          var buffer = await docxFiles[i].async("arraybuffer");
+          var extraction = await mammoth.extractRawText({arrayBuffer:buffer});
+          var texto = extraction.value;
+          if(!texto || !texto.trim()) continue;
+
+          var r = await callClaude(sysCorreccionInforme(), [{role:"user",content:userCorreccionInforme(infNivel, texto, infPrioridad)}], 3000);
+          var clean = r.replace(/```json\n?/g,"").replace(/```\n?/g,"").trim();
+          var sugerencias = JSON.parse(clean);
+
+          var nombre = docxFiles[i].name.split("/").pop().replace(/\.docx$/i,"");
+          informes.push({nombre:nombre, texto:texto, sugerencias:sugerencias});
+          setInfZipDone(informes.length);
+        }catch(e){ /* salteamos el que falle y seguimos */ }
+      }
+
+      if(!informes.length) throw new Error("No se pudo procesar ningún informe del ZIP.");
+
+      var exportMod = await import("./exportUtils.js");
+      await exportMod.exportInformesZip(informes);
+    }catch(e){setInfZipErr("Error: "+e.message);}
+    setInfZipLoading(false);
+  }
 
   async function generarComunicado(){
     if(!comAsunto.trim()) return;
@@ -268,6 +318,35 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                   {infLoading?"Revisando...":"Revisar informe"}
                 </Btn>
                 {infErr&&<div style={{marginTop:12,color:C.red,fontSize:13,background:"#fee2e2",padding:"10px 14px",borderRadius:4}}>{infErr}</div>}
+
+                <div style={{marginTop:20,paddingTop:18,borderTop:"1px solid "+C.border}}>
+                  <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:4}}>Corrección por lote</div>
+                  <p style={{fontSize:12,color:C.textDim,marginBottom:12}}>Subí un ZIP con varios informes .docx (un archivo por alumno). La IA revisa todos y devolvés un ZIP con cada informe marcado. Nombrá cada archivo con el nombre del alumno.</p>
+                  <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+(infZip?C.accent:C.border),borderRadius:4,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:infZip?C.accent:C.text,marginBottom:12}}>
+                    <i className="ti ti-file-zip" style={{fontSize:14}}/>
+                    {infZip?infZip.name:"Subir ZIP de informes"}
+                    <input type="file" accept=".zip" style={{display:"none"}} onChange={function(e){setInfZip(e.target.files[0]);setInfZipErr("");setInfZipDone(0);setInfZipProgress(0);}}/>
+                  </label>
+                  {infZip&&(
+                    <Btn onClick={corregirLote} disabled={infZipLoading} st={{width:"100%",justifyContent:"center"}}>
+                      {infZipLoading?"Procesando "+infZipProgress+" de "+infZipTotal+"...":"Corregir todos"}
+                    </Btn>
+                  )}
+                  {infZipLoading&&infZipTotal>0&&(
+                    <div style={{marginTop:10}}>
+                      <div style={{background:C.bg,borderRadius:4,height:6,overflow:"hidden"}}>
+                        <div style={{background:C.accent,height:6,width:Math.round((infZipProgress/infZipTotal)*100)+"%",transition:"width .2s"}}/>
+                      </div>
+                      <p style={{fontSize:11,color:C.textDim,marginTop:6}}>No cierres esta ventana hasta que termine.</p>
+                    </div>
+                  )}
+                  {infZipDone>0&&!infZipLoading&&(
+                    <div style={{marginTop:10,color:C.green,fontSize:13,display:"flex",alignItems:"center",gap:5}}>
+                      <i className="ti ti-check" style={{fontSize:14}}/>{infZipDone+" informes revisados. Se descargó el ZIP."}
+                    </div>
+                  )}
+                  {infZipErr&&<div style={{marginTop:12,color:C.red,fontSize:13,background:"#fee2e2",padding:"10px 14px",borderRadius:4}}>{infZipErr}</div>}
+                </div>
               </div>
               <div>
                 {infResult?(
