@@ -1305,6 +1305,7 @@ export default function AulaXpro() {
   var [curSid,setCurSid]=useState(null);
   var [view,setView]=useState("dashboard");
   var [verComoDocente,setVerComoDocente]=useState(false);
+  var [adminVerDirectivos,setAdminVerDirectivos]=useState(false);
   var [bar,setBar]=useState(true);
   var [mobileMenu,setMobileMenu]=useState(false);
   var [subjModal,setSubjModal]=useState(false);
@@ -1787,8 +1788,10 @@ useEffect(function(){
   );
 
   if(!authUser) return <AuthScreen onAuth={setAuthUser}/>;
-  if(authUser && authUser.user_metadata && authUser.user_metadata.role==="directivo" && !verComoDocente && !showResetPassword){
-    return <DirectivoDashboard authUser={authUser} onVerComoDocente={function(){setVerComoDocente(true);}} onSignOut={signOut}/>;
+  var esDirectivo = authUser && authUser.user_metadata && authUser.user_metadata.role==="directivo";
+  var esAdmin = authUser && authUser.email===import.meta.env.VITE_ADMIN_EMAIL;
+  if(((esDirectivo && !verComoDocente) || (esAdmin && adminVerDirectivos)) && !showResetPassword){
+    return <DirectivoDashboard authUser={authUser} onVerComoDocente={function(){setVerComoDocente(true);setAdminVerDirectivos(false);}} onSignOut={signOut}/>;
   }
 
   if(showResetPassword) return (
@@ -1990,6 +1993,11 @@ useEffect(function(){
           {authUser && authUser.user_metadata && authUser.user_metadata.role==="directivo" && verComoDocente && (
             <Btn v="accent" st={{padding:"5px 13px",fontSize:12}} onClick={function(){setVerComoDocente(false);}}>
               <i className="ti ti-arrow-back-up" style={{fontSize:13,marginRight:3}}/>Volver a directivos
+            </Btn>
+          )}
+          {authUser && authUser.email===import.meta.env.VITE_ADMIN_EMAIL && (
+            <Btn v="accent" st={{padding:"5px 13px",fontSize:12}} onClick={function(){setAdminVerDirectivos(true);setVerComoDocente(false);}}>
+              <i className="ti ti-briefcase" style={{fontSize:13,marginRight:3}}/>Panel directivos
             </Btn>
           )}
           <TourLaunchButton currentView={view} onLaunch={launchTour} showLabel={true} />
