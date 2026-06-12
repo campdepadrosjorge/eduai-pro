@@ -13,6 +13,7 @@ export default async function handler(req, res) {
   var planId = req.body.plan_id;
   var maxUsers = req.body.max_users || 10;
   var days = req.body.days || 30;
+  var role = req.body.role || "docente";
 
   if (!users || !Array.isArray(users) || users.length === 0) {
     return res.status(400).json({ error: "Lista de usuarios requerida" });
@@ -30,7 +31,7 @@ export default async function handler(req, res) {
 
     try {
       var inviteResult = await supabase.auth.admin.inviteUserByEmail(user.email, {
-        data: { name: user.name || "", institution: institutionName || "", school: institutionName || "" },
+        data: { name: user.name || "", institution: institutionName || "", school: institutionName || "", role: role },
         redirectTo: "https://app.aulaxpro.com/",
       });
 

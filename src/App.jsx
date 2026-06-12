@@ -727,6 +727,7 @@ function AdminPanel({authUser,supabaseClient}) {
   var [singleEmail,setSingleEmail]=useState("");
   var [singleName,setSingleName]=useState("");
   var [singleDays,setSingleDays]=useState(30);
+  var [singleRole,setSingleRole]=useState("docente");
   var [singleLoading,setSingleLoading]=useState(false);
   var [singleResult,setSingleResult]=useState(null);
 
@@ -753,7 +754,8 @@ function AdminPanel({authUser,supabaseClient}) {
         institution_name:"Piloto individual",
         plan_id:"bcdbe285413b4acbbd187fc2fe6d52dc",
         max_users:1,
-        days:singleDays
+        days:singleDays,
+        role:singleRole
       })});
       var data=await res.json();
       setSingleResult(data);
@@ -958,6 +960,18 @@ function AdminPanel({authUser,supabaseClient}) {
               return (
                 <button key={d} style={{flex:1,padding:"7px 0",borderRadius:4,border:"1px solid "+(singleDays===d?C.accent:C.border),background:singleDays===d?C.accentBg:"transparent",color:singleDays===d?C.accent:C.textMuted,cursor:"pointer",fontWeight:600,fontSize:12,fontFamily:"Quicksand,sans-serif"}} onClick={function(){setSingleDays(d);}}>
                   {d}d
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div style={{marginBottom:14}}>
+          <label style={lbl}>ROL</label>
+          <div style={{display:"flex",gap:6}}>
+            {[{id:"docente",label:"Docente"},{id:"directivo",label:"Directivo"}].map(function(r){
+              return (
+                <button key={r.id} style={{flex:1,padding:"7px 0",borderRadius:4,border:"1px solid "+(singleRole===r.id?C.accent:C.border),background:singleRole===r.id?C.accentBg:"transparent",color:singleRole===r.id?C.accent:C.textMuted,cursor:"pointer",fontWeight:600,fontSize:12,fontFamily:"Quicksand,sans-serif"}} onClick={function(){setSingleRole(r.id);}}>
+                  {r.label}
                 </button>
               );
             })}
@@ -1973,6 +1987,11 @@ useEffect(function(){
               </div>
             )}
           </div>
+          {authUser && authUser.user_metadata && authUser.user_metadata.role==="directivo" && verComoDocente && (
+            <Btn v="accent" st={{padding:"5px 13px",fontSize:12}} onClick={function(){setVerComoDocente(false);}}>
+              <i className="ti ti-arrow-back-up" style={{fontSize:13,marginRight:3}}/>Volver a directivos
+            </Btn>
+          )}
           <TourLaunchButton currentView={view} onLaunch={launchTour} showLabel={true} />
           <Btn v="accent" st={{padding:"5px 13px",fontSize:12}} onClick={function(){setSubjModal(true);}}>
             <i className="ti ti-plus" style={{fontSize:12,marginRight:3}}/>Materia
