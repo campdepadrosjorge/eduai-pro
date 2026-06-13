@@ -31,7 +31,7 @@ export default async function handler(req, res) {
 
     try {
       var inviteResult = await supabase.auth.admin.inviteUserByEmail(user.email, {
-        data: { name: user.name || "", institution: institutionName || "", school: institutionName || "", role: role },
+        data: { name: user.name || "", institution: institutionName || "", school: institutionName || "", role: role, needs_password: true },
         redirectTo: "https://app.aulaxpro.com/",
       });
 

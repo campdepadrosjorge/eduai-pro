@@ -1323,6 +1323,7 @@ export default function AulaXpro() {
   var [usage,setUsage]=useState(null);
   var [budgetExceeded,setBudgetExceeded]=useState(false);
   var [showResetPassword,setShowResetPassword]=useState(false);
+  var [needsPassword,setNeedsPassword]=useState(false);
   var [newPassword,setNewPassword]=useState("");
   var [resetLoading,setResetLoading]=useState(false);
   var [resetDone,setResetDone]=useState(false);
@@ -1415,10 +1416,11 @@ export default function AulaXpro() {
   var { activeTour, launchTour, closeTour, nextStep, prevStep } = useTour(authUser ? authUser.id : null, view);
 
   useEffect(function(){
-    supabase.auth.getSession().then(function(result){setAuthUser(result.data.session?result.data.session.user:null);setAuthLoading(false);var params=new URLSearchParams(window.location.search);if(params.get("section")==="pricing") setView("pricing");});
+    supabase.auth.getSession().then(function(result){var u=result.data.session?result.data.session.user:null;setAuthUser(u);setAuthLoading(false);if(u&&u.user_metadata&&u.user_metadata.needs_password) setNeedsPassword(true);var params=new URLSearchParams(window.location.search);if(params.get("section")==="pricing") setView("pricing");});
     var sub=supabase.auth.onAuthStateChange(function(event,session){
       setAuthUser(session?session.user:null);
       if(event==="PASSWORD_RECOVERY") setShowResetPassword(true);
+      if(session && session.user && session.user.user_metadata && session.user.user_metadata.needs_password) setNeedsPassword(true);
     });
     return function(){sub.data.subscription.unsubscribe();};
   },[]);
@@ -1826,6 +1828,30 @@ useEffect(function(){
               </Btn>
             </div>
           )}
+        </div>
+      </div>
+    </div>
+  );
+  if(needsPassword) return (
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:C.bg}}>
+      <div style={{width:420}}>
+        <div style={{textAlign:"center",marginBottom:32}}>
+          <i className="ti ti-lock-plus" style={{fontSize:52,color:C.accent,display:"block",marginBottom:12}}/>
+          <h1 style={{color:C.accent,fontSize:26,fontWeight:700,margin:"0 0 6px"}}>Creá tu contraseña</h1>
+          <p style={{color:C.textMuted,fontSize:15}}>Definí una contraseña para poder ingresar siempre</p>
+        </div>
+        <div style={card}>
+          <label style={lbl}>CONTRASEÑA</label>
+          <input style={Object.assign({},inp,{marginBottom:20})} type="password" value={newPassword} onChange={function(e){setNewPassword(e.target.value);}} placeholder="Minimo 6 caracteres" autoFocus/>
+          <Btn st={{width:"100%",justifyContent:"center",fontSize:14,padding:"11px 20px"}} disabled={resetLoading||newPassword.length<6} onClick={async function(){
+            setResetLoading(true);
+            var result=await supabase.auth.updateUser({password:newPassword,data:{needs_password:false}});
+            if(result.error){alert("Error: "+result.error.message);}
+            else{setNeedsPassword(false);setNewPassword("");}
+            setResetLoading(false);
+          }}>
+            {resetLoading?"Guardando...":"Crear contraseña y entrar"}
+          </Btn>
         </div>
       </div>
     </div>
