@@ -1281,7 +1281,7 @@ function AuthScreen({onAuth}) {
               <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.accent,fontSize:12,fontFamily:"Quicksand,sans-serif",fontWeight:600}} onClick={async function(){
                 if(!email){setError("Ingresa tu email primero.");return;}
                 setLoading(true);
-                var result=await supabase.auth.resetPasswordForEmail(email,{redirectTo:"https://app.aulaxpro.com/reset-password"});
+                var result=await supabase.auth.resetPasswordForEmail(email,{redirectTo:"https://app.aulaxpro.com/"});
                 if(result.error){setError(result.error.message);}
                 else{setError("");alert("Te enviamos un email para restablecer tu contrasena. Revisa tu bandeja.");}
                 setLoading(false);
