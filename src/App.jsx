@@ -1792,7 +1792,7 @@ useEffect(function(){
   if(!authUser) return <AuthScreen onAuth={setAuthUser}/>;
   var esDirectivo = authUser && authUser.user_metadata && authUser.user_metadata.role==="directivo";
   var esAdmin = authUser && authUser.email===import.meta.env.VITE_ADMIN_EMAIL;
-  if(((esDirectivo && !verComoDocente) || (esAdmin && adminVerDirectivos)) && !showResetPassword){
+  if(((esDirectivo && !verComoDocente) || (esAdmin && adminVerDirectivos)) && !showResetPassword && !needsPassword){
     return <DirectivoDashboard authUser={authUser} onVerComoDocente={function(){setVerComoDocente(true);setAdminVerDirectivos(false);}} onSignOut={signOut}/>;
   }
 
