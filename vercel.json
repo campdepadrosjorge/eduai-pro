@@ -17,6 +17,9 @@
     },
     "api/cron-check-expiry.js": {
       "maxDuration": 60
+    },
+    "api/procesar-tramite.js": {
+      "maxDuration": 60
     }
   },
   "crons": [

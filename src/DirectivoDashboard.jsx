@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { exportDocx, exportPdf, exportInformeCorregido } from "./exportUtils.js";
-import { sysComunicado, userComunicado, sysActa, userActa, sysCorreccionInforme, userCorreccionInforme, sysAcompanamiento, userAcompanamiento } from "./directivoPrompts.js";
+import { sysComunicado, userComunicado, sysActa, userActa, sysCorreccionInforme, userCorreccionInforme, sysAcompanamiento, userAcompanamiento, instruccionTramite } from "./directivoPrompts.js";
 
 const C = {
   bg:"#f0efea", surf:"#ffffff", card:"#ffffff", border:"#d4cfc6",
@@ -18,6 +18,7 @@ const DIR_NAV = [
   { id:"actas",       label:"Actas",       icon:"ti-file-description" },
   { id:"informes",    label:"Corrección de Informes", icon:"ti-report" },
   { id:"acompanamiento", label:"Acompañamiento Docente", icon:"ti-users-group" },
+  { id:"tramites",    label:"Asistente de Trámites", icon:"ti-clipboard-text" },
 ];
 
 async function callClaude(system, messages, maxTokens, onStream) {
@@ -207,7 +208,53 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
     }catch(e){setAcoErr("Error: "+e.message);}
     setAcoLoading(false);
   }
+// Estado asistente de tramites
+  var [traFile,setTraFile] = useState(null);
+  var [traTipo,setTraTipo] = useState("explicar");
+  var [traResult,setTraResult] = useState("");
+  var [traLoading,setTraLoading] = useState(false);
+  var [traErr,setTraErr] = useState("");
 
+  async function procesarTramite(){
+    if(!traFile) return;
+    setTraLoading(true);setTraResult("");setTraErr("");
+    try{
+      var base64 = await new Promise(function(resolve,reject){
+        var reader = new FileReader();
+        reader.onload = function(e){ resolve(e.target.result.split(",")[1]); };
+        reader.onerror = function(){ reject(new Error("No se pudo leer el archivo")); };
+        reader.readAsDataURL(traFile);
+      });
+
+      var res = await fetch("/api/procesar-tramite",{
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({ base64:base64, instruccion:instruccionTramite(traTipo) }),
+      });
+      if(!res.ok){ var err={}; try{err=await res.json();}catch(e){} throw new Error(err.error||"Error "+res.status); }
+
+      var reader2 = res.body.getReader();
+      var decoder = new TextDecoder();
+      var fullText = "";
+      while(true){
+        var result = await reader2.read();
+        if(result.done) break;
+        var chunk = decoder.decode(result.value,{stream:true});
+        var lines = chunk.split("\n");
+        for(var i=0;i<lines.length;i++){
+          var line = lines[i];
+          if(!line.startsWith("data: ")) continue;
+          var data2 = line.slice(6);
+          if(data2==="[DONE]") break;
+          try{
+            var parsed = JSON.parse(data2);
+            if(parsed.text){ fullText += parsed.text; setTraResult(fullText); }
+            if(parsed.error) throw new Error(parsed.error);
+          }catch(e){}
+        }
+      }
+    }catch(e){setTraErr("Error: "+e.message);}
+    setTraLoading(false);
+  }
   async function generarComunicado(){
     if(!comAsunto.trim()) return;
     setComLoading(true);setComResult("");setComErr("");
@@ -449,6 +496,52 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                     <i className="ti ti-users-group" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
                     <h3 style={{color:C.textMuted,marginBottom:8}}>El plan aparecerá acá</h3>
                     <p style={{fontSize:13}}>Describí la situación y generá el plan de acompañamiento.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {view==="tramites"&&(
+            <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:18}}>
+              <div style={card}>
+                <h3 style={{margin:"0 0 4px",fontSize:17,fontWeight:700,color:C.text}}>Asistente de trámites</h3>
+                <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Subí la resolución o normativa oficial (PDF) y la IA te ayuda a gestionar el trámite según ese documento.</p>
+                <label style={lbl}>RESOLUCIÓN / NORMATIVA (PDF) *</label>
+                <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+(traFile?C.accent:C.border),borderRadius:4,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:traFile?C.accent:C.text,marginBottom:14}}>
+                  <i className="ti ti-file-upload" style={{fontSize:14}}/>
+                  {traFile?traFile.name:"Subir PDF"}
+                  <input type="file" accept=".pdf" style={{display:"none"}} onChange={function(e){setTraFile(e.target.files[0]);setTraResult("");setTraErr("");}}/>
+                </label>
+                <label style={lbl}>QUÉ NECESITÁS</label>
+                <select style={Object.assign({},sel,{width:"100%",marginBottom:18})} value={traTipo} onChange={function(e){setTraTipo(e.target.value);}}>
+                  <option value="explicar">Explicarme el trámite</option>
+                  <option value="requisitos">Listar requisitos y documentación</option>
+                  <option value="checklist">Generar checklist de pasos</option>
+                  <option value="textos">Redactar los textos / notas necesarios</option>
+                </select>
+                <Btn onClick={procesarTramite} disabled={traLoading||!traFile} st={{width:"100%",justifyContent:"center"}}>
+                  {traLoading?"Procesando...":"Procesar"}
+                </Btn>
+                {traErr&&<div style={{marginTop:12,color:C.red,fontSize:13,background:"#fee2e2",padding:"10px 14px",borderRadius:4}}>{traErr}</div>}
+              </div>
+              <div>
+                {traResult?(
+                  <div style={card}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                      <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8}}>RESULTADO</div>
+                      <div style={{display:"flex",gap:8}}>
+                        <Btn v="ghost" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportDocx("Trámite","Asistente de trámites","",traResult);}}>Word</Btn>
+                        <Btn v="ghost" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportPdf("Trámite","Asistente de trámites","",traResult);}}>PDF</Btn>
+                      </div>
+                    </div>
+                    <MDView text={traResult}/>
+                  </div>
+                ):(
+                  <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
+                    <i className="ti ti-clipboard-text" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
+                    <h3 style={{color:C.textMuted,marginBottom:8}}>El resultado aparecerá acá</h3>
+                    <p style={{fontSize:13}}>Subí la normativa, elegí qué necesitás y procesá.</p>
                   </div>
                 )}
               </div>

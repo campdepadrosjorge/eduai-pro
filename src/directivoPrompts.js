@@ -84,3 +84,12 @@ export function userAcompanamiento(tipo, foco, contexto, situacion) {
     "SITUACIÓN DESCRITA POR EL DIRECTIVO:\n" + situacion + "\n\n" +
     "Recordá: concreto, accionable, formativo y respetuoso de la dignidad del docente.";
 }
+export function instruccionTramite(tipo) {
+  var m = {
+    explicar: "A partir de la resolución/normativa adjunta, explicame el trámite de forma clara y práctica: qué es, en qué casos aplica, quién lo autoriza, y los plazos relevantes. Resumí lo esencial que un directivo necesita saber para gestionarlo.",
+    requisitos: "A partir de la resolución/normativa adjunta, listá de forma organizada todos los requisitos y la documentación que hay que reunir para realizar el trámite. Indicá qué formularios se mencionan y qué adjuntos se requieren.",
+    checklist: "A partir de la resolución/normativa adjunta, generá un checklist de pasos ordenados cronológicamente para completar el trámite, indicando plazos en cada paso cuando la normativa los especifique. Que sea accionable, como una guía paso a paso.",
+    textos: "A partir de la resolución/normativa adjunta, redactá borradores de los textos, notas o solicitudes que el directivo debe presentar para este trámite (por ejemplo notas de elevación, solicitudes, justificaciones). Dejá entre corchetes [ASÍ] los datos puntuales que el directivo debe completar (fechas, nombres, números). Aclarando que son borradores orientativos basados en la normativa provista.",
+  };
+  return m[tipo] || m.explicar;
+}
