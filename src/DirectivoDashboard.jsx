@@ -122,21 +122,40 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
   var [infErr,setInfErr] = useState("");
   var [infResult,setInfResult] = useState(null);
 
+  async function extraerTextoInforme(file){
+    if(/\.pdf$/i.test(file.name)){
+      var base64 = await new Promise(function(resolve,reject){
+        var reader = new FileReader();
+        reader.onload = function(e){ resolve(e.target.result.split(",")[1]); };
+        reader.onerror = function(){ reject(new Error("No se pudo leer el archivo")); };
+        reader.readAsDataURL(file);
+      });
+      var res = await fetch("/api/extraer-texto-pdf",{
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({ base64:base64 }),
+      });
+      if(!res.ok){ var err={}; try{err=await res.json();}catch(e){} throw new Error(err.error||"Error al leer el PDF"); }
+      var data = await res.json();
+      return data.text;
+    } else {
+      var mammoth = await import("mammoth");
+      var buffer = await file.arrayBuffer();
+      var extraction = await mammoth.extractRawText({arrayBuffer:buffer});
+      return extraction.value;
+    }
+  }
   async function corregirInforme(){
     if(!infFile) return;
     setInfLoading(true);setInfErr("");setInfResult(null);
     try{
-      var mammoth = await import("mammoth");
-      var buffer = await infFile.arrayBuffer();
-      var extraction = await mammoth.extractRawText({arrayBuffer:buffer});
-      var texto = extraction.value;
+      var texto = await extraerTextoInforme(infFile);
       if(!texto || !texto.trim()) throw new Error("No se pudo extraer texto del documento.");
 
       var sys = sysCorreccionInforme();
       var usr = userCorreccionInforme(infNivel, texto, infPrioridad);
       var r = await callClaude(sys, [{role:"user",content:usr}], 4000);
 
-      var nombreAlumno = infFile.name.replace(/\.(docx|doc)$/i,"");
+      var nombreAlumno = infFile.name.replace(/\.(docx|doc|pdf)$/i,"");
       setInfResult({nombre:nombreAlumno, textoOriginal:texto, textoCorregido:r.trim()});
     }catch(e){setInfErr("Error: "+e.message);}
     setInfLoading(false);
@@ -159,24 +178,34 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
 
       var docxFiles = [];
       zip.forEach(function(path, file){
-        if(/\.docx$/i.test(path) && !path.startsWith("__MACOSX") && !file.dir) docxFiles.push(file);
+        if(/\.(docx|pdf)$/i.test(path) && !path.startsWith("__MACOSX") && !file.dir) docxFiles.push(file);
       });
 
-      if(!docxFiles.length) throw new Error("El ZIP no contiene archivos .docx");
+      if(!docxFiles.length) throw new Error("El ZIP no contiene archivos .docx ni .pdf");
       setInfZipTotal(docxFiles.length);
 
       var informes = [];
       for(var i=0;i<docxFiles.length;i++){
         setInfZipProgress(i+1);
         try{
-          var buffer = await docxFiles[i].async("arraybuffer");
-          var extraction = await mammoth.extractRawText({arrayBuffer:buffer});
-          var texto = extraction.value;
+          var nombreArch = docxFiles[i].name.split("/").pop();
+          var texto;
+          if(/\.pdf$/i.test(nombreArch)){
+            var pdfBuffer = await docxFiles[i].async("base64");
+            var resPdf = await fetch("/api/extraer-texto-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({base64:pdfBuffer})});
+            if(!resPdf.ok) continue;
+            var dataPdf = await resPdf.json();
+            texto = dataPdf.text;
+          } else {
+            var buffer = await docxFiles[i].async("arraybuffer");
+            var extraction = await mammoth.extractRawText({arrayBuffer:buffer});
+            texto = extraction.value;
+          }
           if(!texto || !texto.trim()) continue;
 
           var r = await callClaude(sysCorreccionInforme(), [{role:"user",content:userCorreccionInforme(infNivel, texto, infPrioridad)}], 4000);
 
-          var nombre = docxFiles[i].name.split("/").pop().replace(/\.docx$/i,"");
+          var nombre = nombreArch.replace(/\.(docx|pdf)$/i,"");
           informes.push({nombre:nombre, textoCorregido:r.trim()});
           setInfZipDone(informes.length);
         }catch(e){ /* salteamos el que falle y seguimos */ }
@@ -389,7 +418,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
             <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:18}}>
               <div style={card}>
                 <h3 style={{margin:"0 0 4px",fontSize:17,fontWeight:700,color:C.text}}>Corregir informe</h3>
-                <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Subí un informe en Word (.docx) y la IA marca sugerencias para que la docente corrija.</p>
+                <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Subí un informe en Word (.docx) o PDF y la IA lo corrige y lo deja listo para entregar.</p>
                 <label style={lbl}>NIVEL / SALA</label>
                 <input style={Object.assign({},inp,{marginBottom:12})} value={infNivel} onChange={function(e){setInfNivel(e.target.value);}} placeholder="Ej: Sala de 5 años"/>
                 <label style={lbl}>PRESTAR ATENCIÓN A (opcional)</label>
@@ -398,7 +427,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                 <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+(infFile?C.accent:C.border),borderRadius:4,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:infFile?C.accent:C.text,marginBottom:18}}>
                   <i className="ti ti-file-upload" style={{fontSize:14}}/>
                   {infFile?infFile.name:"Subir documento"}
-                  <input type="file" accept=".docx" style={{display:"none"}} onChange={function(e){setInfFile(e.target.files[0]);setInfResult(null);setInfErr("");}}/>
+                  <input type="file" accept=".docx,.pdf" style={{display:"none"}} onChange={function(e){setInfFile(e.target.files[0]);setInfResult(null);setInfErr("");}}/>
                 </label>
                 <Btn onClick={corregirInforme} disabled={infLoading||!infFile} st={{width:"100%",justifyContent:"center"}}>
                   {infLoading?"Revisando...":"Revisar informe"}
@@ -407,7 +436,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
 
                 <div style={{marginTop:20,paddingTop:18,borderTop:"1px solid "+C.border}}>
                   <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:4}}>Corrección por lote</div>
-                  <p style={{fontSize:12,color:C.textDim,marginBottom:12}}>Subí un ZIP con varios informes .docx (un archivo por alumno). La IA revisa todos y devolvés un ZIP con cada informe marcado. Nombrá cada archivo con el nombre del alumno.</p>
+                  <p style={{fontSize:12,color:C.textDim,marginBottom:12}}>Subí un ZIP con varios informes .docx o .pdf (un archivo por alumno). La IA corrige todos y devolvés un ZIP con cada informe corregido. Nombrá cada archivo con el nombre del alumno.</p>
                   <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+(infZip?C.accent:C.border),borderRadius:4,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:infZip?C.accent:C.text,marginBottom:12}}>
                     <i className="ti ti-file-zip" style={{fontSize:14}}/>
                     {infZip?infZip.name:"Subir ZIP de informes"}
