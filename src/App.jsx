@@ -728,6 +728,10 @@ function AdminPanel({authUser,supabaseClient}) {
   var [singleName,setSingleName]=useState("");
   var [singleDays,setSingleDays]=useState(30);
   var [singleRole,setSingleRole]=useState("docente");
+  var [roleEmail,setRoleEmail]=useState("");
+  var [roleValue,setRoleValue]=useState("directivo");
+  var [roleLoading,setRoleLoading]=useState(false);
+  var [roleResult,setRoleResult]=useState(null);
   var [singleLoading,setSingleLoading]=useState(false);
   var [singleResult,setSingleResult]=useState(null);
 
@@ -762,6 +766,17 @@ function AdminPanel({authUser,supabaseClient}) {
       if(!data.error) {setSingleEmail("");setSingleName("");}
     } catch(e){setSingleResult({error:e.message});}
     setSingleLoading(false);
+  }
+  async function cambiarRol() {
+    if(!roleEmail.trim()) return;
+    setRoleLoading(true);setRoleResult(null);
+    try {
+      var res=await fetch("/api/cambiar-rol",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:roleEmail.trim(),role:roleValue})});
+      var data=await res.json();
+      setRoleResult(data);
+      if(!data.error) setRoleEmail("");
+    } catch(e){setRoleResult({error:e.message});}
+    setRoleLoading(false);
   }
   async function loadPilotUsers() {
     setPilotLoading(true);
@@ -992,6 +1007,35 @@ function AdminPanel({authUser,supabaseClient}) {
                   <div style={{color:C.red,fontSize:12}}>{singleResult.details.failed.map(function(f){return f.email+": "+f.error;}).join(", ")}</div>
                 )}
               </div>
+            }
+          </div>
+        )}
+      </div>
+      <div style={Object.assign({},card,{marginBottom:16})}>
+        <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
+          <i className="ti ti-user-cog" style={{fontSize:16,color:C.accent}}/>Cambiar Rol de Usuario
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 160px",gap:12,marginBottom:12}}>
+          <div>
+            <label style={lbl}>EMAIL DEL USUARIO *</label>
+            <input style={inp} value={roleEmail} onChange={function(e){setRoleEmail(e.target.value);}} placeholder="usuario@escuela.edu.ar"/>
+          </div>
+          <div>
+            <label style={lbl}>NUEVO ROL</label>
+            <select style={Object.assign({},sel,{width:"100%"})} value={roleValue} onChange={function(e){setRoleValue(e.target.value);}}>
+              <option value="directivo">Directivo</option>
+              <option value="docente">Docente</option>
+            </select>
+          </div>
+        </div>
+        <Btn disabled={roleLoading||!roleEmail.trim()} onClick={cambiarRol}>
+          {roleLoading?"Aplicando...":<><i className="ti ti-user-cog" style={{fontSize:13,marginRight:4}}/>Cambiar rol</>}
+        </Btn>
+        {roleResult&&(
+          <div style={{marginTop:12,padding:"10px 14px",background:C.bg,borderRadius:4,fontSize:13,border:"1px solid "+C.border}}>
+            {roleResult.error
+              ?<span style={{color:C.red}}>Error: {roleResult.error}</span>
+              :<span style={{color:C.green}}>{"Rol actualizado a "+roleResult.role+". El usuario debe cerrar sesión y volver a entrar para que tome efecto."}</span>
             }
           </div>
         )}
