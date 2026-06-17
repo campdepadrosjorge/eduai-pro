@@ -423,7 +423,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                 <input style={Object.assign({},inp,{marginBottom:12})} value={infNivel} onChange={function(e){setInfNivel(e.target.value);}} placeholder="Ej: Sala de 5 años"/>
                 <label style={lbl}>PRESTAR ATENCIÓN A (opcional)</label>
                 <textarea style={Object.assign({},inp,{height:70,resize:"vertical",marginBottom:12})} value={infPrioridad} onChange={function(e){setInfPrioridad(e.target.value);}} placeholder="Ej: cuidar el tono al describir dificultades"/>
-                <label style={lbl}>INFORME (.docx) *</label>
+                <label style={lbl}>INFORME (.docx o .pdf) *</label>
                 <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+(infFile?C.accent:C.border),borderRadius:4,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:infFile?C.accent:C.text,marginBottom:18}}>
                   <i className="ti ti-file-upload" style={{fontSize:14}}/>
                   {infFile?infFile.name:"Subir documento"}
