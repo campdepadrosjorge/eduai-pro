@@ -586,7 +586,60 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                   <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:4}}>Revisión por lote</div>
                   <p style={{fontSize:12,color:C.textDim,marginBottom:12}}>Subí un ZIP con varios documentos .docx o .pdf. La IA revisa todos y devolvés un ZIP con cada documento marcado con observaciones.</p>
                   <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+(revZip?C.accent:C.border),borderRadius:4,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:revZip?C.accent:C.text,marginBottom:12}}>
-                    <i classNa
+                    <i className="ti ti-file-zip" style={{fontSize:14}}/>
+                    {revZip?revZip.name:"Subir ZIP de documentos"}
+                    <input type="file" accept=".zip" style={{display:"none"}} onChange={function(e){setRevZip(e.target.files[0]);setRevZipErr("");setRevZipDone(0);setRevZipProgress(0);}}/>
+                  </label>
+                  {revZip&&(
+                    <Btn onClick={revisarLote} disabled={revZipLoading} st={{width:"100%",justifyContent:"center"}}>
+                      {revZipLoading?"Procesando "+revZipProgress+" de "+revZipTotal+"...":"Revisar todos"}
+                    </Btn>
+                  )}
+                  {revZipLoading&&revZipTotal>0&&(
+                    <div style={{marginTop:10}}>
+                      <div style={{background:C.bg,borderRadius:4,height:6,overflow:"hidden"}}>
+                        <div style={{background:C.accent,height:6,width:Math.round((revZipProgress/revZipTotal)*100)+"%",transition:"width .2s"}}/>
+                      </div>
+                      <p style={{fontSize:11,color:C.textDim,marginTop:6}}>No cierres esta ventana hasta que termine.</p>
+                    </div>
+                  )}
+                  {revZipDone>0&&!revZipLoading&&(
+                    <div style={{marginTop:10,color:C.green,fontSize:13,display:"flex",alignItems:"center",gap:5}}>
+                      <i className="ti ti-check" style={{fontSize:14}}/>{revZipDone+" documentos revisados. Se descargó el ZIP."}
+                    </div>
+                  )}
+                  {revZipErr&&<div style={{marginTop:12,color:C.red,fontSize:13,background:"#fee2e2",padding:"10px 14px",borderRadius:4}}>{revZipErr}</div>}
+                </div>
+              </div>
+              <div>
+                {revResult?(
+                  <div style={card}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                      <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8}}>{revResult.observaciones.length?revResult.observaciones.length+" OBSERVACIONES":"SIN OBSERVACIONES"}</div>
+                      <Btn v="ghost" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportInformeMarcado(revResult.nombre,revResult.texto,revResult.observaciones);}}>Descargar .docx marcado</Btn>
+                    </div>
+                    {!revResult.observaciones.length?(
+                      <div style={{color:C.green,fontSize:14,padding:"8px 0"}}>El documento está completo y bien logrado. No requiere ajustes.</div>
+                    ):revResult.observaciones.map(function(s,i){
+                      return (
+                        <div key={i} style={{borderBottom:"1px solid "+C.border,padding:"12px 0"}}>
+                          <div style={{fontSize:13,color:C.textMuted,fontStyle:"italic",marginBottom:6,background:"#fff3cd",padding:"6px 10px",borderRadius:4}}>"{s.fragmento}"</div>
+                          <div style={{fontSize:13,color:C.text}}><span style={{fontWeight:700,color:C.accent}}>Observación: </span>{s.sugerencia}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ):(
+                  <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
+                    <i className="ti ti-file-search" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
+                    <h3 style={{color:C.textMuted,marginBottom:8}}>Las observaciones aparecerán acá</h3>
+                    <p style={{fontSize:13}}>Subí un documento y la IA lo revisa.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {view==="acompanamiento"&&(
             <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:18}}>
               <div style={card}>
