@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { exportDocx, exportPdf, exportInformeCorregido } from "./exportUtils.js";
-import { sysComunicado, userComunicado, sysActa, userActa, sysCorreccionInforme, userCorreccionInforme, sysAcompanamiento, userAcompanamiento, instruccionTramite } from "./directivoPrompts.js";
+import { exportDocx, exportPdf, exportInformeCorregido, exportInformeMarcado, exportInformesZip } from "./exportUtils.js";
+import { sysComunicado, userComunicado, sysActa, userActa, sysCorreccionInforme, userCorreccionInforme, sysAcompanamiento, userAcompanamiento, instruccionTramite, sysRevisionDocumento, userRevisionDocumento } from "./directivoPrompts.js";
 
 const C = {
   bg:"#f0efea", surf:"#ffffff", card:"#ffffff", border:"#d4cfc6",
@@ -17,6 +17,7 @@ const DIR_NAV = [
   { id:"comunicados", label:"Comunicados", icon:"ti-speakerphone" },
   { id:"actas",       label:"Actas",       icon:"ti-file-description" },
   { id:"informes",    label:"Corrección de Informes", icon:"ti-report" },
+  { id:"revision",    label:"Revisión de Documentos", icon:"ti-file-search" },
   { id:"acompanamiento", label:"Acompañamiento Docente", icon:"ti-users-group" },
   { id:"tramites",    label:"Asistente de Trámites", icon:"ti-clipboard-text" },
 ];
@@ -284,6 +285,82 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
     }catch(e){setTraErr("Error: "+e.message);}
     setTraLoading(false);
   }
+  // Estado revision de documentos
+  var [revTipo,setRevTipo] = useState("Planificación anual");
+  var [revCriterios,setRevCriterios] = useState("");
+  var [revFile,setRevFile] = useState(null);
+  var [revLoading,setRevLoading] = useState(false);
+  var [revErr,setRevErr] = useState("");
+  var [revResult,setRevResult] = useState(null);
+  var [revZip,setRevZip] = useState(null);
+  var [revZipLoading,setRevZipLoading] = useState(false);
+  var [revZipProgress,setRevZipProgress] = useState(0);
+  var [revZipTotal,setRevZipTotal] = useState(0);
+  var [revZipDone,setRevZipDone] = useState(0);
+  var [revZipErr,setRevZipErr] = useState("");
+
+  async function revisarDocumento(){
+    if(!revFile) return;
+    setRevLoading(true);setRevErr("");setRevResult(null);
+    try{
+      var texto = await extraerTextoInforme(revFile);
+      if(!texto || !texto.trim()) throw new Error("No se pudo extraer texto del documento.");
+      var r = await callClaude(sysRevisionDocumento(), [{role:"user",content:userRevisionDocumento(revTipo, texto, revCriterios)}], 3000);
+      var clean = r.replace(/```json\n?/g,"").replace(/```\n?/g,"").trim();
+      var observaciones = JSON.parse(clean);
+      var nombre = revFile.name.replace(/\.(docx|doc|pdf)$/i,"");
+      setRevResult({nombre:nombre, texto:texto, observaciones:observaciones});
+    }catch(e){setRevErr("Error: "+e.message);}
+    setRevLoading(false);
+  }
+
+  async function revisarLote(){
+    if(!revZip) return;
+    setRevZipLoading(true);setRevZipErr("");setRevZipProgress(0);setRevZipDone(0);
+    try{
+      var JSZip = (await import("jszip")).default;
+      var mammoth = await import("mammoth");
+      var zip = await JSZip.loadAsync(revZip);
+      var files = [];
+      zip.forEach(function(path, file){
+        if(/\.(docx|pdf)$/i.test(path) && !path.startsWith("__MACOSX") && !file.dir) files.push(file);
+      });
+      if(!files.length) throw new Error("El ZIP no contiene archivos .docx ni .pdf");
+      setRevZipTotal(files.length);
+
+      var docs = [];
+      for(var i=0;i<files.length;i++){
+        setRevZipProgress(i+1);
+        try{
+          var nombreArch = files[i].name.split("/").pop();
+          var texto;
+          if(/\.pdf$/i.test(nombreArch)){
+            var pdfBuffer = await files[i].async("base64");
+            var resPdf = await fetch("/api/extraer-texto-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({base64:pdfBuffer})});
+            if(!resPdf.ok) continue;
+            var dataPdf = await resPdf.json();
+            texto = dataPdf.text;
+          } else {
+            var buffer = await files[i].async("arraybuffer");
+            var extraction = await mammoth.extractRawText({arrayBuffer:buffer});
+            texto = extraction.value;
+          }
+          if(!texto || !texto.trim()) continue;
+
+          var r = await callClaude(sysRevisionDocumento(), [{role:"user",content:userRevisionDocumento(revTipo, texto, revCriterios)}], 3000);
+          var clean = r.replace(/```json\n?/g,"").replace(/```\n?/g,"").trim();
+          var observaciones = JSON.parse(clean);
+          var nombre = nombreArch.replace(/\.(docx|pdf)$/i,"");
+          docs.push({nombre:nombre, texto:texto, sugerencias:observaciones});
+          setRevZipDone(docs.length);
+        }catch(e){}
+      }
+      if(!docs.length) throw new Error("No se pudo procesar ningún documento del ZIP.");
+      var exportMod = await import("./exportUtils.js");
+      await exportMod.exportInformesZip(docs);
+    }catch(e){setRevZipErr("Error: "+e.message);}
+    setRevZipLoading(false);
+  }
   async function generarComunicado(){
     if(!comAsunto.trim()) return;
     setComLoading(true);setComResult("");setComErr("");
@@ -483,6 +560,33 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
             </div>
           )}
 
+          {view==="revision"&&(
+            <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:18}}>
+              <div style={card}>
+                <h3 style={{margin:"0 0 4px",fontSize:17,fontWeight:700,color:C.text}}>Revisión de documentos</h3>
+                <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Subí una planificación, proyecto u otro documento docente (.docx o .pdf) y la IA marca observaciones para que la docente lo ajuste.</p>
+                <label style={lbl}>TIPO DE DOCUMENTO</label>
+                <select style={Object.assign({},sel,{width:"100%",marginBottom:12})} value={revTipo} onChange={function(e){setRevTipo(e.target.value);}}>
+                  {["Planificación anual","Proyecto áulico","Secuencia didáctica","Salida educativa","Visita a museo","Otro"].map(function(t){return <option key={t}>{t}</option>;})}
+                </select>
+                <label style={lbl}>CRITERIOS ESPECÍFICOS (opcional)</label>
+                <textarea style={Object.assign({},inp,{height:70,resize:"vertical",marginBottom:12})} value={revCriterios} onChange={function(e){setRevCriterios(e.target.value);}} placeholder="Ej: que incluya adaptaciones para alumnos con NEE"/>
+                <label style={lbl}>DOCUMENTO (.docx o .pdf) *</label>
+                <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+(revFile?C.accent:C.border),borderRadius:4,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:revFile?C.accent:C.text,marginBottom:18}}>
+                  <i className="ti ti-file-upload" style={{fontSize:14}}/>
+                  {revFile?revFile.name:"Subir documento"}
+                  <input type="file" accept=".docx,.pdf" style={{display:"none"}} onChange={function(e){setRevFile(e.target.files[0]);setRevResult(null);setRevErr("");}}/>
+                </label>
+                <Btn onClick={revisarDocumento} disabled={revLoading||!revFile} st={{width:"100%",justifyContent:"center"}}>
+                  {revLoading?"Revisando...":"Revisar documento"}
+                </Btn>
+                {revErr&&<div style={{marginTop:12,color:C.red,fontSize:13,background:"#fee2e2",padding:"10px 14px",borderRadius:4}}>{revErr}</div>}
+
+                <div style={{marginTop:20,paddingTop:18,borderTop:"1px solid "+C.border}}>
+                  <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:4}}>Revisión por lote</div>
+                  <p style={{fontSize:12,color:C.textDim,marginBottom:12}}>Subí un ZIP con varios documentos .docx o .pdf. La IA revisa todos y devolvés un ZIP con cada documento marcado con observaciones.</p>
+                  <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+(revZip?C.accent:C.border),borderRadius:4,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:revZip?C.accent:C.text,marginBottom:12}}>
+                    <i classNa
           {view==="acompanamiento"&&(
             <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:18}}>
               <div style={card}>
