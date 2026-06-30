@@ -73,6 +73,17 @@ export default async function handler(req, res) {
     </div>
   `;
 
+  var text = "Bienvenido a AulaXpro, " + userName + "!\n\n" +
+    "Tu cuenta en AulaXpro ya esta activa. Tenes 7 dias de prueba gratuita para explorar todas las funciones.\n\n" +
+    "PARA EMPEZAR:\n\n" +
+    "1. Crea tu primera materia. Carga el nombre, nivel y programa. La IA usara ese contexto para generar material mas preciso.\n\n" +
+    "2. Genera tu primer contenido. Desde el Generador IA elegis el tipo (actividad, evaluacion, rubrica) y en segundos tenes material listo para usar.\n\n" +
+    "3. Explora el tour interactivo. Hace clic en el boton Guia en la barra superior para ver como funciona cada seccion.\n\n" +
+    "Ingresa a la app: https://app.aulaxpro.com\n\n" +
+    "Si tenes alguna pregunta, escribinos a hola@aulaxpro.com\n\n" +
+    "AulaXpro - aulaxpro.com\n\n" +
+    "Para no recibir mas estos correos, escribinos a hola@aulaxpro.com con el asunto BAJA.";
+
   try {
     var resendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -85,6 +96,10 @@ export default async function handler(req, res) {
         to: email,
         subject: "Bienvenido a AulaXpro, " + userName + "!",
         html,
+        text,
+        headers: {
+          "List-Unsubscribe": "<mailto:hola@aulaxpro.com?subject=BAJA>",
+        },
       }),
     });
 

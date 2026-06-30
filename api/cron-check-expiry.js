@@ -82,7 +82,12 @@ const uniqueSubs = Object.values(subs.reduce(function(acc, sub) {
             </div>
           </div>
         `;
-
+        const emailText = "Tu acceso a AulaXpro vence en 3 dias, " + name + "\n\n" +
+          "Tu suscripcion a AulaXpro vence el " + venceDate + ". Para seguir generando material y accediendo a todas las funciones, renova tu plan.\n\n" +
+          "Renova tu plan: https://app.aulaxpro.com?section=pricing\n\n" +
+          "Si tenes alguna pregunta escribinos a hola@aulaxpro.com\n\n" +
+          "AulaXpro - aulaxpro.com\n\n" +
+          "Para no recibir mas estos correos, escribinos a hola@aulaxpro.com con el asunto BAJA.";
         const emailRes = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -94,6 +99,10 @@ const uniqueSubs = Object.values(subs.reduce(function(acc, sub) {
             to: email,
             subject: "Tu acceso a AulaXpro vence en 3 dias",
             html,
+            text: emailText,
+            headers: {
+              "List-Unsubscribe": "<mailto:hola@aulaxpro.com?subject=BAJA>",
+            },
           }),
         });
 
