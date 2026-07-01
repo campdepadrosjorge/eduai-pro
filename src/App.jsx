@@ -1356,6 +1356,7 @@ export default function AulaXpro() {
   var [sf,setSf]=useState({name:"",level:"Secundario (4-6)",materials:"",bibliography:""});
   var [sfPdfs,setSfPdfs]=useState([]);
   var [pdfLoading,setPdfLoading]=useState(false);
+  var [pdfStage,setPdfStage]=useState("");
   var [editingSubject,setEditingSubject]=useState(null);
   var [library,setLibrary]=useState([]);
   var [bank,setBank]=useState([]);
@@ -1522,9 +1523,9 @@ useEffect(function(){
     setSubjects([]);setLibrary([]);setBank([]);setPublicLib([]);setSequences([]);setCurSid(null);setView("dashboard");
   }
 
- async function processPdf(file) {
+ async function processPdf(file, onStage) {
+    if (onStage) onStage("Subiendo archivo...");
     // 1. Subir el archivo a Supabase Storage
-    var ext = file.name.split(".").pop();
     var safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     var path = "pdfs/" + Date.now() + "_" + safeName;
 
@@ -1538,6 +1539,7 @@ useEffect(function(){
     var urlData = supabase.storage.from("documentos").getPublicUrl(path);
     var publicUrl = urlData.data.publicUrl;
 
+    if (onStage) onStage("Leyendo el documento...");
     // 3. Llamar al endpoint con la URL, leyendo la respuesta por streaming
     var res = await fetch("/api/process-pdf", {
       method: "POST",
@@ -1565,7 +1567,10 @@ useEffect(function(){
         if (data2 === "[DONE]") break;
         try {
           var parsed = JSON.parse(data2);
-          if (parsed.text) fullText += parsed.text;
+          if (parsed.text) {
+            if (fullText === "" && onStage) onStage("Extrayendo contenido...");
+            fullText += parsed.text;
+          }
           if (parsed.error) throw new Error(parsed.error);
         } catch(e) {}
       }
@@ -3508,22 +3513,36 @@ useEffect(function(){
             <label style={lbl}>BIBLIOGRAFIA EN PDF (opcional)</label>
             <p style={{fontSize:12,color:C.textDim,margin:"0 0 8px"}}>Claude extraera el contenido para generar material mas preciso.</p>
             <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+C.border,borderRadius:4,padding:"7px 14px",cursor:pdfLoading?"not-allowed":"pointer",fontSize:12,fontWeight:600,color:C.text,marginBottom:10,opacity:pdfLoading?.6:1}}>
-              <i className="ti ti-file-upload" style={{fontSize:14}}/>
-              {pdfLoading?"Procesando PDF...":"Subir PDF"}
+              <i className={pdfLoading?"ti ti-loader":"ti ti-file-upload"} style={{fontSize:14}}/>
+              {pdfLoading?(pdfStage||"Procesando..."):"Subir PDF"}
               <input type="file" accept=".pdf" multiple style={{display:"none"}} disabled={pdfLoading} onChange={async function(e){
                 var files=Array.from(e.target.files);
                 if(!files.length) return;
                 setPdfLoading(true);
                 for(var i=0;i<files.length;i++){
                   try{
-                    var result=await processPdf(files[i]);
+                    setPdfStage("Subiendo archivo...");
+                    var result=await processPdf(files[i],function(stage){setPdfStage(stage);});
                     setSfPdfs(function(prev){return prev.concat([result]);});
                   }catch(err){alert("Error procesando "+files[i].name+": "+err.message);}
                 }
-                setPdfLoading(false);
+                setPdfLoading(false);setPdfStage("");
                 e.target.value="";
               }}/>
             </label>
+            {pdfLoading&&(
+              <div style={{marginTop:4,marginBottom:12}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                  <div style={{width:16,height:16,border:"2px solid #d4cfc6",borderTop:"2px solid "+C.accent,borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
+                  <span style={{fontSize:12,color:C.accent,fontWeight:600}}>{pdfStage||"Procesando..."}</span>
+                </div>
+                <div style={{background:C.bg,borderRadius:4,height:5,overflow:"hidden",position:"relative"}}>
+                  <div style={{position:"absolute",height:5,width:"40%",background:C.accent,borderRadius:4,animation:"indeterminate 1.3s ease-in-out infinite"}}/>
+                </div>
+                <p style={{fontSize:11,color:C.textDim,marginTop:6}}>Puede tardar hasta un minuto en documentos largos. No cierres esta ventana.</p>
+                <style>{"@keyframes spin{to{transform:rotate(360deg)}}@keyframes indeterminate{0%{left:-40%}100%{left:100%}}"}</style>
+              </div>
+            )}
             {sfPdfs.length>0&&(
               <div style={{marginBottom:14}}>
                 {sfPdfs.map(function(p,i){
