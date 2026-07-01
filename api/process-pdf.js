@@ -1,16 +1,15 @@
 // api/process-pdf.js
-// Extrae texto de un PDF usando Claude Vision
- 
+// Extrae y resume el contenido de un PDF que ya está subido en Storage (recibe su URL)
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
- 
-  var base64 = req.body.base64;
+
+  var fileUrl = req.body.url;
   var filename = req.body.filename || "documento.pdf";
- 
-  if (!base64) return res.status(400).json({ error: "PDF requerido" });
- 
+
+  if (!fileUrl) return res.status(400).json({ error: "URL del PDF requerida" });
+
   try {
-    // Usar Claude para extraer y resumir el contenido del PDF
     var claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -21,15 +20,15 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
         max_tokens: 4000,
+        stream: true,
         messages: [{
           role: "user",
           content: [
             {
               type: "document",
               source: {
-                type: "base64",
-                media_type: "application/pdf",
-                data: base64,
+                type: "url",
+                url: fileUrl,
               },
             },
             {
@@ -40,22 +39,41 @@ export default async function handler(req, res) {
         }],
       }),
     });
- 
+
     if (!claudeRes.ok) {
       var err = await claudeRes.json().catch(function() { return {}; });
-      throw new Error(err.error ? err.error.message : "Error procesando el PDF");
+      return res.status(claudeRes.status).json({ error: err.error ? err.error.message : "Error procesando el PDF" });
     }
- 
-    var data = await claudeRes.json();
-    var text = data.content.filter(function(b) { return b.type === "text"; }).map(function(b) { return b.text; }).join("");
- 
-    return res.status(200).json({
-      text: text,
-      filename: filename,
-      chars: text.length,
-    });
- 
+
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    var reader = claudeRes.body.getReader();
+    var decoder = new TextDecoder();
+
+    while (true) {
+      var result = await reader.read();
+      if (result.done) break;
+      var chunk = decoder.decode(result.value, { stream: true });
+      var lines = chunk.split("\n");
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (!line.startsWith("data: ")) continue;
+        var data = line.slice(6);
+        if (data === "[DONE]") { res.write("data: [DONE]\n\n"); continue; }
+        try {
+          var parsed = JSON.parse(data);
+          if (parsed.type === "content_block_delta" && parsed.delta && parsed.delta.type === "text_delta") {
+            res.write("data: " + JSON.stringify({ text: parsed.delta.text }) + "\n\n");
+          }
+        } catch(e) {}
+      }
+    }
+    res.end();
+
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    res.write("data: " + JSON.stringify({ error: error.message }) + "\n\n");
+    res.end();
   }
 }

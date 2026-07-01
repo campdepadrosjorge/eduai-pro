@@ -1522,24 +1522,56 @@ useEffect(function(){
     setSubjects([]);setLibrary([]);setBank([]);setPublicLib([]);setSequences([]);setCurSid(null);setView("dashboard");
   }
 
-  async function processPdf(file) {
-    return new Promise(function(resolve, reject) {
-      var reader = new FileReader();
-      reader.onload = async function(e) {
-        try {
-          var base64 = e.target.result.split(",")[1];
-          var res = await fetch("/api/process-pdf", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ base64, filename: file.name }),
-          });
-          var data = await res.json();
-          if (!res.ok) throw new Error(data.error);
-          resolve(data);
-        } catch(err) { reject(err); }
-      };
-      reader.readAsDataURL(file);
+ async function processPdf(file) {
+    // 1. Subir el archivo a Supabase Storage
+    var ext = file.name.split(".").pop();
+    var safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    var path = "pdfs/" + Date.now() + "_" + safeName;
+
+    var uploadRes = await supabase.storage.from("documentos").upload(path, file, {
+      contentType: file.type || "application/pdf",
+      upsert: false,
     });
+    if (uploadRes.error) throw new Error("Error al subir el archivo: " + uploadRes.error.message);
+
+    // 2. Obtener la URL pública
+    var urlData = supabase.storage.from("documentos").getPublicUrl(path);
+    var publicUrl = urlData.data.publicUrl;
+
+    // 3. Llamar al endpoint con la URL, leyendo la respuesta por streaming
+    var res = await fetch("/api/process-pdf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: publicUrl, filename: file.name }),
+    });
+    if (!res.ok) {
+      var errData = {};
+      try { errData = await res.json(); } catch(e) {}
+      throw new Error(errData.error || "Error procesando el PDF");
+    }
+
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder();
+    var fullText = "";
+    while (true) {
+      var result = await reader.read();
+      if (result.done) break;
+      var chunk = decoder.decode(result.value, { stream: true });
+      var lines = chunk.split("\n");
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (!line.startsWith("data: ")) continue;
+        var data2 = line.slice(6);
+        if (data2 === "[DONE]") break;
+        try {
+          var parsed = JSON.parse(data2);
+          if (parsed.text) fullText += parsed.text;
+          if (parsed.error) throw new Error(parsed.error);
+        } catch(e) {}
+      }
+    }
+
+    return { text: fullText, filename: file.name, chars: fullText.length };
   }
   async function addSubject(){
     if(!sf.name.trim()||!authUser) return;
