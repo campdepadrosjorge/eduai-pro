@@ -24,10 +24,17 @@ export default async function handler(req, res) {
   }
   if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: "messages requeridos" });
 
+  const systemText = system || "Sos un asistente experto.";
   const body = {
     model: "claude-opus-4-6",
     max_tokens: maxTokens,
-    system: system || "Sos un asistente experto.",
+    system: [
+      {
+        type: "text",
+        text: systemText,
+        cache_control: { type: "ephemeral" },
+      },
+    ],
     messages,
     stream,
   };
@@ -48,7 +55,7 @@ export default async function handler(req, res) {
           "Content-Type": "application/json",
           "x-api-key": process.env.ANTHROPIC_API_KEY,
           "anthropic-version": "2023-06-01",
-          "anthropic-beta": "web-search-2025-03-05",
+          "anthropic-beta": "web-search-2025-03-05,prompt-caching-2024-07-31",
         },
         body: JSON.stringify(body),
       });
