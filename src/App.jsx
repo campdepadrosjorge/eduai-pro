@@ -113,7 +113,7 @@ function userGen(type, topic, diff, extra, subject, docText) {
    material:
       "Crea un material didactico de excelencia sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
       "Pensalo como lo escribiria un gran docente: con explicaciones claras, ejemplos concretos y cercanos al alumno, y todo lo que ayude a comprender el tema de verdad (introduccion motivadora, conceptos clave destacados, cuadros o tablas de sintesis, glosario, preguntas de autoevaluacion con sus respuestas). Incluí eso solo si aporta valor real; no agregues secciones de relleno ni cantidades fijas de items forzadas.\n\n" +
-      "SE CONCISO Y PRACTICO. Desarrollá bien lo importante y evitá el relleno. El material tiene que ser claro y estudiable, no interminable. Apuntá a una extension moderada.\n\n" +
+      "SE CONCISO. Esto es clave: el material tiene que ser acotado y estudiable, no extenso. Enfocate en el contenido central del tema y explicalo bien, sin desarrollar cada subtema hasta el agotamiento ni acumular ejemplos de mas. Si hay glosario, que tenga los terminos realmente importantes, no una lista larga. Un material de pocas paginas bien hecho es mucho mejor que uno larguisimo. Preferí siempre la claridad y la brevedad por sobre la exhaustividad.\n\n" +
       "FORMATO: usa exclusivamente tablas en formato Markdown (con | y guiones), nunca dibujadas con caracteres o ASCII. No uses emojis en los titulos; como mucho alguno muy puntual dentro del texto si de verdad aporta. Estructura clara con encabezados." + e,
 
     presentacion:
@@ -130,7 +130,7 @@ function userGen(type, topic, diff, extra, subject, docText) {
     guia:
       "Crea una guia de estudio de excelencia y autonoma sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
       "Pensala para que el alumno pueda estudiar solo: con objetivos claros de lo que va a lograr, el tema bien organizado y explicado, preguntas orientadoras que activen la lectura, autoevaluacion con respuestas para verificar, y estrategias de repaso. Sumá cuadros de sintesis, actividades de comprension o recursos para profundizar solo si aportan valor real; no fuerces secciones de relleno.\n\n" +
-      "SE CONCISO Y PRACTICO. Desarrollá bien lo importante y evitá el relleno. La guia tiene que ser util y estudiable, no interminable. Apuntá a una extension moderada.\n\n" +
+      "SE CONCISA. Esto es clave: la guia tiene que ser acotada y util, no extensa. Enfocate en orientar el estudio de lo esencial, sin desarrollar cada punto hasta el agotamiento ni acumular actividades o preguntas de mas. Una guia de pocas paginas bien hecha es mucho mejor que una larguisima. Preferí siempre la claridad y la brevedad por sobre la exhaustividad.\n\n" +
       "FORMATO: usa exclusivamente tablas en formato Markdown (con | y guiones), nunca dibujadas con caracteres o ASCII. No uses emojis en los titulos; como mucho alguno muy puntual dentro del texto si de verdad aporta. Estructura clara con encabezados." + e,
   };
   return m[type] || "Crea contenido educativo de alta calidad sobre \"" + topic + "\"" + nivel + materia + ". Dificultad: " + diff + "." + e;
