@@ -108,7 +108,7 @@ function userGen(type, topic, diff, extra, subject, docText) {
       "- Seccion de respuesta breve\n" +
       "- Seccion de desarrollo (1-2 preguntas integradoras)\n" +
       "- El valor de cada seccion indicado\n" +
-      "- CLAVE DE RESPUESTAS completa al final para el docente\n\n" +
+      "- CLAVE DE RESPUESTAS completa al final para el docente. La clave debe ser CONCISA: indicá la respuesta correcta de cada item y, cuando haga falta, una fundamentacion breve de una sola linea. No escribas parrafos largos de explicacion por cada respuesta.\n\n" +
       "Las preguntas deben ser claras, bien formuladas y adecuadas al nivel; priorizá la calidad de cada consigna por sobre la cantidad. No incluyas mas items de los necesarios para evaluar bien el tema.\n\n" +
       "FORMATO: usa tablas en formato Markdown (con | y guiones) si necesitas tablas, nunca dibujadas con ASCII. No uses emojis. Estructura clara con encabezados. Listo para imprimir." + e,
 
@@ -1634,7 +1634,7 @@ useEffect(function(){
     try{
       var sys=sysGen(genType,curSubj.name,genLevel,curSubj.materials,curSubj.bibliography);
       var usr=userGen(genType,genTopic,genDiff,genExtra,curSubj,genDocText);
-      var maxTokPorTipo={ material:16000, guia:16000, planclase:12000, secuencia:14000, presentacion:12000, actividad:10000, evaluacion:14000, rubrica:6000, adaptado:12000 };
+      var maxTokPorTipo={ material:16000, guia:16000, planclase:12000, secuencia:14000, presentacion:12000, actividad:10000, evaluacion:16000, rubrica:6000, adaptado:12000 };
       var maxTok=maxTokPorTipo[genType]||10000;
       var r=await callClaude(sys,[{role:"user",content:usr}],maxTok,false,function(partial){
         setGenResult(partial);
