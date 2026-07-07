@@ -1336,6 +1336,10 @@ export default function AulaXpro() {
   var [genType,setGenType]=useState("planclase");
   var [genTopic,setGenTopic]=useState("");
   var [genLevel,setGenLevel]=useState("Secundaria (ciclo superior)");
+  useEffect(function(){
+    var m=subjects.find(function(s){return s.id===curSid;});
+    if(m&&m.level) setGenLevel(m.level);
+  },[curSid]);
   var [genDiff,setGenDiff]=useState("Intermedio");
   var [genExtra,setGenExtra]=useState("");
   var [genResult,setGenResult]=useState("");
@@ -1628,7 +1632,7 @@ useEffect(function(){
     if(!hasBudget){setBudgetExceeded(true);return;}
     setGenLoading(true);setGenResult("");setGenSaved(false);setGenErr("");setMakeCodeUrl(null);setActImgUrl(null);
     try{
-      var sys=sysGen(genType,curSubj.name,genLevel||curSubj.level,curSubj.materials,curSubj.bibliography);
+      var sys=sysGen(genType,curSubj.name,genLevel,curSubj.materials,curSubj.bibliography);
       var usr=userGen(genType,genTopic,genDiff,genExtra,curSubj,genDocText);
       var maxTokPorTipo={ material:16000, guia:16000, planclase:12000, secuencia:14000, presentacion:12000, actividad:10000, evaluacion:10000, rubrica:6000, adaptado:12000 };
       var maxTok=maxTokPorTipo[genType]||10000;
