@@ -56,8 +56,8 @@ function sysGen(type, subject, level, materials, bibliography) {
   var p = {
     planclase:    base + "\n\nTu tarea es crear un PLAN DE CLASE de excelencia que un docente pueda llevar directamente al aula, pensado con criterio pedagogico real y no como un formulario a completar. Un buen plan de clase tiene una secuencia didactica clara (inicio, desarrollo y cierre) con tiempos, objetivos bien formulados, y consignas concretas para los alumnos. Desarrollá bien lo importante y decidí con criterio que incluir segun el tema; no fuerces secciones de relleno. Como minimo deben quedar claros: los objetivos, la secuencia didactica con momentos y tiempos, y como se evalua.",
     actividad:   base + "\n\nTu tarea es crear una ACTIVIDAD DIDACTICA de excelencia, lista para usar en el aula y pensada con criterio pedagogico real, no como un formulario a completar. Una buena actividad es clara, motivadora, bien secuenciada y directamente aplicable; incluye consignas precisas que el alumno entiende sin ayuda, y propone un desafio genuino adecuado al nivel. Decidi vos que secciones y en que profundidad segun lo que el tema realmente necesita, priorizando la calidad y la usabilidad por sobre la exhaustividad. No fuerces secciones que no aporten. Como minimo, la actividad debe dejar claros: los objetivos de aprendizaje, el desarrollo paso a paso, y como se evalua.",
-    rubrica:      base + "\n\nTu tarea es crear RUBRICAS ANALITICAS profesionales listas para usar. Incluí siempre: tabla con 5-6 criterios especificos, 4 niveles de logro (Excelente/Satisfactorio/En proceso/Inicio) con descriptores concretos y observables, puntaje por criterio, escala de conversion a nota, instrucciones de uso para el docente, espacio para comentarios.",
-    evaluacion:   base + "\n\nTu tarea es crear EVALUACIONES COMPLETAS listas para imprimir. Incluí siempre: encabezado con datos del alumno, instrucciones claras por seccion, seccion 1 opcion multiple (5-6 items con 4 opciones), seccion 2 verdadero/falso con justificacion (4-5 items), seccion 3 respuesta breve (3-4 preguntas), seccion 4 desarrollo (1-2 preguntas integradoras), valor de cada seccion, clave de respuestas al final. Formato listo para imprimir.",
+    rubrica:      base + "\n\nTu tarea es crear una RUBRICA ANALITICA de excelencia, lista para usar. Una buena rubrica tiene criterios claros y observables, con descriptores concretos que permiten distinguir sin ambiguedad cada nivel de logro. Los descriptores tienen que ser especificos del tema evaluado, no genericos. Mantene la estructura de tabla con criterios y niveles, e incluí como se traduce a una calificacion.",
+    evaluacion:   base + "\n\nTu tarea es crear una EVALUACION de excelencia, lista para imprimir y tomar. Una buena evaluacion tiene preguntas claras, bien formuladas y de dificultad adecuada al nivel, que realmente midan la comprension del tema y no solo la memoria. Cuida que cada consigna sea inequivoca y que la evaluacion tenga una progresion razonable de dificultad. Mantene una estructura clara por secciones e incluí siempre una clave de respuestas al final para el docente.",
     material:     base + "\n\nTu tarea es crear MATERIALES DIDACTICOS atractivos y completos. Incluí siempre: titulo, introduccion motivadora, desarrollo por subtemas con ejemplos concretos y cercanos a la realidad del alumno, cuadros de conceptos clave, actividades integradas dentro del texto, sintesis visual, glosario, preguntas de autoevaluacion. Usa formato de texto escolar con tablas, recuadros destacados y estructura clara.",
     presentacion: base + "\n\nTu tarea es crear ESQUEMAS DE PRESENTACION detallados. Genera entre 12 y 18 diapositivas usando EXACTAMENTE este formato para cada una:\n\n## SLIDE [N]: [Titulo]\n[Bullets de contenido, uno por linea comenzando con -]\nNOTAS DEL PRESENTADOR: [Lo que dice el docente, 3-4 oraciones con detalle pedagogico]\n\n---\n\nCada slide debe tener contenido sustancial. Incluí slide de apertura, cierre y preguntas.",
     guia:         base + "\n\nTu tarea es crear GUIAS DE ESTUDIO completas y autonomas. Incluí siempre: objetivos de aprendizaje, mapa conceptual en texto, preguntas orientadoras antes de cada seccion, desarrollo por unidades con ejemplos, actividades de comprension lectora integradas, cuadros comparativos, autoevaluacion con respuestas, estrategias de repaso y memoria, recursos adicionales sugeridos.",
@@ -88,28 +88,29 @@ function userGen(type, topic, diff, extra, subject, docText) {
       "FORMATO: usa exclusivamente tablas en formato Markdown (con | y guiones), nunca dibujadas con caracteres o ASCII. No uses emojis en los titulos; como mucho, alguno muy puntual dentro del texto si de verdad aporta. Estructura clara con encabezados. El documento debe poder imprimirse y entregarse directamente." + mk + e,
 
     rubrica:
-      "Crea una rubrica analitica COMPLETA y profesional para evaluar: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
+      "Crea una rubrica analitica completa y profesional para evaluar: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
       "La rubrica debe incluir:\n" +
-      "- Tabla principal con 5-6 criterios especificos y observables\n" +
-      "- 4 niveles de logro: Excelente (4) / Satisfactorio (3) / En proceso (2) / Inicio (1)\n" +
-      "- Descriptores concretos y observables para cada criterio en cada nivel\n" +
-      "- Puntaje por criterio y puntaje total\n" +
-      "- Tabla de conversion: puntaje total → nota en escala 1-10\n" +
-      "- Instrucciones de uso para el docente\n" +
-      "- Espacio para calificacion final y comentarios\n" +
-      "- Instrucciones para el alumno (como sera evaluado)" + e,
+      "- Una tabla principal con criterios especificos y observables (los que el tema realmente requiera)\n" +
+      "- Niveles de logro claros (por ejemplo Excelente / Satisfactorio / En proceso / Inicio) con su puntaje\n" +
+      "- Descriptores concretos y especificos del tema para cada criterio en cada nivel (no genericos)\n" +
+      "- Puntaje por criterio y total, y como se convierte a una nota\n" +
+      "- Breves instrucciones de uso para el docente\n\n" +
+      "Priorizá que los criterios y descriptores sean utiles y claros por sobre la cantidad. Que un docente pueda tomar la rubrica y evaluar con ella sin dudas.\n\n" +
+      "FORMATO: usá tablas en formato Markdown (con | y guiones), nunca dibujadas con ASCII. No uses emojis. Estructura clara." + e,
 
     evaluacion:
-      "Crea una evaluacion COMPLETA lista para imprimir sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
-      "La evaluacion debe incluir:\n" +
-      "- Encabezado institucional con: Nombre, Apellido, Curso, Fecha, Calificacion (campos en blanco)\n" +
+      "Crea una evaluacion completa y lista para imprimir sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
+      "Estructura sugerida (adaptala si el tema lo pide):\n" +
+      "- Encabezado con: Nombre, Apellido, Curso, Fecha, Calificacion (campos en blanco)\n" +
       "- Instrucciones generales claras\n" +
-      "- SECCION 1 — Opcion multiple (5-6 items, 4 opciones cada uno, valor indicado)\n" +
-      "- SECCION 2 — Verdadero o Falso con justificacion obligatoria (4-5 items)\n" +
-      "- SECCION 3 — Respuesta breve (3-4 preguntas con espacio para responder)\n" +
-      "- SECCION 4 — Desarrollo (1-2 preguntas integradoras con criterios de correccion)\n" +
-      "- Valor de cada seccion claramente indicado\n" +
-      "- CLAVE DE RESPUESTAS completa al final (separada por una linea)" + e,
+      "- Seccion de opcion multiple (varios items con 4 opciones)\n" +
+      "- Seccion de verdadero o falso con justificacion\n" +
+      "- Seccion de respuesta breve\n" +
+      "- Seccion de desarrollo (1-2 preguntas integradoras)\n" +
+      "- El valor de cada seccion indicado\n" +
+      "- CLAVE DE RESPUESTAS completa al final para el docente\n\n" +
+      "Las preguntas deben ser claras, bien formuladas y adecuadas al nivel; priorizá la calidad de cada consigna por sobre la cantidad. No incluyas mas items de los necesarios para evaluar bien el tema.\n\n" +
+      "FORMATO: usa tablas en formato Markdown (con | y guiones) si necesitas tablas, nunca dibujadas con ASCII. No uses emojis. Estructura clara con encabezados. Listo para imprimir." + e,
 
    material:
       "Crea un material didactico de excelencia sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
