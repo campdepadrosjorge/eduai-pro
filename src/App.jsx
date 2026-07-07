@@ -23,8 +23,8 @@ const NAV = [
 ];
 
 const GEN_TYPES = [
-  { id:"planclase",    label:"Actividad Completa",       icon:"ti-calendar",   color:"#1d4ed8" },
-  { id:"actividad",   label:"Actividad Didactica",       icon:"ti-target",     color:"#059669" },
+  { id:"planclase",    label:"Plan de Clase",       icon:"ti-calendar",   color:"#1d4ed8" },
+  { id:"actividad",   label:"Actividad para el Alumno",       icon:"ti-target",     color:"#059669" },
   { id:"rubrica",     label:"Rubrica de Evaluacion",     icon:"ti-list-check", color:"#0d9488" },
   { id:"evaluacion",  label:"Evaluacion / Examen",       icon:"ti-writing",    color:"#7c3aed" },
   { id:"material",    label:"Material Didactico",        icon:"ti-book",       color:"#0891b2" },
