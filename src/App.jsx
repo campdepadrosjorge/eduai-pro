@@ -42,8 +42,9 @@ const MM_TYPES = [
 ];
 
 const LEVELS = [
-  "Inicial","Primario (1-3)","Primario (4-6)",
-  "Secundario (1-3)","Secundario (4-6)",
+  "Nivel Inicial",
+  "Primaria (primer ciclo)","Primaria (segundo ciclo)",
+  "Secundaria (ciclo basico)","Secundaria (ciclo superior)",
   "Terciario / Universitario","Formacion Docente","Capacitacion Profesional",
 ];
 
@@ -1310,7 +1311,7 @@ export default function AulaXpro() {
   var [bar,setBar]=useState(true);
   var [mobileMenu,setMobileMenu]=useState(false);
   var [subjModal,setSubjModal]=useState(false);
-  var [sf,setSf]=useState({name:"",level:"Secundario (4-6)",materials:"",bibliography:""});
+  var [sf,setSf]=useState({name:"",level:"Secundaria (ciclo superior)",materials:"",bibliography:""});
   var [sfPdfs,setSfPdfs]=useState([]);
   var [pdfLoading,setPdfLoading]=useState(false);
   var [pdfStage,setPdfStage]=useState("");
@@ -1333,7 +1334,7 @@ export default function AulaXpro() {
   var [showNotifications,setShowNotifications]=useState(false);
   var [genType,setGenType]=useState("planclase");
   var [genTopic,setGenTopic]=useState("");
-  var [genLevel,setGenLevel]=useState("Secundario (4-6)");
+  var [genLevel,setGenLevel]=useState("Secundaria (ciclo superior)");
   var [genDiff,setGenDiff]=useState("Intermedio");
   var [genExtra,setGenExtra]=useState("");
   var [genResult,setGenResult]=useState("");
@@ -1550,7 +1551,7 @@ useEffect(function(){
       var sub=await dbAddSubject(authUser.id,subData);
       setSubjects(subjects.concat([sub]));setCurSid(sub.id);
     }
-    setSf({name:"",level:"Secundario (4-6)",materials:"",bibliography:""});
+    setSf({name:"",level:"Secundaria (ciclo superior)",materials:"",bibliography:""});
     setSfPdfs([]);setEditingSubject(null);setSubjModal(false);
   }
 
