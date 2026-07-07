@@ -68,9 +68,8 @@ function sysGen(type, subject, level, materials, bibliography) {
 function userGen(type, topic, diff, extra, subject, docText) {
   var docCtx = docText ? "\n\nDOCUMENTO DE CONTEXTO (usá este material como base para generar el contenido, respetando su enfoque, vocabulario y nivel):\n" + docText.slice(0, 8000) : "";
   var e = (extra ? "\n\nInstrucciones adicionales del docente: " + extra : "") + docCtx;
-  var isMakeCode = topic.toLowerCase().includes("micro") || topic.toLowerCase().includes("makecode") ||
-    (extra && extra.toLowerCase().includes("makecode")) ||
-    (subject && ((subject.name||"").toLowerCase().includes("robot") || (subject.name||"").toLowerCase().includes("program") || (subject.name||"").toLowerCase().includes("tecnolog")));
+  var makecodeText = (topic + " " + (extra || "")).toLowerCase();
+  var isMakeCode = makecodeText.includes("makecode") || makecodeText.includes("micro:bit") || makecodeText.includes("microbit");
   var mk = isMakeCode ? "\n\nIMPORTANTE: Incluí una seccion '## Codigo MakeCode' con el codigo JavaScript completo para micro:bit dentro de un bloque ```javascript. Explicá cada linea con comentarios." : "";
   var nivel = subject ? " para alumnos de " + (subject.level||"nivel medio") : "";
   var materia = subject ? " en el contexto de " + subject.name : "";
