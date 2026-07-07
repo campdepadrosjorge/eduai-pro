@@ -1634,7 +1634,7 @@ useEffect(function(){
     try{
       var sys=sysGen(genType,curSubj.name,genLevel,curSubj.materials,curSubj.bibliography);
       var usr=userGen(genType,genTopic,genDiff,genExtra,curSubj,genDocText);
-      var maxTokPorTipo={ material:16000, guia:16000, planclase:12000, secuencia:14000, presentacion:12000, actividad:10000, evaluacion:10000, rubrica:6000, adaptado:12000 };
+      var maxTokPorTipo={ material:16000, guia:16000, planclase:12000, secuencia:14000, presentacion:12000, actividad:10000, evaluacion:14000, rubrica:6000, adaptado:12000 };
       var maxTok=maxTokPorTipo[genType]||10000;
       var r=await callClaude(sys,[{role:"user",content:usr}],maxTok,false,function(partial){
         setGenResult(partial);
