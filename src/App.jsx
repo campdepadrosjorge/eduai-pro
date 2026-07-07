@@ -110,19 +110,11 @@ function userGen(type, topic, diff, extra, subject, docText) {
       "- Valor de cada seccion claramente indicado\n" +
       "- CLAVE DE RESPUESTAS completa al final (separada por una linea)" + e,
 
-    material:
-      "Crea un material didactico COMPLETO y atractivo sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
-      "El material debe incluir:\n" +
-      "- Titulo atractivo y subtitulo descriptivo\n" +
-      "- Introduccion motivadora que conecte con la experiencia del alumno\n" +
-      "- Desarrollo organizado en 3-4 subtemas con:\n" +
-      "  * Explicacion clara con ejemplos concretos y actuales\n" +
-      "  * Al menos un recuadro de 'Concepto clave' por subtema\n" +
-      "  * Una actividad breve integrada al texto\n" +
-      "- Cuadro comparativo o tabla de sintesis\n" +
-      "- Sintesis final en forma de mapa conceptual textual\n" +
-      "- Glosario de terminos clave (minimo 8 terminos)\n" +
-      "- Preguntas de autoevaluacion con respuestas al pie" + e,
+   material:
+      "Crea un material didactico de excelencia sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
+      "Pensalo como lo escribiria un gran docente: con explicaciones claras, ejemplos concretos y cercanos al alumno, y todo lo que ayude a comprender el tema de verdad (introduccion motivadora, conceptos clave destacados, cuadros o tablas de sintesis, glosario, preguntas de autoevaluacion con sus respuestas). Incluí eso solo si aporta valor real; no agregues secciones de relleno ni cantidades fijas de items forzadas.\n\n" +
+      "SE CONCISO Y PRACTICO. Desarrollá bien lo importante y evitá el relleno. El material tiene que ser claro y estudiable, no interminable. Apuntá a una extension moderada.\n\n" +
+      "FORMATO: usa exclusivamente tablas en formato Markdown (con | y guiones), nunca dibujadas con caracteres o ASCII. No uses emojis en los titulos; como mucho alguno muy puntual dentro del texto si de verdad aporta. Estructura clara con encabezados." + e,
 
     presentacion:
       "Crea un esquema de presentacion COMPLETO sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
@@ -136,17 +128,10 @@ function userGen(type, topic, diff, extra, subject, docText) {
       "Incluí: slide de apertura con pregunta disparadora, slides de desarrollo con ejemplos, slide de actividad para hacer con los alumnos, slide de sintesis, slide de cierre con preguntas para reflexionar." + e,
 
     guia:
-      "Crea una guia de estudio COMPLETA y autonoma sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
-      "La guia debe incluir:\n" +
-      "- Objetivos de aprendizaje claros (lo que vas a poder hacer al terminar)\n" +
-      "- Mapa conceptual en formato textual con relaciones entre conceptos\n" +
-      "- Preguntas orientadoras antes de cada seccion (para activar la lectura activa)\n" +
-      "- Desarrollo organizado por unidades con explicaciones claras\n" +
-      "- Cuadros comparativos y tablas de sintesis\n" +
-      "- Actividades de comprension integradas al texto\n" +
-      "- Autoevaluacion final con respuestas (para que el alumno verifique)\n" +
-      "- Estrategias de repaso y memoria (tecnicas de estudio sugeridas)\n" +
-      "- Recursos adicionales (que buscar, que leer o ver para profundizar)" + e,
+      "Crea una guia de estudio de excelencia y autonoma sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
+      "Pensala para que el alumno pueda estudiar solo: con objetivos claros de lo que va a lograr, el tema bien organizado y explicado, preguntas orientadoras que activen la lectura, autoevaluacion con respuestas para verificar, y estrategias de repaso. Sumá cuadros de sintesis, actividades de comprension o recursos para profundizar solo si aportan valor real; no fuerces secciones de relleno.\n\n" +
+      "SE CONCISO Y PRACTICO. Desarrollá bien lo importante y evitá el relleno. La guia tiene que ser util y estudiable, no interminable. Apuntá a una extension moderada.\n\n" +
+      "FORMATO: usa exclusivamente tablas en formato Markdown (con | y guiones), nunca dibujadas con caracteres o ASCII. No uses emojis en los titulos; como mucho alguno muy puntual dentro del texto si de verdad aporta. Estructura clara con encabezados." + e,
   };
   return m[type] || "Crea contenido educativo de alta calidad sobre \"" + topic + "\"" + nivel + materia + ". Dificultad: " + diff + "." + e;
 }
