@@ -1659,7 +1659,7 @@ useEffect(function(){
     try{
       var sys=sysGen(genType,curSubj.name,genLevel||curSubj.level,curSubj.materials,curSubj.bibliography);
       var usr=userGen(genType,genTopic,genDiff,genExtra,curSubj,genDocText);
-      var r=await callClaude(sys,[{role:"user",content:usr}],6000,false,function(partial){
+      var r=await callClaude(sys,[{role:"user",content:usr}],8000,false,function(partial){
         setGenResult(partial);
       });
       setGenResult(r);setMakeCodeUrl(generateMakeCodeUrl(r));
