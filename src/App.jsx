@@ -54,7 +54,7 @@ function sysGen(type, subject, level, materials, bibliography) {
   var base = "Sos un docente experto con 20 anos de experiencia en " + subject + " nivel " + level + ", especializado en diseno de materiales educativos de alta calidad para el contexto argentino. " + ctx;
   var p = {
     planclase:    base + "\n\nTu tarea es crear planes de clase EXCEPCIONALES que cualquier docente pueda usar directamente en el aula. Incluí siempre: datos del plan, objetivos con verbos de Bloom, contenidos conceptuales/procedimentales/actitudinales, secuencia didactica detallada con tiempos exactos (inicio/desarrollo/cierre), consignas textuales para los alumnos, preguntas orientadoras, criterios de evaluacion formativa, tarea o actividad de extension. Usa tablas, listas y estructura visual clara.",
-    actividad:   base + "\n\nTu tarea es crear ACTIVIDADES DIDACTICAS completas y listas para usar en el aula. El documento debe poder entregarse directamente al alumno. Incluí siempre: titulo atractivo, objetivo claro, duracion, materiales, contexto/motivacion, desarrollo paso a paso con consignas exactas y detalladas, preguntas de reflexion, desafio extra para alumnos avanzados, criterios de evaluacion, espacio para bitacora o registro del alumno. Usa formato visual con tablas, checkboxes y pasos numerados. Sin emojis excesivos.",
+    actividad:   base + "\n\nTu tarea es crear una ACTIVIDAD DIDACTICA de excelencia, lista para usar en el aula y pensada con criterio pedagogico real, no como un formulario a completar. Una buena actividad es clara, motivadora, bien secuenciada y directamente aplicable; incluye consignas precisas que el alumno entiende sin ayuda, y propone un desafio genuino adecuado al nivel. Decidi vos que secciones y en que profundidad segun lo que el tema realmente necesita, priorizando la calidad y la usabilidad por sobre la exhaustividad. No fuerces secciones que no aporten. Como minimo, la actividad debe dejar claros: los objetivos de aprendizaje, el desarrollo paso a paso, y como se evalua.",
     rubrica:      base + "\n\nTu tarea es crear RUBRICAS ANALITICAS profesionales listas para usar. Incluí siempre: tabla con 5-6 criterios especificos, 4 niveles de logro (Excelente/Satisfactorio/En proceso/Inicio) con descriptores concretos y observables, puntaje por criterio, escala de conversion a nota, instrucciones de uso para el docente, espacio para comentarios.",
     evaluacion:   base + "\n\nTu tarea es crear EVALUACIONES COMPLETAS listas para imprimir. Incluí siempre: encabezado con datos del alumno, instrucciones claras por seccion, seccion 1 opcion multiple (5-6 items con 4 opciones), seccion 2 verdadero/falso con justificacion (4-5 items), seccion 3 respuesta breve (3-4 preguntas), seccion 4 desarrollo (1-2 preguntas integradoras), valor de cada seccion, clave de respuestas al final. Formato listo para imprimir.",
     material:     base + "\n\nTu tarea es crear MATERIALES DIDACTICOS atractivos y completos. Incluí siempre: titulo, introduccion motivadora, desarrollo por subtemas con ejemplos concretos y cercanos a la realidad del alumno, cuadros de conceptos clave, actividades integradas dentro del texto, sintesis visual, glosario, preguntas de autoevaluacion. Usa formato de texto escolar con tablas, recuadros destacados y estructura clara.",
@@ -98,20 +98,9 @@ function userGen(type, topic, diff, extra, subject, docText) {
       "Usar emojis con moderacion. El documento completo debe poder usarse sin modificaciones." + e,
 
     actividad:
-      "Crea una actividad didactica COMPLETA y lista para entregar al alumno sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
-      "La actividad debe:\n" +
-      "- Tener un titulo atractivo y motivador\n" +
-      "- Incluir objetivo claro, duracion estimada y materiales necesarios\n" +
-      "- Tener una introduccion/contexto que motive al alumno (maximo 3 lineas)\n" +
-      "- Desarrollar la actividad en PARTES o PASOS numerados con consignas exactas y detalladas\n" +
-      "- Incluir al menos una tabla o checklist que el alumno pueda completar\n" +
-      "- Tener un DESAFIO EXTRA para alumnos que terminan antes\n" +
-      "- Incluir preguntas de reflexion final (minimo 3)\n" +
-      "- Terminar con espacio para bitacora o registro del alumno\n" +
-      "- Incluir NOTA PARA EL DOCENTE con sugerencias pedagogicas en recuadro separado\n" +
-      "- Incluir una rubrica de evaluacion sintetica al final\n" +
-"- Usar emojis con moderacion, solo donde aporten claridad visual real\n" +
-"- El documento completo debe poder imprimirse y entregarse directamente al alumno con espacios para completar (lineas de puntos o guiones para escribir)" + mk + e,
+      "Crea una actividad didactica de excelencia, lista para entregar al alumno, sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
+      "Pensala como la pensaria un gran docente: con un objetivo claro, un desarrollo bien secuenciado en pasos con consignas precisas, y una forma de evaluar lo aprendido. Sumale lo que el tema pida para ser una gran actividad (por ejemplo motivacion inicial, tablas o espacios para completar, un desafio para quienes terminan antes, reflexion final o una nota para el docente), pero solo si aporta valor real; no incluyas secciones de relleno.\n\n" +
+      "FORMATO: usa exclusivamente tablas en formato Markdown (con | y guiones), nunca dibujadas con caracteres o ASCII. No uses emojis en los titulos; como mucho, alguno muy puntual dentro del texto si de verdad aporta. Estructura clara con encabezados. El documento debe poder imprimirse y entregarse directamente, con espacios para completar donde el alumno deba escribir." + mk + e,
 
     rubrica:
       "Crea una rubrica analitica COMPLETA y profesional para evaluar: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
