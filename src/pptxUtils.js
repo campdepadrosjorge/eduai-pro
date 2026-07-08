@@ -12,7 +12,14 @@ const COLORS = {
  
 function cleanText(text) {
   if (!text) return "";
-  return text.replace(/\*\*/g, "").replace(/\*/g, "").replace(/^[-•]\s+/gm, "").replace(/^#+\s+/gm, "").trim();
+  return text
+    .replace(/\*\*/g, "")
+    .replace(/\*/g, "")
+    .replace(/^[-•]\s+/gm, "")
+    .replace(/^#+\s+/gm, "")
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE00}-\u{FE0F}\u{1F000}-\u{1F0FF}]/gu, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }
  
 function extractBullets(text) {
@@ -22,7 +29,12 @@ function extractBullets(text) {
   for (var i = 0; i < lines.length; i++) {
     var line = lines[i].trim();
     if (!line || line.match(/^NOTAS?:/i) || line.match(/^---+$/)) break;
-    var clean = line.replace(/^[-•*]\s+/, "").replace(/\*\*/g, "").trim();
+    var clean = line
+      .replace(/^[-•*]\s+/, "")
+      .replace(/\*\*/g, "")
+      .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE00}-\u{FE0F}\u{1F000}-\u{1F0FF}]/gu, "")
+      .replace(/\s{2,}/g, " ")
+      .trim();
     if (clean.length > 2) bullets.push(clean);
   }
   return bullets.slice(0, 7);
