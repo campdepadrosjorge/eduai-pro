@@ -58,7 +58,7 @@ function sysGen(type, subject, level, materials, bibliography) {
     rubrica:      base + "\n\nTu tarea es crear una RUBRICA ANALITICA de excelencia, lista para usar. Una buena rubrica tiene criterios claros y observables, con descriptores concretos que permiten distinguir sin ambiguedad cada nivel de logro. Los descriptores tienen que ser especificos del tema evaluado, no genericos. Mantene la estructura de tabla con criterios y niveles, e incluí como se traduce a una calificacion.",
     evaluacion:   base + "\n\nTu tarea es crear una EVALUACION de excelencia, lista para imprimir y tomar. Una buena evaluacion tiene preguntas claras, bien formuladas y de dificultad adecuada al nivel, que realmente midan la comprension del tema y no solo la memoria. Cuida que cada consigna sea inequivoca y que la evaluacion tenga una progresion razonable de dificultad. Mantene una estructura clara por secciones e incluí siempre una clave de respuestas al final para el docente.",
     material:     base + "\n\nTu tarea es crear MATERIALES DIDACTICOS atractivos y completos. Incluí siempre: titulo, introduccion motivadora, desarrollo por subtemas con ejemplos concretos y cercanos a la realidad del alumno, cuadros de conceptos clave, actividades integradas dentro del texto, sintesis visual, glosario, preguntas de autoevaluacion. Usa formato de texto escolar con tablas, recuadros destacados y estructura clara.",
-    presentacion: base + "\n\nTu tarea es crear un ESQUEMA DE PRESENTACION de excelencia, pensado con criterio pedagogico: cada diapositiva debe aportar contenido valioso y bien organizado, con una progresion clara del tema. No se trata de llenar slides, sino de que la presentacion realmente ayude a ense\u00f1ar.\n\nGenera la cantidad de diapositivas que el tema necesite (habitualmente entre 10 y 16), usando EXACTAMENTE este formato para cada una:\n\n## SLIDE [N]: [Titulo]\n[Bullets de contenido, uno por linea comenzando con -]\nNOTAS DEL PRESENTADOR: [Lo que dice el docente, 3-4 oraciones con detalle pedagogico]\n\n---\n\nRespeta este formato al pie de la letra (el encabezado '## SLIDE', los bullets con '-', la linea 'NOTAS DEL PRESENTADOR:' y el separador '---'), porque se procesa automaticamente. No uses emojis en los titulos. Incluí slide de apertura, desarrollo, cierre y preguntas. Cada slide con contenido sustancial y concreto.",
+    presentacion: base + "\n\nTu tarea es crear un ESQUEMA DE PRESENTACION de excelencia, pensado con criterio pedagogico y con una progresion clara del tema. REGLA CLAVE: las diapositivas llevan MUY POCO texto (ideas clave en pocas palabras, nunca oraciones largas ni parrafos); todo el desarrollo, las explicaciones y los ejemplos van en las NOTAS DEL PRESENTADOR. Una slide es un apoyo visual, no un documento.\n\nGenera la cantidad de diapositivas que el tema necesite (habitualmente entre 10 y 16), usando EXACTAMENTE este formato para cada una:\n\n## SLIDE [N]: [Titulo]\n[3-5 bullets cortos y telegraficos, uno por linea comenzando con -, pocas palabras cada uno]\nNOTAS DEL PRESENTADOR: [Todo el desarrollo del contenido, ejemplos y transiciones, 3-5 oraciones]\n\n---\n\nRespeta este formato al pie de la letra (el encabezado '## SLIDE', los bullets con '-', la linea 'NOTAS DEL PRESENTADOR:' y el separador '---'), porque se procesa automaticamente. No uses emojis en los titulos. Incluí slide de apertura, desarrollo, cierre y preguntas.",
     guia:         base + "\n\nTu tarea es crear GUIAS DE ESTUDIO completas y autonomas. Incluí siempre: objetivos de aprendizaje, mapa conceptual en texto, preguntas orientadoras antes de cada seccion, desarrollo por unidades con ejemplos, actividades de comprension lectora integradas, cuadros comparativos, autoevaluacion con respuestas, estrategias de repaso y memoria, recursos adicionales sugeridos.",
     adaptado:     base + "\n\nSos especialista en educacion inclusiva y NEE con experiencia en adaptaciones curriculares. Tu tarea es crear materiales adaptados especificos, practicos y listos para usar con un alumno concreto.",
   };
@@ -121,12 +121,13 @@ function userGen(type, topic, diff, extra, subject, docText) {
       "Crea un esquema de presentacion sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
       "Genera la cantidad de diapositivas que el tema necesite (habitualmente entre 10 y 16) usando EXACTAMENTE este formato para cada una:\n\n" +
       "## SLIDE [N]: [Titulo de la diapositiva]\n" +
-      "- [bullet de contenido]\n" +
-      "- [bullet de contenido]\n" +
-      "- [bullet de contenido]\n" +
-      "NOTAS DEL PRESENTADOR: [Lo que dice el docente en voz alta, 3-4 oraciones con desarrollo del contenido, ejemplos y transiciones]\n\n" +
+      "- [bullet corto y telegrafico, maximo 6-8 palabras]\n" +
+      "- [bullet corto]\n" +
+      "- [bullet corto]\n" +
+      "NOTAS DEL PRESENTADOR: [Aca va TODO el desarrollo: lo que el docente explica en voz alta, ejemplos, detalles y transiciones. 3-5 oraciones]\n\n" +
       "---\n\n" +
-      "Respeta el formato al pie de la letra (el '## SLIDE', los bullets con '-', la linea 'NOTAS DEL PRESENTADOR:' y el separador '---'), porque se procesa automaticamente. No uses emojis. Cada slide con contenido concreto y sustancial. Incluí apertura con pregunta disparadora, desarrollo con ejemplos, una slide de actividad para los alumnos, sintesis y cierre con preguntas para reflexionar." + e,
+      "REGLA CLAVE de una buena presentacion: las diapositivas llevan MUY POCO texto (ideas clave en pocas palabras, nunca oraciones largas ni parrafos). Maximo 3-5 bullets por slide, cada uno de pocas palabras. Todo el contenido desarrollado, las explicaciones y los ejemplos van en las NOTAS DEL PRESENTADOR, no en la slide. Una slide es un apoyo visual, no un documento.\n\n" +
+      "Respeta el formato al pie de la letra (el '## SLIDE', los bullets con '-', la linea 'NOTAS DEL PRESENTADOR:' y el separador '---'), porque se procesa automaticamente. No uses emojis. Incluí apertura con pregunta disparadora, desarrollo, una slide de actividad para los alumnos, sintesis y cierre con preguntas." + e,
 
     guia:
       "Crea una guia de estudio de excelencia y autonoma sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
@@ -1637,7 +1638,13 @@ useEffect(function(){
       var r=await callClaude(sys,[{role:"user",content:usr}],maxTok,false,function(partial){
         setGenResult(partial);
       });
-      setGenResult(r);setMakeCodeUrl(generateMakeCodeUrl(r));
+      setGenResult(r);
+      var pidioMakeCode=(genTopic+" "+(genExtra||"")).toLowerCase();
+      if(pidioMakeCode.includes("makecode")||pidioMakeCode.includes("micro:bit")||pidioMakeCode.includes("microbit")){
+        setMakeCodeUrl(generateMakeCodeUrl(r));
+      }else{
+        setMakeCodeUrl(null);
+      }
       var gt2=GEN_TYPES.find(function(g){return g.id===genType;});
       var tokIn=Math.round((sys.length+usr.length)/4);
       var tokOut=Math.round(r.length/4);
