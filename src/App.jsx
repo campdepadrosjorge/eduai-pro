@@ -2001,7 +2001,7 @@ useEffect(function(){
             );
           })}
         </nav>
-        <div style={{padding:"10px 12px",borderTop:"1px solid "+C.border}}>
+        <div style={{padding:"10px 12px",paddingBottom:isMobile?40:10,borderTop:"1px solid "+C.border}}>
           {bar?(
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div style={{fontSize:11,color:C.textDim,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4}}>
