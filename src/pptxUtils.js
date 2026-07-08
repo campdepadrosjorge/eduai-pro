@@ -28,7 +28,7 @@ function extractBullets(text) {
   var bullets = [];
   for (var i = 0; i < lines.length; i++) {
     var line = lines[i].trim();
-    if (!line || line.match(/^NOTAS?:/i) || line.match(/^---+$/)) break;
+    if (!line || line.match(/^NOTAS?(\s+DEL\s+PRESENTADOR)?\s*:/i) || line.match(/^-{3,}$/)) break;
     var clean = line
       .replace(/^[-•*]\s+/, "")
       .replace(/\*\*/g, "")
@@ -42,7 +42,7 @@ function extractBullets(text) {
  
 function extractNotes(text) {
   if (!text) return "";
-  var match = text.match(/NOTAS?:\s*([\s\S]*?)(?=\n---|\n##|$)/i);
+  var match = text.match(/NOTAS?(?:\s+DEL\s+PRESENTADOR)?\s*:\s*([\s\S]*?)(?=\n-{3,}|\n##|$)/i);
   return match ? match[1].replace(/\*\*/g, "").trim() : "";
 }
  
