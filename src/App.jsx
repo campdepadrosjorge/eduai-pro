@@ -37,7 +37,6 @@ const MM_TYPES = [
   { id:"podcast",             label:"Guion de Podcast",         icon:"ti-microphone",   desc:"Episodio educativo completo" },
   { id:"infografia",          label:"Estructura de Infografia", icon:"ti-chart-bar",    desc:"Layout para Canva" },
   { id:"video_script",        label:"Guion de Video",           icon:"ti-video",        desc:"Con descripcion visual" },
-  { id:"presentacion_visual", label:"Presentacion Visual",      icon:"ti-presentation", desc:"Slide por slide" },
   { id:"imagen_ia",           label:"Generador de Imagenes IA", icon:"ti-photo-ai",     desc:"Imagenes con IA" },
 ];
 
@@ -144,7 +143,6 @@ function userMM(type, topic, extra) {
     podcast:             "Guion de podcast sobre \"" + topic + "\": [INTRO], [BLOQUES] 3-4 partes, [CIERRE], notas de produccion." + e,
     infografia:          "Infografia sobre \"" + topic + "\": titulo, 5+ secciones, paleta HEX, instrucciones para Canva." + e,
     video_script:        "Guion de video sobre \"" + topic + "\" [IMAGEN][VOZ][TEXTO]: gancho, 3-4 bloques, CTA." + e,
-    presentacion_visual: "Presentacion visual sobre \"" + topic + "\" 15 slides: N, titulo, layout, descripcion, texto, guion." + e,
   };
   return m[type] || "Contenido multimedia educativo sobre \"" + topic + "\"." + e;
 }
