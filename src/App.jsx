@@ -59,7 +59,7 @@ function sysGen(type, subject, level, materials, bibliography) {
     rubrica:      base + "\n\nTu tarea es crear una RUBRICA ANALITICA de excelencia, lista para usar. Una buena rubrica tiene criterios claros y observables, con descriptores concretos que permiten distinguir sin ambiguedad cada nivel de logro. Los descriptores tienen que ser especificos del tema evaluado, no genericos. Mantene la estructura de tabla con criterios y niveles, e incluí como se traduce a una calificacion.",
     evaluacion:   base + "\n\nTu tarea es crear una EVALUACION de excelencia, lista para imprimir y tomar. Una buena evaluacion tiene preguntas claras, bien formuladas y de dificultad adecuada al nivel, que realmente midan la comprension del tema y no solo la memoria. Cuida que cada consigna sea inequivoca y que la evaluacion tenga una progresion razonable de dificultad. Mantene una estructura clara por secciones e incluí siempre una clave de respuestas al final para el docente.",
     material:     base + "\n\nTu tarea es crear MATERIALES DIDACTICOS atractivos y completos. Incluí siempre: titulo, introduccion motivadora, desarrollo por subtemas con ejemplos concretos y cercanos a la realidad del alumno, cuadros de conceptos clave, actividades integradas dentro del texto, sintesis visual, glosario, preguntas de autoevaluacion. Usa formato de texto escolar con tablas, recuadros destacados y estructura clara.",
-    presentacion: base + "\n\nTu tarea es crear ESQUEMAS DE PRESENTACION detallados. Genera entre 12 y 18 diapositivas usando EXACTAMENTE este formato para cada una:\n\n## SLIDE [N]: [Titulo]\n[Bullets de contenido, uno por linea comenzando con -]\nNOTAS DEL PRESENTADOR: [Lo que dice el docente, 3-4 oraciones con detalle pedagogico]\n\n---\n\nCada slide debe tener contenido sustancial. Incluí slide de apertura, cierre y preguntas.",
+    presentacion: base + "\n\nTu tarea es crear un ESQUEMA DE PRESENTACION de excelencia, pensado con criterio pedagogico: cada diapositiva debe aportar contenido valioso y bien organizado, con una progresion clara del tema. No se trata de llenar slides, sino de que la presentacion realmente ayude a ense\u00f1ar.\n\nGenera la cantidad de diapositivas que el tema necesite (habitualmente entre 10 y 16), usando EXACTAMENTE este formato para cada una:\n\n## SLIDE [N]: [Titulo]\n[Bullets de contenido, uno por linea comenzando con -]\nNOTAS DEL PRESENTADOR: [Lo que dice el docente, 3-4 oraciones con detalle pedagogico]\n\n---\n\nRespeta este formato al pie de la letra (el encabezado '## SLIDE', los bullets con '-', la linea 'NOTAS DEL PRESENTADOR:' y el separador '---'), porque se procesa automaticamente. No uses emojis en los titulos. Incluí slide de apertura, desarrollo, cierre y preguntas. Cada slide con contenido sustancial y concreto.",
     guia:         base + "\n\nTu tarea es crear GUIAS DE ESTUDIO completas y autonomas. Incluí siempre: objetivos de aprendizaje, mapa conceptual en texto, preguntas orientadoras antes de cada seccion, desarrollo por unidades con ejemplos, actividades de comprension lectora integradas, cuadros comparativos, autoevaluacion con respuestas, estrategias de repaso y memoria, recursos adicionales sugeridos.",
     adaptado:     base + "\n\nSos especialista en educacion inclusiva y NEE con experiencia en adaptaciones curriculares. Tu tarea es crear materiales adaptados especificos, practicos y listos para usar con un alumno concreto.",
   };
@@ -119,15 +119,15 @@ function userGen(type, topic, diff, extra, subject, docText) {
       "FORMATO: usa exclusivamente tablas en formato Markdown (con | y guiones), nunca dibujadas con caracteres o ASCII. No uses emojis en los titulos; como mucho alguno muy puntual dentro del texto si de verdad aporta. Estructura clara con encabezados." + e,
 
     presentacion:
-      "Crea un esquema de presentacion COMPLETO sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
-      "Genera entre 14 y 18 diapositivas usando EXACTAMENTE este formato para cada una:\n\n" +
+      "Crea un esquema de presentacion sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
+      "Genera la cantidad de diapositivas que el tema necesite (habitualmente entre 10 y 16) usando EXACTAMENTE este formato para cada una:\n\n" +
       "## SLIDE [N]: [Titulo de la diapositiva]\n" +
-      "- [bullet 1 de contenido]\n" +
-      "- [bullet 2 de contenido]\n" +
-      "- [bullet 3 de contenido]\n" +
-      "NOTAS DEL PRESENTADOR: [Lo que dice el docente en voz alta, 3-4 oraciones detalladas con el desarrollo del contenido, ejemplos y transiciones]\n\n" +
+      "- [bullet de contenido]\n" +
+      "- [bullet de contenido]\n" +
+      "- [bullet de contenido]\n" +
+      "NOTAS DEL PRESENTADOR: [Lo que dice el docente en voz alta, 3-4 oraciones con desarrollo del contenido, ejemplos y transiciones]\n\n" +
       "---\n\n" +
-      "Incluí: slide de apertura con pregunta disparadora, slides de desarrollo con ejemplos, slide de actividad para hacer con los alumnos, slide de sintesis, slide de cierre con preguntas para reflexionar." + e,
+      "Respeta el formato al pie de la letra (el '## SLIDE', los bullets con '-', la linea 'NOTAS DEL PRESENTADOR:' y el separador '---'), porque se procesa automaticamente. No uses emojis. Cada slide con contenido concreto y sustancial. Incluí apertura con pregunta disparadora, desarrollo con ejemplos, una slide de actividad para los alumnos, sintesis y cierre con preguntas para reflexionar." + e,
 
     guia:
       "Crea una guia de estudio de excelencia y autonoma sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
