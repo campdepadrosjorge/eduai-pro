@@ -154,7 +154,10 @@ function userSequence(topic, nClasses, level, subject, extra) {
     (subject && subject.materials ? "\n\nPrograma:\n" + subject.materials.slice(0, 400) : "") +
     "\n\nPara cada clase usa ESTE FORMATO EXACTO:\n\n## CLASE [N]: [Titulo]\n**Duracion:** [min]\n**Objetivos:** [2-3]\n**Retoma:** [conexion anterior]\n**Inicio (10min):** [apertura]\n**Desarrollo (25min):** [actividad principal]\n**Cierre (10min):** [sintesis]\n**Recursos:** [materiales]\n**Evaluacion:** [como evaluar]\n\n---\n\nProgresion clara de dificultad entre clases." + (extra ? "\n\nInstrucciones adicionales: " + extra : "");
 }
-
+function msgError(e){
+  if(e && e.message==="__LIMIT__") return "Alcanzaste el limite de uso disponible por el momento. El servicio se restablece automaticamente. Si el problema persiste, escribinos a hola@aulaxpro.com.";
+  return "Error: "+(e && e.message ? e.message : e);
+}
 async function callClaude(system, messages, maxTokens, useSearch, onStream, userId) {
   if (!maxTokens) maxTokens = 4000;
   var useStreaming = typeof onStream === "function";
@@ -162,7 +165,15 @@ async function callClaude(system, messages, maxTokens, useSearch, onStream, user
     method:"POST", headers:{"Content-Type":"application/json"},
     body:JSON.stringify({ system, messages, maxTokens, useSearch:!!useSearch, stream:useStreaming }),
   });
-  if (!res.ok) { var err = {}; try { err = await res.json(); } catch(e) {} throw new Error(err.error || "Error " + res.status); }
+  if (!res.ok) {
+    var err = {};
+    try { err = await res.json(); } catch(e) {}
+    var errMsg = err.error || ("Error " + res.status);
+    if (/usage limit|usage limits|credit balance|rate limit|reached your/i.test(errMsg)) {
+      throw new Error("__LIMIT__");
+    }
+    throw new Error(errMsg);
+  }
   if (!useStreaming) {
     var data = await res.json();
     return data.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("");
@@ -1615,7 +1626,7 @@ useEffect(function(){
       var usr="Arma una evaluacion formal. NO inventes nombre de institucion ni docente. Usa este titulo y encabezado exacto:\n\n# Evaluacion de "+(curSubj?curSubj.name:"Materia")+"\n\n**Institucion:** ___________________________\n\n**Alumno/a:** ___________________________ **Curso:** ____________\n\n**Fecha:** ____________ **Calificacion:** ____________\n\n---\n\nLuego instrucciones por seccion y preguntas organizadas por tipo. Para V/F usa: V ___ F ___ (sin tablas). Para multiple choice usa a) b) c) d) sin tablas. No uses emojis. Al final la clave de respuestas.\n\nPREGUNTAS:\n"+questionsText;
       var r=await callClaude(sys,[{role:"user",content:usr}],4000);
       setQiExamResult(r);
-    }catch(e){setQiExamResult("Error: "+e.message);}
+    }catch(e){setQiExamResult(msgError(e));}
     setQiExamLoading(false);
   }
   async function generateDiff() {
@@ -1626,7 +1637,7 @@ useEffect(function(){
       var usr="A partir del siguiente contenido educativo, genera 3 versiones diferenciadas para distintos niveles de aprendizaje:\n\n## CONTENIDO ORIGINAL:\n"+genResult.slice(0,3000)+"\n\n## VERSIONES A GENERAR:\n\n### VERSION 1 — BASICA (alumnos con dificultades o que necesitan apoyo)\n- Lenguaje simple y directo\n- Pasos muy detallados y secuenciados\n- Menos cantidad de consignas\n- Vocabulario accesible con definiciones de terminos clave\n- Ejemplos concretos y cercanos a la vida cotidiana\n\n### VERSION 2 — ESTANDAR (nivel esperado para el curso)\n- Fiel al contenido original con leves adaptaciones\n- Consignas claras con nivel de desafio apropiado\n\n### VERSION 3 — AVANZADA (alumnos con altas capacidades)\n- Mayor nivel de complejidad y abstraccion\n- Consignas que exigen analisis, sintesis y evaluacion (verbos Bloom superiores)\n- Contenido ampliado con conexiones interdisciplinarias\n- Desafios adicionales y preguntas de extension\n\nGenera las 3 versiones completas y utilizables en el aula.";
       var r=await callClaude(sys,[{role:"user",content:usr}],6000);
       setDiffResult(r);
-    }catch(e){setDiffResult("Error: "+e.message);}
+    }catch(e){setDiffResult(msgError(e));}
     setDiffLoading(false);
   }
   async function generate(){
@@ -1655,7 +1666,7 @@ useEffect(function(){
       var costUsd=(tokIn*0.000003)+(tokOut*0.000015);
       dbLogUsage(authUser.id,authUser.email,genType,gt2?gt2.label:genType,curSubj?curSubj.name:"",tokIn,tokOut,false);
       dbAddUsageCost(authUser.id,costUsd).then(function(){dbGetUsage(authUser.id).then(function(u){setUsage(u);});});
-    }catch(e){setGenErr("Error: "+e.message);}
+    }catch(e){setGenErr(msgError(e));}
     setGenLoading(false);
   }
 
@@ -1666,7 +1677,7 @@ useEffect(function(){
       var sys="Sos experto en contenido educativo digital para "+curSubj.name+" ("+curSubj.level+"). Responde en espanol rioplatense con Markdown.";
       var r=await callClaude(sys,[{role:"user",content:userMM(mmType,mmTopic,mmExtra)}]);
       setMmResult(r);
-    }catch(e){setMmResult("Error: "+e.message);}
+    }catch(e){setMmResult(msgError(e));}
     setMmLoading(false);
   }
 
@@ -1766,7 +1777,7 @@ useEffect(function(){
       });
       dbSaveChatMessage(authUser.id,"assistant",r,chatSid||curSid,sessionId);
     }catch(e){
-      setChatMsgs(hist.concat([{role:"assistant",content:"Error: "+e.message}]));
+      setChatMsgs(hist.concat([{role:"assistant",content:msgError(e)}]));
     }
     setChatLoading(false);
   }
@@ -1847,7 +1858,7 @@ async function loadChatDoc(file){
             }catch{}
           }
         } catch(e) {
-          results.push({name:t.name,result:"Error: "+e.message,score:null,saved:false});
+          results.push({name:t.name,result:msgError(e),score:null,saved:false});
         }
       }
       setBatchResults(results);
@@ -1861,7 +1872,7 @@ async function loadChatDoc(file){
     var sys="Sos docente evaluador experto. Materia: \""+(curSubj?curSubj.name:"General")+"\". Responde en espanol rioplatense con Markdown.";
     var usr="Correccion usando la rubrica.\n\n## RUBRICA:\n"+corrR+"\n\n## TRABAJO:\n"+corrW+"\n\nIncluí: evaluacion por criterio, calificacion final, fortalezas, areas de mejora, devolucion al alumno.";
     try{var r=await callClaude(sys,[{role:"user",content:usr}],4000);setCorrResult(r);}
-    catch(e){setCorrResult("Error: "+e.message);}
+    catch(e){setCorrResult(msgError(e));}
     setCorrLoading(false);
   }
 
@@ -3025,7 +3036,7 @@ async function loadChatDoc(file){
                       var seq={subject_id:curSid,subject_name:curSubj?curSubj.name:"",topic:seqForm.topic,level:seqForm.level||(curSubj?curSubj.level:""),n_classes:seqForm.n_classes,content:r};
                       var saved=await dbAddSequence(authUser.id,seq);
                       setSequences(function(prev){return [saved].concat(prev);});setSeqView(saved);
-                    }catch(e){alert("Error: "+e.message);}
+                    }catch(e){alert(msgError(e));}
                     setSeqLoading(false);
                   }}>
                     {seqLoading?"Generando...":<><i className="ti ti-list-numbers" style={{fontSize:13,marginRight:4}}/>Generar secuencia</>}
