@@ -1386,6 +1386,10 @@ export default function AulaXpro() {
   var [chatLoading,setChatLoading]=useState(false);
   var [chatSessions,setChatSessions]=useState([]);
   var [currentSessionId,setCurrentSessionId]=useState(null);
+  var [chatDocText,setChatDocText]=useState("");
+  var [chatDocName,setChatDocName]=useState("");
+  var [chatDocLoading,setChatDocLoading]=useState(false);
+  var [chatDocPaste,setChatDocPaste]=useState(false);
   var [chatSessionsLoading,setChatSessionsLoading]=useState(false);
   var chatRef=useRef(null);
   var [corrR,setCorrR]=useState("");
@@ -1753,6 +1757,7 @@ useEffect(function(){
 
     var sys="Sos un asistente experto y versatil. Responde de forma natural y conversacional, sin usar emojis, sin markdown, sin asteriscos ni simbolos de formato. Texto plano solamente, como si fuera una conversacion normal. Podes responder cualquier tipo de pregunta."
       +(subj?" Contexto: el usuario es docente de \""+subj.name+"\" ("+subj.level+")."+(subj.materials?"\nPrograma: "+subj.materials:""):"")
+      +(chatDocText?"\n\nEl usuario adjunto un documento para esta conversacion. Basa tus respuestas principalmente en el contenido de este documento cuando la pregunta se relacione con el. Si te preguntan algo que no esta en el documento, aclaralo. DOCUMENTO ADJUNTO (\""+chatDocName+"\"):\n"+chatDocText.slice(0,50000):"")
       +"\nResponde en espanol rioplatense. Cuando necesites informacion actualizada usa la busqueda web.";
     try{
       setChatMsgs(hist.concat([{role:"assistant",content:""}]));
@@ -1764,6 +1769,33 @@ useEffect(function(){
       setChatMsgs(hist.concat([{role:"assistant",content:"Error: "+e.message}]));
     }
     setChatLoading(false);
+  }
+async function loadChatDoc(file){
+    setChatDocLoading(true);
+    try{
+      var texto="";
+      if(/\.pdf$/i.test(file.name)){
+        var result=await processPdf(file);
+        texto=result.text;
+      }else if(/\.docx$/i.test(file.name)){
+        var mammoth=await import("mammoth");
+        var buffer=await file.arrayBuffer();
+        var extraction=await mammoth.extractRawText({arrayBuffer:buffer});
+        texto=extraction.value;
+      }else{
+        throw new Error("Formato no soportado. Subi PDF o DOCX.");
+      }
+      if(!texto||!texto.trim()) throw new Error("No se pudo extraer texto del documento.");
+      setChatDocText(texto);
+      setChatDocName(file.name);
+    }catch(e){
+      alert("Error al procesar el documento: "+e.message);
+    }
+    setChatDocLoading(false);
+  }
+
+  function clearChatDoc(){
+    setChatDocText("");setChatDocName("");setChatDocPaste(false);
   }
 
   function extractScore(text) {
@@ -2573,6 +2605,32 @@ useEffect(function(){
                       {subjects.map(function(s){return <option key={s.id} value={s.id}>{s.name+" ("+s.level+")"}</option>;})}
                     </select>
                   </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginTop:8,flexWrap:"wrap"}}>
+                    <span style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.6,whiteSpace:"nowrap"}}>DOCUMENTO:</span>
+                    {chatDocName?(
+                      <div style={{display:"flex",alignItems:"center",gap:6,background:C.accentBg,borderRadius:4,padding:"4px 10px"}}>
+                        <i className="ti ti-file-check" style={{fontSize:13,color:C.accent}}/>
+                        <span style={{fontSize:12,color:C.accent,fontWeight:600}}>{chatDocName}</span>
+                        <button style={{background:"none",border:"none",cursor:"pointer",color:C.textDim,fontSize:14,padding:0,display:"flex"}} onClick={clearChatDoc} title="Quitar documento"><i className="ti ti-x"/></button>
+                      </div>
+                    ):chatDocLoading?(
+                      <span style={{fontSize:12,color:C.textDim}}>Procesando documento...</span>
+                    ):(
+                      <>
+                        <label style={{display:"inline-flex",alignItems:"center",gap:5,background:C.surf,border:"1px solid "+C.border,borderRadius:4,padding:"4px 10px",cursor:"pointer",fontSize:12,fontWeight:600,color:C.text}}>
+                          <i className="ti ti-paperclip" style={{fontSize:13}}/>Adjuntar PDF/DOCX
+                          <input type="file" accept=".pdf,.docx" style={{display:"none"}} onChange={function(e){if(e.target.files[0])loadChatDoc(e.target.files[0]);e.target.value="";}}/>
+                        </label>
+                        <button style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:C.textDim,textDecoration:"underline"}} onClick={function(){setChatDocPaste(!chatDocPaste);}}>o pegar texto</button>
+                      </>
+                    )}
+                  </div>
+                  {chatDocPaste&&!chatDocName&&(
+                    <div style={{marginTop:8}}>
+                      <textarea style={Object.assign({},inp,{width:"100%",height:80,resize:"vertical",fontSize:12})} placeholder="Pega aca el texto del documento..." onChange={function(e){setChatDocText(e.target.value);}}/>
+                      <button style={{marginTop:4,background:C.accent,color:"#fff",border:"none",borderRadius:4,padding:"4px 12px",cursor:"pointer",fontSize:12,fontWeight:600}} onClick={function(){if(chatDocText.trim()){setChatDocName("Texto pegado");setChatDocPaste(false);}}}>Usar este texto</button>
+                    </div>
+                  )}
                 </div>
                 <div style={Object.assign({},card,{flex:1,overflow:"auto",padding:"14px 18px",minHeight:0,marginBottom:0})}>
                   {!chatMsgs.length?(
