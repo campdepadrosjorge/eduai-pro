@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { exportDocx, exportPdf, exportInformeCorregido, exportInformeMarcado, exportInformesZip } from "./exportUtils.js";
 import { sysComunicado, userComunicado, sysActa, userActa, sysCorreccionInforme, userCorreccionInforme, sysAcompanamiento, userAcompanamiento, instruccionTramite, sysRevisionDocumento, userRevisionDocumento } from "./directivoPrompts.js";
 
@@ -87,6 +87,20 @@ function Btn({children,onClick,disabled,v,st}) {
 
 export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignOut }) {
   var [view,setView] = useState("comunicados");
+  var [isMobile,setIsMobile] = useState(typeof window!=="undefined" && window.innerWidth<768);
+  var [mobileMenu,setMobileMenu] = useState(false);
+  useEffect(function(){
+    function handleResize(){setIsMobile(window.innerWidth<768);}
+    window.addEventListener("resize",handleResize);
+    return function(){window.removeEventListener("resize",handleResize);};
+  },[]);
+  var [isMobile,setIsMobile] = useState(typeof window!=="undefined" && window.innerWidth<768);
+  var [mobileMenu,setMobileMenu] = useState(false);
+  useEffect(function(){
+    function handleResize(){setIsMobile(window.innerWidth<768);}
+    window.addEventListener("resize",handleResize);
+    return function(){window.removeEventListener("resize",handleResize);};
+  },[]);
   var userName = (authUser && authUser.user_metadata && authUser.user_metadata.name) || "Directivo";
 
   // Estado comunicados
@@ -400,7 +414,10 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
 
   return (
     <div style={{display:"flex",height:"100vh",background:C.bg,color:C.text,fontFamily:"Quicksand,sans-serif",overflow:"hidden"}}>
-      <div style={{width:218,minWidth:218,background:"#0D3559",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+      {isMobile&&mobileMenu&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:9998}} onClick={function(){setMobileMenu(false);}}/>
+      )}
+      <div style={{width:isMobile?(mobileMenu?240:0):218,minWidth:isMobile?(mobileMenu?240:0):218,background:"#0D3559",display:"flex",flexDirection:"column",overflow:"hidden",overflowY:isMobile?"auto":"hidden",transition:"all .22s",position:isMobile?"fixed":"relative",top:0,left:0,height:isMobile?"100dvh":"auto",zIndex:isMobile?9999:"auto"}}>
         <div style={{padding:"16px 16px",borderBottom:"1px solid rgba(255,255,255,.1)"}}>
           <span style={{fontSize:15,fontWeight:700,color:"#fff"}}>Aula<span style={{color:"#26C3D4"}}>X</span>pro</span>
           <div style={{fontSize:11,color:"#7aaabf",marginTop:4}}>Panel de Directivos</div>
@@ -408,7 +425,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
         <nav style={{flex:1,padding:"8px 0",overflowY:"auto"}}>
           {DIR_NAV.map(function(n){
             return (
-              <div key={n.id} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 14px",cursor:"pointer",margin:"2px 8px",borderRadius:4,background:view===n.id?"rgba(38,195,212,.15)":"transparent",color:view===n.id?"#26C3D4":"#7aaabf",fontSize:13}} onClick={function(){setView(n.id);}}>
+              <div key={n.id} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 14px",cursor:"pointer",margin:"2px 8px",borderRadius:4,background:view===n.id?"rgba(38,195,212,.15)":"transparent",color:view===n.id?"#26C3D4":"#7aaabf",fontSize:13}} onClick={function(){setView(n.id);if(isMobile)setMobileMenu(false);}}>
                 <i className={"ti "+n.icon} style={{fontSize:17,minWidth:22}}/>
                 <span>{n.label}</span>
               </div>
@@ -422,14 +439,19 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
       </div>
 
       <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-        <div style={{background:C.surf,borderBottom:"1px solid "+C.border,padding:"0 24px",display:"flex",alignItems:"center",minHeight:54}}>
+        <div style={{background:C.surf,borderBottom:"1px solid "+C.border,padding:isMobile?"0 16px":"0 24px",display:"flex",alignItems:"center",gap:12,minHeight:54}}>
+          {isMobile&&(
+            <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.text,padding:4,display:"flex"}} onClick={function(){setMobileMenu(!mobileMenu);}}>
+              <i className="ti ti-menu-2" style={{fontSize:22}}/>
+            </button>
+          )}
           <h1 style={{margin:0,fontSize:16,fontWeight:700,color:C.text,flex:1}}>{(DIR_NAV.find(function(n){return n.id===view;})||{}).label}</h1>
           <div style={{fontSize:13,color:C.textMuted}}>{userName}</div>
         </div>
 
         <div style={{flex:1,overflow:"auto",padding:"22px 26px"}}>
           {view==="comunicados"&&(
-            <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:18}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"360px 1fr",gap:18}}>
               <div style={card}>
                 <h3 style={{margin:"0 0 4px",fontSize:17,fontWeight:700,color:C.text}}>Generar comunicado</h3>
                 <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Completá los datos y la IA redacta el comunicado listo para enviar.</p>
@@ -476,7 +498,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
           )}
 
           {view==="actas"&&(
-            <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:18}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"360px 1fr",gap:18}}>
               <div style={card}>
                 <h3 style={{margin:"0 0 4px",fontSize:17,fontWeight:700,color:C.text}}>Generar acta</h3>
                 <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Tirá tus notas de la reunión y la IA arma el acta formal.</p>
@@ -533,7 +555,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
           )}
 
           {view==="informes"&&(
-            <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:18}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"360px 1fr",gap:18}}>
               <div style={card}>
                 <h3 style={{margin:"0 0 4px",fontSize:17,fontWeight:700,color:C.text}}>Corregir informe</h3>
                 <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Subí un informe en Word (.docx) o PDF y la IA lo corrige y lo deja listo para entregar.</p>
@@ -602,7 +624,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
           )}
 
           {view==="revision"&&(
-            <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:18}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"360px 1fr",gap:18}}>
               <div style={card}>
                 <h3 style={{margin:"0 0 4px",fontSize:17,fontWeight:700,color:C.text}}>Revisión de documentos</h3>
                 <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Subí una planificación, proyecto u otro documento docente (.docx o .pdf) y la IA marca observaciones para que la docente lo ajuste.</p>
@@ -682,7 +704,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
           )}
 
           {view==="acompanamiento"&&(
-            <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:18}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"360px 1fr",gap:18}}>
               <div style={card}>
                 <h3 style={{margin:"0 0 4px",fontSize:17,fontWeight:700,color:C.text}}>Acompañamiento docente</h3>
                 <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Describí la situación del docente y obtené un plan concreto y formativo.</p>
@@ -730,7 +752,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
           )}
 
           {view==="tramites"&&(
-            <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:18}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"360px 1fr",gap:18}}>
               <div style={card}>
                 <h3 style={{margin:"0 0 4px",fontSize:17,fontWeight:700,color:C.text}}>Asistente de trámites</h3>
                 <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Subí la resolución o normativa oficial (PDF) y la IA te ayuda a gestionar el trámite según ese documento.</p>
