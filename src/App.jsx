@@ -1408,6 +1408,7 @@ export default function AulaXpro() {
   var [corrW,setCorrW]=useState("");
   var [corrResult,setCorrResult]=useState("");
   var [corrLoading,setCorrLoading]=useState(false);
+  var [corrRigor,setCorrRigor]=useState("equilibrado");
   var [imgExtractLoading,setImgExtractLoading]=useState(false);
   var [imgExtractErr,setImgExtractErr]=useState("");
   var [batchFile,setBatchFile]=useState(null);
@@ -1842,12 +1843,12 @@ async function loadChatDoc(file){
       }
       setBatchTotal(trabajos.length);
       var results = [];
-      var sys = "Sos docente evaluador experto. Materia: \""+(curSubj?curSubj.name:"General")+"\". Responde en espanol rioplatense con Markdown.";
+      var sys = "Sos un docente evaluador experto y justo. Materia: \""+(curSubj?curSubj.name:"General")+"\". Corregis con criterio pedagogico: riguroso pero constructivo, evaluas segun la rubrica de forma coherente y justificada, y tu devolucion ayuda al alumno a mejorar. Responde en espanol rioplatense con Markdown, sin emojis.";
       for(var j=0;j<trabajos.length;j++){
         var t = trabajos[j];
         setBatchProgress(j+1);
         try {
-          var usr = "Correccion usando la rubrica.\n\n## RUBRICA:\n"+corrR+"\n\n## TRABAJO DE "+t.name+":\n"+t.work+"\n\nIncluí: evaluacion por criterio, Calificacion final: X/10, fortalezas, areas de mejora, devolucion al alumno.";
+          var usr = "Corregi el trabajo usando la rubrica provista.\n\n## RUBRICA:\n"+corrR+"\n\n## TRABAJO DE "+t.name+":\n"+t.work+"\n\nEvalua cada criterio de forma justificada, da una Calificacion final: X/10 coherente con esa evaluacion, y escribí una devolucion constructiva que reconozca lo bueno y marque con claridad que puede mejorar y como. Se concreto y util."+instruccionRigor(corrRigor);
           var r = await callClaude(sys,[{role:"user",content:usr}],3000);
           var score = extractScore(r);
           results.push({name:t.name,result:r,score:score,saved:false});
@@ -1868,11 +1869,16 @@ async function loadChatDoc(file){
     } catch(e) { alert("Error: "+e.message); }
     setBatchLoading(false);setBatchProgress(0);
   }
+  function instruccionRigor(nivel){
+    if(nivel==="riguroso") return "\n\nNIVEL DE EXIGENCIA: RIGUROSO. Corregi con exigencia alta, como en una instancia formal o un nivel avanzado. Marca todos los errores, incluidos los menores, y se estricto al aplicar la rubrica. La calificacion debe reflejar esa exigencia (no regales puntos). Aun asi, manten un tono humano y respetuoso: sos exigente, no cruel.";
+    if(nivel==="flexible") return "\n\nNIVEL DE EXIGENCIA: FLEXIBLE Y COMPRENSIVO. Corregi priorizando el aliento y el proceso de aprendizaje, como con un alumno que esta empezando o que necesita motivacion. Se indulgente con los errores menores, valora el esfuerzo y los aciertos, y en la calificacion dale el beneficio de la duda cuando sea razonable. El tono debe ser calido y alentador, marcando lo mejorable con suavidad.";
+    return "\n\nNIVEL DE EXIGENCIA: EQUILIBRADO. Corregi de forma justa y equilibrada: exigente pero comprensivo. Aplica la rubrica con criterio razonable, marca lo importante sin ser lapidario, y da una calificacion justa. Tono humano y constructivo.";
+  }
   async function correctTP(){
     if(!corrR.trim()||!corrW.trim()) return;
     setCorrLoading(true);setCorrResult("");
     var sys="Sos docente evaluador experto. Materia: \""+(curSubj?curSubj.name:"General")+"\". Responde en espanol rioplatense con Markdown.";
-    var usr="Correccion usando la rubrica.\n\n## RUBRICA:\n"+corrR+"\n\n## TRABAJO:\n"+corrW+"\n\nIncluí: evaluacion por criterio, calificacion final, fortalezas, areas de mejora, devolucion al alumno.";
+    var usr="Corregi el siguiente trabajo usando la rubrica provista.\n\n## RUBRICA:\n"+corrR+"\n\n## TRABAJO:\n"+corrW+"\n\nEvalua cada criterio de la rubrica de forma justificada (por que esa calificacion, basandote en el trabajo), da una calificacion final coherente con esa evaluacion, y escribí una devolucion para el alumno que reconozca lo bueno y le marque con claridad y en tono constructivo que puede mejorar y como. Se concreto y util, no generico."+instruccionRigor(corrRigor);
     try{var r=await callClaude(sys,[{role:"user",content:usr}],4000);setCorrResult(r);}
     catch(e){setCorrResult(msgError(e));}
     setCorrLoading(false);
@@ -2699,6 +2705,12 @@ async function loadChatDoc(file){
                     </select>
                   </div>
                 )}
+                <label style={lbl}>NIVEL DE CORRECCION</label>
+                <div style={{display:"flex",gap:5,marginBottom:12}}>
+                  {[{v:"riguroso",l:"Riguroso"},{v:"equilibrado",l:"Equilibrado"},{v:"flexible",l:"Flexible"}].map(function(o){
+                    return <button key={o.v} style={{flex:1,padding:"6px 3px",borderRadius:4,border:"1px solid "+(corrRigor===o.v?C.accent:C.border),background:corrRigor===o.v?C.accentBg:"transparent",color:corrRigor===o.v?C.accent:C.textMuted,cursor:"pointer",fontSize:11,fontWeight:corrRigor===o.v?700:400,fontFamily:"Quicksand,sans-serif"}} onClick={function(){setCorrRigor(o.v);}}>{o.l}</button>;
+                  })}
+                </div>
                 <label style={lbl}>TRABAJO DEL ALUMNO *</label>
                 <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
                   <label data-tour="corr-photo" style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+C.border,borderRadius:4,padding:"7px 14px",cursor:imgExtractLoading?"not-allowed":"pointer",fontSize:12,fontWeight:600,color:C.text,opacity:imgExtractLoading?.6:1}}>
