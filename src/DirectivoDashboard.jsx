@@ -105,6 +105,9 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
   var [actResult,setActResult] = useState("");
   var [actLoading,setActLoading] = useState(false);
   var [actErr,setActErr] = useState("");
+  var [actFotoLoading,setActFotoLoading] = useState(false);
+  var [actHojas,setActHojas] = useState(0);
+  var [actFotoErr,setActFotoErr] = useState("");
 
   async function generarActa(){
     if(!actTemas.trim()) return;
@@ -115,6 +118,30 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
     }catch(e){setActErr("Error: "+e.message);}
     setActLoading(false);
   }
+
+  async function agregarFotoActa(file){
+    if(!file) return;
+    setActFotoLoading(true);setActFotoErr("");
+    try{
+      var base64 = await new Promise(function(resolve,reject){
+        var reader = new FileReader();
+        reader.onload = function(ev){ resolve(ev.target.result.split(",")[1]); };
+        reader.onerror = function(){ reject(new Error("No se pudo leer la imagen")); };
+        reader.readAsDataURL(file);
+      });
+      var mediaType = file.type || "image/jpeg";
+      var res = await fetch("/api/extract-text",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({base64:base64,mediaType:mediaType})});
+      var data = await res.json();
+      if(!res.ok) throw new Error(data.error || "Error al leer la imagen");
+      setActHojas(function(h){
+        var nueva = h+1;
+        setActTemas(function(prev){return prev?(prev+"\n\n--- HOJA "+nueva+" ---\n"+data.text):("--- HOJA "+nueva+" ---\n"+data.text);});
+        return nueva;
+      });
+    }catch(e){setActFotoErr("Error: "+e.message);}
+    setActFotoLoading(false);
+  }
+
 // Estado correccion de informes
   var [infNivel,setInfNivel] = useState("Sala de 5 años");
   var [infPrioridad,setInfPrioridad] = useState("");
@@ -461,6 +488,20 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                 <input style={Object.assign({},inp,{marginBottom:12})} value={actDatos} onChange={function(e){setActDatos(e.target.value);}} placeholder="Ej: 24/06/2026, equipo docente de primaria"/>
                 <label style={lbl}>TEMAS TRATADOS *</label>
                 <textarea style={Object.assign({},inp,{height:130,resize:"vertical",marginBottom:12})} value={actTemas} onChange={function(e){setActTemas(e.target.value);}} placeholder="Escribí tus notas en bruto de lo que se trató..."/>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,flexWrap:"wrap"}}>
+                  <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+C.border,borderRadius:4,padding:"7px 14px",cursor:actFotoLoading?"not-allowed":"pointer",fontSize:12,fontWeight:600,color:C.text,opacity:actFotoLoading?.6:1}}>
+                    <i className="ti ti-camera" style={{fontSize:14}}/>
+                    {actFotoLoading?"Leyendo imagen...":(actHojas>0?"Agregar otra hoja":"Fotografiar notas")}
+                    <input type="file" accept="image/*" capture="environment" style={{display:"none"}} disabled={actFotoLoading} onChange={function(e){if(e.target.files[0])agregarFotoActa(e.target.files[0]);e.target.value="";}}/>
+                  </label>
+                  {actHojas>0&&(
+                    <span style={{fontSize:12,color:C.accent,fontWeight:600}}><i className="ti ti-file-check" style={{fontSize:13,marginRight:3}}/>{actHojas} {actHojas===1?"hoja":"hojas"}</span>
+                  )}
+                  {actHojas>0&&(
+                    <button style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:C.textDim,textDecoration:"underline"}} onClick={function(){setActHojas(0);}}>Reiniciar foto</button>
+                  )}
+                </div>
+                {actFotoErr&&<div style={{marginBottom:12,color:C.red,fontSize:12}}>{actFotoErr}</div>}
                 <label style={lbl}>ACUERDOS / CONCLUSIONES (opcional)</label>
                 <textarea style={Object.assign({},inp,{height:80,resize:"vertical",marginBottom:18})} value={actAcuerdos} onChange={function(e){setActAcuerdos(e.target.value);}} placeholder="Si no los completás, la IA los infiere de lo tratado."/>
                 <Btn onClick={generarActa} disabled={actLoading||!actTemas.trim()} st={{width:"100%",justifyContent:"center"}}>
