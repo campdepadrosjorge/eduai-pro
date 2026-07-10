@@ -1421,6 +1421,7 @@ export default function AulaXpro() {
   var [seqLoading,setSeqLoading]=useState(false);
   var [seqForm,setSeqForm]=useState({topic:"",n_classes:6,level:""});
   var [seqView,setSeqView]=useState(null);
+  var [seqStream,setSeqStream]=useState("");
   var [students,setStudents]=useState([]);
   var [selectedStudent,setSelectedStudent]=useState(null);
   var [studentEvals,setStudentEvals]=useState([]);
@@ -3030,13 +3031,13 @@ async function loadChatDoc(file){
                     })}
                   </div>
                   <Btn st={{width:"100%",justifyContent:"center"}} disabled={seqLoading||!seqForm.topic.trim()||!curSubj} onClick={async function(){
-                    setSeqLoading(true);
+                    setSeqLoading(true);setSeqStream("");
                     try{
-                      var sys="Sos experto en planificacion curricular argentina. Responde en espanol rioplatense con Markdown.";
-                      var r=await callClaude(sys,[{role:"user",content:userSequence(seqForm.topic,seqForm.n_classes,seqForm.level||(curSubj?curSubj.level:""),curSubj,seqForm.extra)}],6000);
+                      var sys="Sos experto en planificacion curricular y diseno de secuencias didacticas. Responde en espanol rioplatense con Markdown.";
+                      var r=await callClaude(sys,[{role:"user",content:userSequence(seqForm.topic,seqForm.n_classes,seqForm.level||(curSubj?curSubj.level:""),curSubj,seqForm.extra)}],6000,false,function(partial){setSeqStream(partial);});
                       var seq={subject_id:curSid,subject_name:curSubj?curSubj.name:"",topic:seqForm.topic,level:seqForm.level||(curSubj?curSubj.level:""),n_classes:seqForm.n_classes,content:r};
                       var saved=await dbAddSequence(authUser.id,seq);
-                      setSequences(function(prev){return [saved].concat(prev);});setSeqView(saved);
+                      setSequences(function(prev){return [saved].concat(prev);});setSeqView(saved);setSeqStream("");
                     }catch(e){alert(msgError(e));}
                     setSeqLoading(false);
                   }}>
@@ -3067,7 +3068,18 @@ async function loadChatDoc(file){
                 </div>
               </div>
               <div>
-                {seqLoading&&<div style={card}><Spin/></div>}
+                {seqLoading&&(
+                  <div style={card}>
+                    {seqStream?(
+                      <div>
+                        <div style={{fontSize:11,color:C.accent,fontWeight:700,marginBottom:10,display:"flex",alignItems:"center",gap:6}}><Spin/>Generando secuencia...</div>
+                        <MDView text={seqStream}/>
+                      </div>
+                    ):(
+                      <Spin/>
+                    )}
+                  </div>
+                )}
                 {!seqLoading&&!seqView&&(
                   <div style={Object.assign({},card,{textAlign:"center",padding:"52px 24px",color:C.textDim})}>
                     <i className="ti ti-list-numbers" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
