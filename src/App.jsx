@@ -141,9 +141,9 @@ function userGen(type, topic, diff, extra, subject, docText) {
 function userMM(type, topic, extra) {
   var e = extra ? "\n\nInstrucciones: " + extra : "";
   var m = {
-    podcast:             "Guion de podcast sobre \"" + topic + "\": [INTRO], [BLOQUES] 3-4 partes, [CIERRE], notas de produccion." + e,
-    infografia:          "Infografia sobre \"" + topic + "\": titulo, 5+ secciones, paleta HEX, instrucciones para Canva." + e,
-    video_script:        "Guion de video sobre \"" + topic + "\" [IMAGEN][VOZ][TEXTO]: gancho, 3-4 bloques, CTA." + e,
+    podcast:             "Crea un guion de podcast educativo de calidad sobre: \"" + topic + "\". Pensalo para que sea ameno y claro de escuchar: una introduccion que enganche, un desarrollo en bloques bien organizados con contenido sustancioso y ejemplos, y un cierre. Incluí indicaciones de produccion utiles (tono, pausas, musica) donde ayuden. Que suene natural, no acartonado. Se conciso y practico, sin relleno. No uses emojis." + e,
+    infografia:          "Crea el contenido y la estructura de una infografia educativa de calidad sobre: \"" + topic + "\". Definí un titulo claro, las secciones con su contenido concreto (datos, conceptos clave, pasos), y una propuesta visual: paleta de colores sugerida (en codigos HEX) e indicaciones de que iria en cada bloque para armarla en Canva u otra herramienta. Priorizá que la informacion sea clara y bien jerarquizada. Se conciso. No uses emojis en el contenido." + e,
+    video_script:        "Crea un guion de video educativo de calidad sobre: \"" + topic + "\". Estructuralo con un gancho inicial que capte la atencion, un desarrollo en bloques claros, y un cierre con llamado a la accion. Para cada parte, indicá que se ve (imagen/visual), que se dice (voz en off o presentador) y que texto aparece en pantalla. Que sea dinamico y adecuado para video. Se conciso y practico. No uses emojis." + e,
   };
   return m[type] || "Contenido multimedia educativo sobre \"" + topic + "\"." + e;
 }
@@ -1677,7 +1677,7 @@ useEffect(function(){
     setMmLoading(true);setMmResult("");
     try{
       var sys="Sos experto en contenido educativo digital para "+curSubj.name+" ("+curSubj.level+"). Responde en espanol rioplatense con Markdown.";
-      var r=await callClaude(sys,[{role:"user",content:userMM(mmType,mmTopic,mmExtra)}]);
+      var r=await callClaude(sys,[{role:"user",content:userMM(mmType,mmTopic,mmExtra)}],6000,false,function(partial){setMmResult(partial);});
       setMmResult(r);
     }catch(e){setMmResult(msgError(e));}
     setMmLoading(false);
