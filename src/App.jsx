@@ -1410,6 +1410,7 @@ export default function AulaXpro() {
   var [corrLoading,setCorrLoading]=useState(false);
   var [corrRigor,setCorrRigor]=useState("equilibrado");
   var [imgExtractLoading,setImgExtractLoading]=useState(false);
+  var [corrHojas,setCorrHojas]=useState(0);
   var [imgExtractErr,setImgExtractErr]=useState("");
   var [batchFile,setBatchFile]=useState(null);
   var [batchLoading,setBatchLoading]=useState(false);
@@ -2715,7 +2716,7 @@ async function loadChatDoc(file){
                 <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
                   <label data-tour="corr-photo" style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+C.border,borderRadius:4,padding:"7px 14px",cursor:imgExtractLoading?"not-allowed":"pointer",fontSize:12,fontWeight:600,color:C.text,opacity:imgExtractLoading?.6:1}}>
                     <i className="ti ti-camera" style={{fontSize:14}}/>
-                    {imgExtractLoading?"Extrayendo texto...":"Fotografiar examen"}
+                    {imgExtractLoading?"Extrayendo texto...":(corrHojas>0?"Agregar otra hoja":"Fotografiar examen")}
                     <input type="file" accept="image/*" capture="environment" style={{display:"none"}} disabled={imgExtractLoading} onChange={async function(e){
                       var file=e.target.files[0]; if(!file) return;
                       setImgExtractLoading(true);setImgExtractErr("");
@@ -2727,14 +2728,25 @@ async function loadChatDoc(file){
                           var res=await fetch("/api/extract-text",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({base64,mediaType})});
                           var data=await res.json();
                           if(!res.ok) throw new Error(data.error);
-                          setCorrW(data.text);
+                          setCorrHojas(function(h){
+                            var nueva=h+1;
+                            setCorrW(function(prev){return prev?(prev+"\n\n--- HOJA "+nueva+" ---\n"+data.text):("--- HOJA "+nueva+" ---\n"+data.text);});
+                            return nueva;
+                          });
                           setImgExtractLoading(false);
                         };
                         reader.readAsDataURL(file);
                       }catch(err){setImgExtractErr("Error: "+err.message);setImgExtractLoading(false);}
+                      e.target.value="";
                     }}/>
                   </label>
                   {imgExtractErr&&<span style={{fontSize:12,color:C.red}}>{imgExtractErr}</span>}
+                  {corrHojas>0&&(
+                    <div style={{display:"flex",alignItems:"center",gap:10,marginTop:6}}>
+                      <span style={{fontSize:12,color:C.accent,fontWeight:600}}><i className="ti ti-file-check" style={{fontSize:13,marginRight:3}}/>{corrHojas} {corrHojas===1?"hoja agregada":"hojas agregadas"}</span>
+                      <button style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:C.textDim,textDecoration:"underline"}} onClick={function(){setCorrHojas(0);setCorrW("");}}>Reiniciar</button>
+                    </div>
+                  )}
                   {corrW&&<span style={{fontSize:11,color:C.green,display:"flex",alignItems:"center",gap:3}}><i className="ti ti-check" style={{fontSize:12}}/>Texto extraido</span>}
                 </div>
                 <textarea style={Object.assign({},inp,{height:175,resize:"vertical",marginBottom:18})} value={corrW} onChange={function(e){setCorrW(e.target.value);}} placeholder="Pega el texto del trabajo o fotografialo con el boton de arriba..."/>
