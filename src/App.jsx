@@ -2548,8 +2548,8 @@ async function loadChatDoc(file){
                 )}
                 {mmType!=="imagen_ia"&&(
                   <div>
-                    {mmLoading&&<div style={card}><Spin/></div>}
-                    {mmResult&&!mmLoading&&(
+                    {mmLoading&&!mmResult&&<div style={card}><Spin/></div>}
+                    {mmResult&&(
                       <div style={card}>
                         <div style={{display:"flex",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}>
                           <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8}}>CONTENIDO GENERADO</div>
