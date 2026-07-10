@@ -1869,10 +1869,10 @@ async function loadChatDoc(file){
     } catch(e) { alert("Error: "+e.message); }
     setBatchLoading(false);setBatchProgress(0);
   }
-  function instruccionRigor(nivel){
-    if(nivel==="riguroso") return "\n\nNIVEL DE EXIGENCIA: RIGUROSO (pero no extremo). Corregi con una exigencia algo por encima de lo normal, como en una instancia formal. Marca los errores relevantes y aplica la rubrica con cierta firmeza, pero sin obsesionarte con cada detalle minimo ni castigar en exceso. La calificacion es algo mas estricta que la equilibrada, pero justa. Manten siempre un tono humano y respetuoso.";
-    if(nivel==="flexible") return "\n\nNIVEL DE EXIGENCIA: FLEXIBLE Y GENEROSO. Corregi con mirada amable y motivadora. Enfocate sobre todo en lo que el alumno hizo bien, pasa por alto los errores menores y no descuentes por detalles pequenos. Da el beneficio de la duda de forma amplia: ante algo dudoso, resolvé a favor del alumno. La calificacion debe ser claramente generosa (varios puntos por encima de una correccion estricta ante el mismo trabajo). El tono es calido, alentador y positivo, marcando lo mejorable como sugerencias suaves, no como faltas.";
-    return "\n\nNIVEL DE EXIGENCIA: EQUILIBRADO. Corregi de forma justa y equilibrada: exigente pero comprensivo. Aplica la rubrica con criterio razonable, marca lo importante sin ser lapidario, y da una calificacion justa. Tono humano y constructivo.";
+ function instruccionRigor(nivel){
+    if(nivel==="riguroso") return "\n\nNIVEL DE EXIGENCIA: RIGUROSO. Corregi con exigencia alta, como en un examen final o un nivel avanzado. Aplica la rubrica con firmeza, marca los errores y no dejes pasar los relevantes. La calificacion es exigente: solo las respuestas realmente solidas y completas merecen la nota maxima. Manten un tono humano y respetuoso, exigente pero no cruel.";
+    if(nivel==="flexible") return "\n\nNIVEL DE EXIGENCIA: FLEXIBLE Y MUY GENEROSO. Tu prioridad es reconocer lo que el alumno logro y alentarlo a seguir. Corregi con la mayor benevolencia razonable: si el trabajo muestra comprension basica del tema y un esfuerzo genuino, debe APROBAR. Pasa por alto los errores menores por completo y no descuentes por detalles. Ante cualquier duda, siempre a favor del alumno. Como referencia: un trabajo que en modo riguroso sacaria un aplazo bajo, aca deberia quedar cerca de la aprobacion o aprobado si hay comprension del tema. El tono es calido, positivo y motivador; lo mejorable se plantea como sugerencias suaves, nunca como faltas.";
+    return "\n\nNIVEL DE EXIGENCIA: EQUILIBRADO. Corregi de forma justa y estandar, como un buen docente en una evaluacion normal. Aplica la rubrica con criterio razonable, marca lo importante sin ser lapidario, reconoce los aciertos y da una calificacion justa y merecida. Tono humano y constructivo.";
   }
   async function correctTP(){
     if(!corrR.trim()||!corrW.trim()) return;
