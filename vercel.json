@@ -21,6 +21,9 @@
     "api/procesar-tramite.js": {
       "maxDuration": 60
     },
+    "api/transcribir-audio.js": {
+      "maxDuration": 120
+    },
     "api/extraer-texto-pdf.js": {
       "maxDuration": 60
     }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { exportDocx, exportPdf, exportInformeCorregido, exportInformeMarcado, exportInformesZip } from "./exportUtils.js";
 import { sysComunicado, userComunicado, sysActa, userActa, sysCorreccionInforme, userCorreccionInforme, sysAcompanamiento, userAcompanamiento, instruccionTramite, sysRevisionDocumento, userRevisionDocumento } from "./directivoPrompts.js";
 
@@ -122,6 +122,10 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
   var [actFotoLoading,setActFotoLoading] = useState(false);
   var [actHojas,setActHojas] = useState(0);
   var [actFotoErr,setActFotoErr] = useState("");
+  var [actGrabando,setActGrabando] = useState(false);
+  var [actAudioLoading,setActAudioLoading] = useState(false);
+  var [actAudioErr,setActAudioErr] = useState("");
+  var [actTiempo,setActTiempo] = useState(0);
 
   async function generarActa(){
     if(!actTemas.trim()) return;
@@ -152,8 +156,66 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
         setActTemas(function(prev){return prev?(prev+"\n\n--- HOJA "+nueva+" ---\n"+data.text):("--- HOJA "+nueva+" ---\n"+data.text);});
         return nueva;
       });
-    }catch(e){setActFotoErr("Error: "+e.message);}
+ }catch(e){setActFotoErr("Error: "+e.message);}
     setActFotoLoading(false);
+  }
+
+  var mediaRecorderRef = useRef(null);
+  var audioChunksRef = useRef([]);
+  var timerRef = useRef(null);
+
+  async function iniciarGrabacion(){
+    setActAudioErr("");
+    try{
+      var stream = await navigator.mediaDevices.getUserMedia({audio:true});
+      var recorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      recorder.ondataavailable = function(e){ if(e.data.size>0) audioChunksRef.current.push(e.data); };
+      recorder.onstop = function(){
+        stream.getTracks().forEach(function(t){t.stop();});
+        procesarAudioGrabado();
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setActGrabando(true);
+      setActTiempo(0);
+      timerRef.current = setInterval(function(){ setActTiempo(function(t){return t+1;}); }, 1000);
+    }catch(e){
+      setActAudioErr("No se pudo acceder al microfono. Revisa los permisos del navegador.");
+    }
+  }
+
+  function detenerGrabacion(){
+    if(mediaRecorderRef.current && actGrabando){
+      mediaRecorderRef.current.stop();
+      setActGrabando(false);
+      if(timerRef.current) clearInterval(timerRef.current);
+    }
+  }
+
+  async function procesarAudioGrabado(){
+    setActAudioLoading(true);setActAudioErr("");
+    try{
+      var blob = new Blob(audioChunksRef.current, {type:"audio/webm"});
+      if(blob.size > 28*1024*1024) throw new Error("La grabacion es demasiado larga. Intenta con reuniones mas cortas.");
+      var base64 = await new Promise(function(resolve,reject){
+        var reader = new FileReader();
+        reader.onload = function(ev){ resolve(ev.target.result.split(",")[1]); };
+        reader.onerror = function(){ reject(new Error("No se pudo procesar el audio")); };
+        reader.readAsDataURL(blob);
+      });
+      var res = await fetch("/api/transcribir-audio",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({base64:base64,mimeType:"audio/webm"})});
+      var data = await res.json();
+      if(!res.ok) throw new Error(data.error || "Error al transcribir");
+      setActTemas(function(prev){return prev?(prev+"\n\n--- TRANSCRIPCION DE LA REUNION ---\n"+data.text):("--- TRANSCRIPCION DE LA REUNION ---\n"+data.text);});
+    }catch(e){setActAudioErr("Error: "+e.message);}
+    setActAudioLoading(false);
+  }
+
+  function formatTiempo(s){
+    var m = Math.floor(s/60);
+    var sec = s%60;
+    return m+":"+(sec<10?"0":"")+sec;
   }
 
 // Estado correccion de informes
@@ -524,6 +586,29 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                   )}
                 </div>
                 {actFotoErr&&<div style={{marginBottom:12,color:C.red,fontSize:12}}>{actFotoErr}</div>}
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,flexWrap:"wrap"}}>
+                  {!actGrabando&&!actAudioLoading&&(
+                    <button style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+C.border,borderRadius:4,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:C.text}} onClick={iniciarGrabacion}>
+                      <i className="ti ti-microphone" style={{fontSize:14}}/>Grabar reunion
+                    </button>
+                  )}
+                  {actGrabando&&(
+                    <button style={{display:"inline-flex",alignItems:"center",gap:6,background:"#fee2e2",border:"1px solid "+C.red,borderRadius:4,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:C.red}} onClick={detenerGrabacion}>
+                      <span style={{width:9,height:9,borderRadius:"50%",background:C.red,display:"inline-block",animation:"pulse 1s infinite"}}/>
+                      Detener ({formatTiempo(actTiempo)})
+                    </button>
+                  )}
+                  {actAudioLoading&&(
+                    <span style={{fontSize:12,color:C.textDim}}>Transcribiendo audio...</span>
+                  )}
+                </div>
+                {actGrabando&&(
+                  <div style={{marginBottom:12,fontSize:11,color:C.textDim,background:"#fdf6ec",border:"1px solid #f0d9a8",borderRadius:4,padding:"7px 10px"}}>
+                    <i className="ti ti-info-circle" style={{fontSize:12,marginRight:4}}/>Acordate de avisar a los participantes que la reunion esta siendo grabada.
+                  </div>
+                )}
+                {actAudioErr&&<div style={{marginBottom:12,color:C.red,fontSize:12}}>{actAudioErr}</div>}
+                <style>{"@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}"}</style>
                 <label style={lbl}>ACUERDOS / CONCLUSIONES (opcional)</label>
                 <textarea style={Object.assign({},inp,{height:80,resize:"vertical",marginBottom:18})} value={actAcuerdos} onChange={function(e){setActAcuerdos(e.target.value);}} placeholder="Si no los completás, la IA los infiere de lo tratado."/>
                 <Btn onClick={generarActa} disabled={actLoading||!actTemas.trim()} st={{width:"100%",justifyContent:"center"}}>
