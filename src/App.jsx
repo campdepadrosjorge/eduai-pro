@@ -149,10 +149,11 @@ function userMM(type, topic, extra) {
 }
 
 function userSequence(topic, nClasses, level, subject, extra) {
-  return "Diseña una secuencia didactica de " + nClasses + " clases sobre: \"" + topic + "\"" +
+  return "Disena una secuencia didactica de " + nClasses + " clases sobre: \"" + topic + "\"" +
     (subject ? " para " + subject.name : "") + (level ? " | Nivel: " + level : "") +
     (subject && subject.materials ? "\n\nPrograma:\n" + subject.materials.slice(0, 400) : "") +
-    "\n\nPara cada clase usa ESTE FORMATO EXACTO:\n\n## CLASE [N]: [Titulo]\n**Duracion:** [min]\n**Objetivos:** [2-3]\n**Retoma:** [conexion anterior]\n**Inicio (10min):** [apertura]\n**Desarrollo (25min):** [actividad principal]\n**Cierre (10min):** [sintesis]\n**Recursos:** [materiales]\n**Evaluacion:** [como evaluar]\n\n---\n\nProgresion clara de dificultad entre clases." + (extra ? "\n\nInstrucciones adicionales: " + extra : "");
+    "\n\nPensala como lo haria un gran docente: con una progresion pedagogica real entre clases (cada una retoma y avanza sobre la anterior), objetivos claros, y actividades concretas y aplicables. Que sea util y directamente llevable al aula, no un relleno formal." +
+    "\n\nPara cada clase usa ESTE FORMATO EXACTO:\n\n## CLASE [N]: [Titulo]\n**Duracion:** [min]\n**Objetivos:** [2-3]\n**Retoma:** [conexion anterior]\n**Inicio (10min):** [apertura]\n**Desarrollo (25min):** [actividad principal]\n**Cierre (10min):** [sintesis]\n**Recursos:** [materiales]\n**Evaluacion:** [como evaluar]\n\n---\n\nRespeta este formato al pie de la letra (el '## CLASE', los campos en negrita y el separador '---'). No uses emojis. Progresion clara de dificultad entre clases." + (extra ? "\n\nInstrucciones adicionales: " + extra : "");
 }
 function msgError(e){
   if(e && e.message==="__LIMIT__") return "Alcanzaste el limite de uso disponible por el momento. El servicio se restablece automaticamente. Si el problema persiste, escribinos a hola@aulaxpro.com.";
