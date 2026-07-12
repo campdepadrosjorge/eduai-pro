@@ -4,6 +4,7 @@ import { exportDocx, exportPdf, exportZip } from "./exportUtils.js";
 import { useTour, TourTooltip, TourLaunchButton, WelcomeModal } from "./TourSystem.jsx";
 import { generatePptx } from "./pptxUtils.js";
 import DirectivoDashboard from "./DirectivoDashboard.jsx";
+var _currentUser = { id: null, isAdmin: false };
 
 const NAV = [
   { id:"dashboard",  label:"Inicio",              icon:"ti-layout-dashboard" },
@@ -164,13 +165,13 @@ async function callClaude(system, messages, maxTokens, useSearch, onStream, user
   var useStreaming = typeof onStream === "function";
   var res = await fetch("/api/generate", {
     method:"POST", headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({ system, messages, maxTokens, useSearch:!!useSearch, stream:useStreaming }),
+    body:JSON.stringify({ system, messages, maxTokens, useSearch:!!useSearch, stream:useStreaming, userId:_currentUser.id, isAdmin:_currentUser.isAdmin }),
   });
   if (!res.ok) {
     var err = {};
     try { err = await res.json(); } catch(e) {}
     var errMsg = err.error || ("Error " + res.status);
-    if (/usage limit|usage limits|credit balance|rate limit|reached your/i.test(errMsg)) {
+    if (res.status===402 || /usage limit|usage limits|credit balance|rate limit|reached your|limite de uso/i.test(errMsg)) {
       throw new Error("__LIMIT__");
     }
     throw new Error(errMsg);
@@ -1440,6 +1441,10 @@ export default function AulaXpro() {
   },[]);
   var curSubj=subjects.find(function(s){return s.id===curSid;})||null;
   var { activeTour, launchTour, closeTour, nextStep, prevStep } = useTour(authUser ? authUser.id : null, view);
+  useEffect(function(){
+    _currentUser.id = authUser ? authUser.id : null;
+    _currentUser.isAdmin = authUser ? (authUser.email===import.meta.env.VITE_ADMIN_EMAIL) : false;
+  },[authUser]);
 
   useEffect(function(){
     supabase.auth.getSession().then(function(result){var u=result.data.session?result.data.session.user:null;setAuthUser(u);setAuthLoading(false);if(u&&u.user_metadata&&u.user_metadata.needs_password) setNeedsPassword(true);var params=new URLSearchParams(window.location.search);if(params.get("section")==="pricing") setView("pricing");});
@@ -1646,7 +1651,8 @@ useEffect(function(){
   }
   async function generate(){
     if(!genTopic.trim()||!curSubj) return;
-    var hasBudget = await dbCheckBudget(authUser.id);
+    var esAdmin = authUser.email===import.meta.env.VITE_ADMIN_EMAIL;
+    var hasBudget = esAdmin || await dbCheckBudget(authUser.id);
     if(!hasBudget){setBudgetExceeded(true);return;}
     setGenLoading(true);setGenResult("");setGenSaved(false);setGenErr("");setMakeCodeUrl(null);setActImgUrl(null);
     try{

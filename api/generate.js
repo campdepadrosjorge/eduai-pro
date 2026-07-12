@@ -1,3 +1,27 @@
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
+
+async function checkBudget(userId, isAdmin) {
+  if (isAdmin) return true;
+  if (!userId) return true;
+  try {
+    const r = await supabase.from("subscriptions")
+      .select("tokens_used,tokens_limit,extra_credits,tokens_reset_date")
+      .eq("user_id", userId).eq("status", "active").limit(1);
+    if (r.error || !r.data || r.data.length === 0) return true;
+    const usage = r.data[0];
+    const resetDate = new Date(usage.tokens_reset_date);
+    if (new Date() > resetDate) return true;
+    const totalLimit = (usage.tokens_limit || 3) + (usage.extra_credits || 0);
+    return (usage.tokens_used || 0) < totalLimit;
+  } catch (e) {
+    return true;
+  }
+}
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW = 60 * 1000;
 const RATE_LIMIT_MAX = 10;
@@ -16,13 +40,17 @@ function checkRateLimit(identifier) {
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const { system, messages, maxTokens = 4000, useSearch = false, stream = false } = req.body;
+  const { system, messages, maxTokens = 4000, useSearch = false, stream = false, userId = null, isAdmin = false } = req.body;
 
   const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || req.socket?.remoteAddress || "unknown";
   if (!checkRateLimit(ip)) {
     return res.status(429).json({ error: "Demasiadas solicitudes. Espera un minuto antes de continuar." });
   }
   if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: "messages requeridos" });
+  const tienePresupuesto = await checkBudget(userId, isAdmin);
+  if (!tienePresupuesto) {
+    return res.status(402).json({ error: "Alcanzaste el limite de uso disponible este mes. El servicio se restablece automaticamente el proximo periodo. Si necesitas mas, escribinos a hola@aulaxpro.com." });
+  }
 
   const systemText = system || "Sos un asistente experto.";
   const body = {
