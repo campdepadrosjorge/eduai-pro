@@ -211,7 +211,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
         reader.onerror = function(){ reject(new Error("No se pudo procesar el audio")); };
         reader.readAsDataURL(blob);
       });
-      var res = await fetch("/api/transcribir-audio",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({base64:base64,mimeType:"audio/webm"})});
+      var res = await fetch("/api/transcribir-audio",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({base64:base64,mimeType:"audio/webm",userId:authUser?authUser.id:null,userEmail:authUser?authUser.email:""})});
       var data = await res.json();
       if(!res.ok) throw new Error(data.error || "Error al transcribir");
       setActTemas(function(prev){return prev?(prev+"\n\n--- TRANSCRIPCION DE LA REUNION ---\n"+data.text):("--- TRANSCRIPCION DE LA REUNION ---\n"+data.text);});
