@@ -179,7 +179,14 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
       mediaRecorderRef.current = recorder;
       setActGrabando(true);
       setActTiempo(0);
-      timerRef.current = setInterval(function(){ setActTiempo(function(t){return t+1;}); }, 1000);
+      timerRef.current = setInterval(function(){ setActTiempo(function(t){
+        var nuevo = t+1;
+        if(nuevo >= 3600){
+          detenerGrabacion();
+          setActAudioErr("Se alcanzo el limite de 60 minutos por grabacion. Se detuvo automaticamente y se va a transcribir lo grabado.");
+        }
+        return nuevo;
+      }); }, 1000);
     }catch(e){
       setActAudioErr("No se pudo acceder al microfono. Revisa los permisos del navegador.");
     }
