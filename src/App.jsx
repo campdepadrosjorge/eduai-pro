@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import supabase from "./supabase.js";
 import { exportDocx, exportPdf, exportZip } from "./exportUtils.js";
 import { useTour, TourTooltip, TourLaunchButton, WelcomeModal } from "./TourSystem.jsx";
@@ -54,37 +54,37 @@ function sysGen(type, subject, level, materials, bibliography) {
     (bibliography ? "\n\nBibliografia de referencia:\n" + bibliography.slice(0, 8000) : "");
   var base = "Sos un docente experto con 20 anos de experiencia en " + subject + " nivel " + level + ", especializado en diseno de materiales educativos de alta calidad. Usa el nivel educativo tal como se te indica, sin agregar rangos de grados o anos especificos (como '4to a 6to'), ya que la organizacion de grados varia segun la jurisdiccion y el pais. " + ctx;
   var p = {
-    planclase:    base + "\n\nTu tarea es crear un PLAN DE CLASE de excelencia que un docente pueda llevar directamente al aula, pensado con criterio pedagogico real y no como un formulario a completar. Un buen plan de clase tiene una secuencia didactica clara (inicio, desarrollo y cierre) con tiempos, objetivos bien formulados, y consignas concretas para los alumnos. Desarrollá bien lo importante y decidí con criterio que incluir segun el tema; no fuerces secciones de relleno. Como minimo deben quedar claros: los objetivos, la secuencia didactica con momentos y tiempos, y como se evalua.",
+    planclase:    base + "\n\nTu tarea es crear un PLAN DE CLASE de excelencia que un docente pueda llevar directamente al aula, pensado con criterio pedagogico real y no como un formulario a completar. Un buen plan de clase tiene una secuencia didactica clara (inicio, desarrollo y cierre) con tiempos, objetivos bien formulados, y consignas concretas para los alumnos. DesarrollÃ¡ bien lo importante y decidÃ­ con criterio que incluir segun el tema; no fuerces secciones de relleno. Como minimo deben quedar claros: los objetivos, la secuencia didactica con momentos y tiempos, y como se evalua.",
     actividad:   base + "\n\nTu tarea es crear una ACTIVIDAD DIDACTICA de excelencia, lista para usar en el aula y pensada con criterio pedagogico real, no como un formulario a completar. Una buena actividad es clara, motivadora, bien secuenciada y directamente aplicable; incluye consignas precisas que el alumno entiende sin ayuda, y propone un desafio genuino adecuado al nivel. Decidi vos que secciones y en que profundidad segun lo que el tema realmente necesita, priorizando la calidad y la usabilidad por sobre la exhaustividad. No fuerces secciones que no aporten. Como minimo, la actividad debe dejar claros: los objetivos de aprendizaje, el desarrollo paso a paso, y como se evalua.",
-    rubrica:      base + "\n\nTu tarea es crear una RUBRICA ANALITICA de excelencia, lista para usar. Una buena rubrica tiene criterios claros y observables, con descriptores concretos que permiten distinguir sin ambiguedad cada nivel de logro. Los descriptores tienen que ser especificos del tema evaluado, no genericos. Mantene la estructura de tabla con criterios y niveles, e incluí como se traduce a una calificacion.",
-    evaluacion:   base + "\n\nTu tarea es crear una EVALUACION de excelencia, lista para imprimir y tomar. Una buena evaluacion tiene preguntas claras, bien formuladas y de dificultad adecuada al nivel, que realmente midan la comprension del tema y no solo la memoria. Cuida que cada consigna sea inequivoca y que la evaluacion tenga una progresion razonable de dificultad. Mantene una estructura clara por secciones e incluí siempre una clave de respuestas al final para el docente.",
-    material:     base + "\n\nTu tarea es crear MATERIALES DIDACTICOS atractivos y completos. Incluí siempre: titulo, introduccion motivadora, desarrollo por subtemas con ejemplos concretos y cercanos a la realidad del alumno, cuadros de conceptos clave, actividades integradas dentro del texto, sintesis visual, glosario, preguntas de autoevaluacion. Usa formato de texto escolar con tablas, recuadros destacados y estructura clara.",
-    presentacion: base + "\n\nTu tarea es crear un ESQUEMA DE PRESENTACION de excelencia, pensado con criterio pedagogico y con una progresion clara del tema. REGLA CLAVE: las diapositivas llevan MUY POCO texto (ideas clave en pocas palabras, nunca oraciones largas ni parrafos); todo el desarrollo, las explicaciones y los ejemplos van en las NOTAS DEL PRESENTADOR. Una slide es un apoyo visual, no un documento.\n\nGenera la cantidad de diapositivas que el tema necesite (habitualmente entre 10 y 16), usando EXACTAMENTE este formato para cada una:\n\n## SLIDE [N]: [Titulo]\n[3-5 bullets cortos y telegraficos, uno por linea comenzando con -, pocas palabras cada uno]\nNOTAS DEL PRESENTADOR: [Todo el desarrollo del contenido, ejemplos y transiciones, 3-5 oraciones]\n\n---\n\nRespeta este formato al pie de la letra (el encabezado '## SLIDE', los bullets con '-', la linea 'NOTAS DEL PRESENTADOR:' y el separador '---'), porque se procesa automaticamente. No uses emojis en los titulos. Incluí slide de apertura, desarrollo, cierre y preguntas.",
-    guia:         base + "\n\nTu tarea es crear GUIAS DE ESTUDIO completas y autonomas. Incluí siempre: objetivos de aprendizaje, mapa conceptual en texto, preguntas orientadoras antes de cada seccion, desarrollo por unidades con ejemplos, actividades de comprension lectora integradas, cuadros comparativos, autoevaluacion con respuestas, estrategias de repaso y memoria, recursos adicionales sugeridos.",
+    rubrica:      base + "\n\nTu tarea es crear una RUBRICA ANALITICA de excelencia, lista para usar. Una buena rubrica tiene criterios claros y observables, con descriptores concretos que permiten distinguir sin ambiguedad cada nivel de logro. Los descriptores tienen que ser especificos del tema evaluado, no genericos. Mantene la estructura de tabla con criterios y niveles, e incluÃ­ como se traduce a una calificacion.",
+    evaluacion:   base + "\n\nTu tarea es crear una EVALUACION de excelencia, lista para imprimir y tomar. Una buena evaluacion tiene preguntas claras, bien formuladas y de dificultad adecuada al nivel, que realmente midan la comprension del tema y no solo la memoria. Cuida que cada consigna sea inequivoca y que la evaluacion tenga una progresion razonable de dificultad. Mantene una estructura clara por secciones e incluÃ­ siempre una clave de respuestas al final para el docente.",
+    material:     base + "\n\nTu tarea es crear MATERIALES DIDACTICOS atractivos y completos. IncluÃ­ siempre: titulo, introduccion motivadora, desarrollo por subtemas con ejemplos concretos y cercanos a la realidad del alumno, cuadros de conceptos clave, actividades integradas dentro del texto, sintesis visual, glosario, preguntas de autoevaluacion. Usa formato de texto escolar con tablas, recuadros destacados y estructura clara.",
+    presentacion: base + "\n\nTu tarea es crear un ESQUEMA DE PRESENTACION de excelencia, pensado con criterio pedagogico y con una progresion clara del tema. REGLA CLAVE: las diapositivas llevan MUY POCO texto (ideas clave en pocas palabras, nunca oraciones largas ni parrafos); todo el desarrollo, las explicaciones y los ejemplos van en las NOTAS DEL PRESENTADOR. Una slide es un apoyo visual, no un documento.\n\nGenera la cantidad de diapositivas que el tema necesite (habitualmente entre 10 y 16), usando EXACTAMENTE este formato para cada una:\n\n## SLIDE [N]: [Titulo]\n[3-5 bullets cortos y telegraficos, uno por linea comenzando con -, pocas palabras cada uno]\nNOTAS DEL PRESENTADOR: [Todo el desarrollo del contenido, ejemplos y transiciones, 3-5 oraciones]\n\n---\n\nRespeta este formato al pie de la letra (el encabezado '## SLIDE', los bullets con '-', la linea 'NOTAS DEL PRESENTADOR:' y el separador '---'), porque se procesa automaticamente. No uses emojis en los titulos. IncluÃ­ slide de apertura, desarrollo, cierre y preguntas.",
+    guia:         base + "\n\nTu tarea es crear GUIAS DE ESTUDIO completas y autonomas. IncluÃ­ siempre: objetivos de aprendizaje, mapa conceptual en texto, preguntas orientadoras antes de cada seccion, desarrollo por unidades con ejemplos, actividades de comprension lectora integradas, cuadros comparativos, autoevaluacion con respuestas, estrategias de repaso y memoria, recursos adicionales sugeridos.",
     adaptado:     base + "\n\nSos especialista en educacion inclusiva y NEE con experiencia en adaptaciones curriculares. Tu tarea es crear materiales adaptados especificos, practicos y listos para usar con un alumno concreto.",
   };
   return (p[type] || base) + "\n\nResponde siempre en espanol rioplatense. Usa Markdown con estructura visual clara (tablas, listas, encabezados). El material debe ser de calidad profesional, listo para usar sin modificaciones.";
 }
 
 function userGen(type, topic, diff, extra, subject, docText) {
-  var docCtx = docText ? "\n\nDOCUMENTO DE CONTEXTO (usá este material como base para generar el contenido, respetando su enfoque, vocabulario y nivel):\n" + docText.slice(0, 8000) : "";
+  var docCtx = docText ? "\n\nDOCUMENTO DE CONTEXTO (usÃ¡ este material como base para generar el contenido, respetando su enfoque, vocabulario y nivel):\n" + docText.slice(0, 8000) : "";
   var e = (extra ? "\n\nInstrucciones adicionales del docente: " + extra : "") + docCtx;
   var makecodeText = (topic + " " + (extra || "")).toLowerCase();
   var isMakeCode = makecodeText.includes("makecode") || makecodeText.includes("micro:bit") || makecodeText.includes("microbit");
-  var mk = isMakeCode ? "\n\nIMPORTANTE: Incluí una seccion '## Codigo MakeCode' con el codigo JavaScript completo para micro:bit dentro de un bloque ```javascript. Explicá cada linea con comentarios." : "";
+  var mk = isMakeCode ? "\n\nIMPORTANTE: IncluÃ­ una seccion '## Codigo MakeCode' con el codigo JavaScript completo para micro:bit dentro de un bloque ```javascript. ExplicÃ¡ cada linea con comentarios." : "";
   var nivel = subject ? " para alumnos de " + (subject.level||"nivel medio") : "";
   var materia = subject ? " en el contexto de " + subject.name : "";
   var m = {
    planclase:
       "Crea un plan de clase de excelencia sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
-      "El documento integra dos partes: una GUIA PARA EL DOCENTE (con los datos del plan, objetivos, la secuencia didactica de inicio-desarrollo-cierre con tiempos, consignas concretas para los alumnos y como se evalua) y un MATERIAL PARA EL ALUMNO listo para imprimir y entregar (con las consignas y los espacios de trabajo que la clase necesite). Sumá lo que el tema pida para ser un gran plan (diferenciacion, preguntas orientadoras, desafio extra, etc.) solo si aporta valor real.\n\n" +
-      "SE CONCISO Y PRACTICO. Desarrollá bien lo importante y evitá el relleno. Mantené las tablas breves (pocas filas, no listas larguisimas) y no desmenuces cada punto al extremo. Un docente tiene que poder leer y usar este plan rapido. Apuntá a una extension moderada, no a un documento de muchas paginas.\n\n" +
+      "El documento integra dos partes: una GUIA PARA EL DOCENTE (con los datos del plan, objetivos, la secuencia didactica de inicio-desarrollo-cierre con tiempos, consignas concretas para los alumnos y como se evalua) y un MATERIAL PARA EL ALUMNO listo para imprimir y entregar (con las consignas y los espacios de trabajo que la clase necesite). SumÃ¡ lo que el tema pida para ser un gran plan (diferenciacion, preguntas orientadoras, desafio extra, etc.) solo si aporta valor real.\n\n" +
+      "SE CONCISO Y PRACTICO. DesarrollÃ¡ bien lo importante y evitÃ¡ el relleno. MantenÃ© las tablas breves (pocas filas, no listas larguisimas) y no desmenuces cada punto al extremo. Un docente tiene que poder leer y usar este plan rapido. ApuntÃ¡ a una extension moderada, no a un documento de muchas paginas.\n\n" +
       "FORMATO: usa exclusivamente tablas en formato Markdown (con | y guiones), nunca dibujadas con caracteres o ASCII. No uses emojis en los titulos; como mucho alguno muy puntual dentro del texto si de verdad aporta. Estructura clara con encabezados." + e,
 
     actividad:
       "Crea una actividad didactica de excelencia, lista para entregar al alumno, sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
       "Pensala como la pensaria un gran docente: con un objetivo claro, un desarrollo bien secuenciado en pasos con consignas precisas, y una forma de evaluar lo aprendido. Sumale lo que el tema pida para ser una gran actividad (por ejemplo motivacion inicial, un desafio para quienes terminan antes, reflexion final o una nota para el docente), pero solo si aporta valor real.\n\n" +
-      "SE CONCISO Y PRACTICO. El documento tiene que ser agil y directamente usable, no exhaustivo. Priorizá lo esencial: desarrollá bien lo importante y evitá el relleno. Cuando uses tablas para completar, mantenelas breves (pocas filas de ejemplo, no listas larguisimas). No agregues espacios de escritura excesivos ni desmenuces cada paso al extremo. Un docente tiene que poder leer y usar esta actividad rapido. Apuntá a una extension moderada, no a un documento de muchas paginas.\n\n" +
+      "SE CONCISO Y PRACTICO. El documento tiene que ser agil y directamente usable, no exhaustivo. PriorizÃ¡ lo esencial: desarrollÃ¡ bien lo importante y evitÃ¡ el relleno. Cuando uses tablas para completar, mantenelas breves (pocas filas de ejemplo, no listas larguisimas). No agregues espacios de escritura excesivos ni desmenuces cada paso al extremo. Un docente tiene que poder leer y usar esta actividad rapido. ApuntÃ¡ a una extension moderada, no a un documento de muchas paginas.\n\n" +
       "FORMATO: usa exclusivamente tablas en formato Markdown (con | y guiones), nunca dibujadas con caracteres o ASCII. No uses emojis en los titulos; como mucho, alguno muy puntual dentro del texto si de verdad aporta. Estructura clara con encabezados. El documento debe poder imprimirse y entregarse directamente." + mk + e,
 
     rubrica:
@@ -95,8 +95,8 @@ function userGen(type, topic, diff, extra, subject, docText) {
       "- Descriptores concretos y especificos del tema para cada criterio en cada nivel (no genericos)\n" +
       "- Puntaje por criterio y total, y como se convierte a una nota\n" +
       "- Breves instrucciones de uso para el docente\n\n" +
-      "Priorizá que los criterios y descriptores sean utiles y claros por sobre la cantidad. Que un docente pueda tomar la rubrica y evaluar con ella sin dudas.\n\n" +
-      "FORMATO: usá tablas en formato Markdown (con | y guiones), nunca dibujadas con ASCII. No uses emojis. Estructura clara." + e,
+      "PriorizÃ¡ que los criterios y descriptores sean utiles y claros por sobre la cantidad. Que un docente pueda tomar la rubrica y evaluar con ella sin dudas.\n\n" +
+      "FORMATO: usÃ¡ tablas en formato Markdown (con | y guiones), nunca dibujadas con ASCII. No uses emojis. Estructura clara." + e,
 
     evaluacion:
       "Crea una evaluacion completa y lista para imprimir sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
@@ -108,14 +108,14 @@ function userGen(type, topic, diff, extra, subject, docText) {
       "- Seccion de respuesta breve\n" +
       "- Seccion de desarrollo (1-2 preguntas integradoras)\n" +
       "- El valor de cada seccion indicado\n" +
-      "- CLAVE DE RESPUESTAS completa al final para el docente. La clave debe ser CONCISA: indicá la respuesta correcta de cada item y, cuando haga falta, una fundamentacion breve de una sola linea. No escribas parrafos largos de explicacion por cada respuesta.\n\n" +
-      "Las preguntas deben ser claras, bien formuladas y adecuadas al nivel; priorizá la calidad de cada consigna por sobre la cantidad. No incluyas mas items de los necesarios para evaluar bien el tema.\n\n" +
+      "- CLAVE DE RESPUESTAS completa al final para el docente. La clave debe ser CONCISA: indicÃ¡ la respuesta correcta de cada item y, cuando haga falta, una fundamentacion breve de una sola linea. No escribas parrafos largos de explicacion por cada respuesta.\n\n" +
+      "Las preguntas deben ser claras, bien formuladas y adecuadas al nivel; priorizÃ¡ la calidad de cada consigna por sobre la cantidad. No incluyas mas items de los necesarios para evaluar bien el tema.\n\n" +
       "FORMATO: usa tablas en formato Markdown (con | y guiones) si necesitas tablas, nunca dibujadas con ASCII. No uses emojis. Estructura clara con encabezados. Listo para imprimir." + e,
 
    material:
       "Crea un material didactico de excelencia sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
-      "Pensalo como lo escribiria un gran docente: con explicaciones claras, ejemplos concretos y cercanos al alumno, y todo lo que ayude a comprender el tema de verdad (introduccion motivadora, conceptos clave destacados, cuadros o tablas de sintesis, glosario, preguntas de autoevaluacion con sus respuestas). Incluí eso solo si aporta valor real; no agregues secciones de relleno ni cantidades fijas de items forzadas.\n\n" +
-      "SE CONCISO. Esto es clave: el material tiene que ser acotado y estudiable, no extenso. Enfocate en el contenido central del tema y explicalo bien, sin desarrollar cada subtema hasta el agotamiento ni acumular ejemplos de mas. Si hay glosario, que tenga los terminos realmente importantes, no una lista larga. Un material de pocas paginas bien hecho es mucho mejor que uno larguisimo. Preferí siempre la claridad y la brevedad por sobre la exhaustividad.\n\n" +
+      "Pensalo como lo escribiria un gran docente: con explicaciones claras, ejemplos concretos y cercanos al alumno, y todo lo que ayude a comprender el tema de verdad (introduccion motivadora, conceptos clave destacados, cuadros o tablas de sintesis, glosario, preguntas de autoevaluacion con sus respuestas). IncluÃ­ eso solo si aporta valor real; no agregues secciones de relleno ni cantidades fijas de items forzadas.\n\n" +
+      "SE CONCISO. Esto es clave: el material tiene que ser acotado y estudiable, no extenso. Enfocate en el contenido central del tema y explicalo bien, sin desarrollar cada subtema hasta el agotamiento ni acumular ejemplos de mas. Si hay glosario, que tenga los terminos realmente importantes, no una lista larga. Un material de pocas paginas bien hecho es mucho mejor que uno larguisimo. PreferÃ­ siempre la claridad y la brevedad por sobre la exhaustividad.\n\n" +
       "FORMATO: usa exclusivamente tablas en formato Markdown (con | y guiones), nunca dibujadas con caracteres o ASCII. No uses emojis en los titulos; como mucho alguno muy puntual dentro del texto si de verdad aporta. Estructura clara con encabezados." + e,
 
     presentacion:
@@ -128,12 +128,12 @@ function userGen(type, topic, diff, extra, subject, docText) {
       "NOTAS DEL PRESENTADOR: [Aca va TODO el desarrollo: lo que el docente explica en voz alta, ejemplos, detalles y transiciones. 3-5 oraciones]\n\n" +
       "---\n\n" +
       "REGLA CLAVE de una buena presentacion: las diapositivas llevan MUY POCO texto (ideas clave en pocas palabras, nunca oraciones largas ni parrafos). Maximo 3-5 bullets por slide, cada uno de pocas palabras. Todo el contenido desarrollado, las explicaciones y los ejemplos van en las NOTAS DEL PRESENTADOR, no en la slide. Una slide es un apoyo visual, no un documento.\n\n" +
-      "Respeta el formato al pie de la letra (el '## SLIDE', los bullets con '-', la linea 'NOTAS DEL PRESENTADOR:' y el separador '---'), porque se procesa automaticamente. No uses emojis. Incluí apertura con pregunta disparadora, desarrollo, una slide de actividad para los alumnos, sintesis y cierre con preguntas." + e,
+      "Respeta el formato al pie de la letra (el '## SLIDE', los bullets con '-', la linea 'NOTAS DEL PRESENTADOR:' y el separador '---'), porque se procesa automaticamente. No uses emojis. IncluÃ­ apertura con pregunta disparadora, desarrollo, una slide de actividad para los alumnos, sintesis y cierre con preguntas." + e,
 
     guia:
       "Crea una guia de estudio de excelencia y autonoma sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
-      "Pensala para que el alumno pueda estudiar solo: con objetivos claros de lo que va a lograr, el tema bien organizado y explicado, preguntas orientadoras que activen la lectura, autoevaluacion con respuestas para verificar, y estrategias de repaso. Sumá cuadros de sintesis, actividades de comprension o recursos para profundizar solo si aportan valor real; no fuerces secciones de relleno.\n\n" +
-      "SE CONCISA. Esto es clave: la guia tiene que ser acotada y util, no extensa. Enfocate en orientar el estudio de lo esencial, sin desarrollar cada punto hasta el agotamiento ni acumular actividades o preguntas de mas. Una guia de pocas paginas bien hecha es mucho mejor que una larguisima. Preferí siempre la claridad y la brevedad por sobre la exhaustividad.\n\n" +
+      "Pensala para que el alumno pueda estudiar solo: con objetivos claros de lo que va a lograr, el tema bien organizado y explicado, preguntas orientadoras que activen la lectura, autoevaluacion con respuestas para verificar, y estrategias de repaso. SumÃ¡ cuadros de sintesis, actividades de comprension o recursos para profundizar solo si aportan valor real; no fuerces secciones de relleno.\n\n" +
+      "SE CONCISA. Esto es clave: la guia tiene que ser acotada y util, no extensa. Enfocate en orientar el estudio de lo esencial, sin desarrollar cada punto hasta el agotamiento ni acumular actividades o preguntas de mas. Una guia de pocas paginas bien hecha es mucho mejor que una larguisima. PreferÃ­ siempre la claridad y la brevedad por sobre la exhaustividad.\n\n" +
       "FORMATO: usa exclusivamente tablas en formato Markdown (con | y guiones), nunca dibujadas con caracteres o ASCII. No uses emojis en los titulos; como mucho alguno muy puntual dentro del texto si de verdad aporta. Estructura clara con encabezados." + e,
   };
   return m[type] || "Crea contenido educativo de alta calidad sobre \"" + topic + "\"" + nivel + materia + ". Dificultad: " + diff + "." + e;
@@ -142,9 +142,9 @@ function userGen(type, topic, diff, extra, subject, docText) {
 function userMM(type, topic, extra) {
   var e = extra ? "\n\nInstrucciones: " + extra : "";
   var m = {
-    podcast:             "Crea un guion de podcast educativo de calidad sobre: \"" + topic + "\". Pensalo para que sea ameno y claro de escuchar: una introduccion que enganche, un desarrollo en bloques bien organizados con contenido sustancioso y ejemplos, y un cierre. Incluí indicaciones de produccion utiles (tono, pausas, musica) donde ayuden. Que suene natural, no acartonado. Se conciso y practico, sin relleno. No uses emojis." + e,
-    infografia:          "Crea el contenido y la estructura de una infografia educativa de calidad sobre: \"" + topic + "\". Definí un titulo claro, las secciones con su contenido concreto (datos, conceptos clave, pasos), y una propuesta visual: paleta de colores sugerida (en codigos HEX) e indicaciones de que iria en cada bloque para armarla en Canva u otra herramienta. Priorizá que la informacion sea clara y bien jerarquizada. Se conciso. No uses emojis en el contenido." + e,
-    video_script:        "Crea un guion de video educativo de calidad sobre: \"" + topic + "\". Estructuralo con un gancho inicial que capte la atencion, un desarrollo en bloques claros, y un cierre con llamado a la accion. Para cada parte, indicá que se ve (imagen/visual), que se dice (voz en off o presentador) y que texto aparece en pantalla. Que sea dinamico y adecuado para video. Se conciso y practico. No uses emojis." + e,
+    podcast:             "Crea un guion de podcast educativo de calidad sobre: \"" + topic + "\". Pensalo para que sea ameno y claro de escuchar: una introduccion que enganche, un desarrollo en bloques bien organizados con contenido sustancioso y ejemplos, y un cierre. IncluÃ­ indicaciones de produccion utiles (tono, pausas, musica) donde ayuden. Que suene natural, no acartonado. Se conciso y practico, sin relleno. No uses emojis." + e,
+    infografia:          "Crea el contenido y la estructura de una infografia educativa de calidad sobre: \"" + topic + "\". DefinÃ­ un titulo claro, las secciones con su contenido concreto (datos, conceptos clave, pasos), y una propuesta visual: paleta de colores sugerida (en codigos HEX) e indicaciones de que iria en cada bloque para armarla en Canva u otra herramienta. PriorizÃ¡ que la informacion sea clara y bien jerarquizada. Se conciso. No uses emojis en el contenido." + e,
+    video_script:        "Crea un guion de video educativo de calidad sobre: \"" + topic + "\". Estructuralo con un gancho inicial que capte la atencion, un desarrollo en bloques claros, y un cierre con llamado a la accion. Para cada parte, indicÃ¡ que se ve (imagen/visual), que se dice (voz en off o presentador) y que texto aparece en pantalla. Que sea dinamico y adecuado para video. Se conciso y practico. No uses emojis." + e,
   };
   return m[type] || "Contenido multimedia educativo sobre \"" + topic + "\"." + e;
 }
@@ -372,7 +372,7 @@ async function dbLoadNotifications(userId) {
       id: m.id,
       type: "project_invite",
       title: "Te invitaron a un proyecto",
-      message: "Proyecto: " + (m.projects ? m.projects.title : "Sin título"),
+      message: "Proyecto: " + (m.projects ? m.projects.title : "Sin tÃ­tulo"),
       date: m.invited_at,
       read: m.status === "active",
     };
@@ -554,7 +554,7 @@ function PricingPanel({authUser}) {
   var [consultSent,setConsultSent]=useState(false);
   var plans=[
     {id:"b2917cb9b9a948bc8adb1e0eb3bbad39",name:"Individual Mensual",price:"$12.000",period:"por mes",users:1,color:C.blue,features:["Generador IA (8 tipos)","Multimedia + Imagenes","Chat Docente","Corrector de TPs","Exportacion Word y PDF","Biblioteca personal"]},
-    {id:"bb7e1d8a1bef42b08bcbca6833667980",name:"Individual Anual",price:"$102.000",period:"por año",badge:"Ahorra 15%",users:1,color:C.accent,features:["Todo Individual","2 meses gratis","Soporte prioritario"]},
+    {id:"bb7e1d8a1bef42b08bcbca6833667980",name:"Individual Anual",price:"$102.000",period:"por aÃ±o",badge:"Ahorra 15%",users:1,color:C.accent,features:["Todo Individual","2 meses gratis","Soporte prioritario"]},
     {id:"institucional_basico",name:"Institucional Basico",price:"$100.000",period:"por mes",users:10,color:C.green,institutional:true,features:["Hasta 10 docentes","Biblioteca publica compartida","Panel admin institucional","Soporte dedicado"]},
     {id:"institucional_consulta",name:"Institucional A Medida",price:"Consultar",period:"segun cantidad de docentes",users:999,color:C.purple,institutional:true,features:["Mas de 10 docentes","Todo Institucional Basico","Precio segun cantidad","Soporte dedicado"]},
   ];
@@ -580,7 +580,7 @@ function PricingPanel({authUser}) {
     <div>
       <div style={{textAlign:"center",marginBottom:32}}>
         <h2 style={{fontSize:26,fontWeight:700,color:C.text,marginBottom:8}}>Planes y Precios</h2>
-        <p style={{color:C.textMuted,fontSize:15}}>Elegí el plan que mejor se adapta a tus necesidades</p>
+        <p style={{color:C.textMuted,fontSize:15}}>ElegÃ­ el plan que mejor se adapta a tus necesidades</p>
       </div>
       {error&&<div style={{background:"#fee2e2",border:"1px solid #fca5a5",borderRadius:4,padding:"10px 16px",marginBottom:20,color:C.red,fontSize:13}}>{error}</div>}
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:16}}>
@@ -624,12 +624,12 @@ function PricingPanel({authUser}) {
               </div>
             ):(
               <div>
-                <h2 style={{margin:"0 0 6px",fontSize:18,fontWeight:700,color:C.text}}>{"Consulta — "+consultPlan}</h2>
-                <p style={{fontSize:13,color:C.textMuted,marginBottom:20}}>Completá el formulario y te contactamos a la brevedad.</p>
+                <h2 style={{margin:"0 0 6px",fontSize:18,fontWeight:700,color:C.text}}>{"Consulta â€” "+consultPlan}</h2>
+                <p style={{fontSize:13,color:C.textMuted,marginBottom:20}}>CompletÃ¡ el formulario y te contactamos a la brevedad.</p>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
                   <div>
                     <label style={lbl}>NOMBRE *</label>
-                    <input style={inp} value={consultForm.nombre} onChange={function(e){setConsultForm(Object.assign({},consultForm,{nombre:e.target.value}));}} placeholder="Prof. García"/>
+                    <input style={inp} value={consultForm.nombre} onChange={function(e){setConsultForm(Object.assign({},consultForm,{nombre:e.target.value}));}} placeholder="Prof. GarcÃ­a"/>
                   </div>
                   <div>
                     <label style={lbl}>CARGO *</label>
@@ -907,7 +907,7 @@ function AdminPanel({authUser,supabaseClient}) {
                   return (
                     <tr key={u.user_id} style={{borderBottom:"1px solid "+C.bg}}>
                       <td style={{padding:"8px 10px",color:C.text}}>{u.email}</td>
-                      <td style={{padding:"8px 10px",color:C.textDim}}>{u.institution||"—"}</td>
+                      <td style={{padding:"8px 10px",color:C.textDim}}>{u.institution||"â€”"}</td>
                       <td style={{padding:"8px 10px"}}>
                         <span style={{fontWeight:700,color:clr}}>{u.days_left>0?u.days_left+" dias":"Vencido"}</span>
                       </td>
@@ -1006,7 +1006,7 @@ function AdminPanel({authUser,supabaseClient}) {
           <div style={{marginTop:12,padding:"10px 14px",background:C.bg,borderRadius:4,fontSize:13,border:"1px solid "+C.border}}>
             {roleResult.error
               ?<span style={{color:C.red}}>Error: {roleResult.error}</span>
-              :<span style={{color:C.green}}>{"Rol actualizado a "+roleResult.role+". El usuario debe cerrar sesión y volver a entrar para que tome efecto."}</span>
+              :<span style={{color:C.green}}>{"Rol actualizado a "+roleResult.role+". El usuario debe cerrar sesiÃ³n y volver a entrar para que tome efecto."}</span>
             }
           </div>
         )}
@@ -1031,7 +1031,7 @@ function AdminPanel({authUser,supabaseClient}) {
               <option value={60}>60 dias</option>
               <option value={90}>90 dias</option>
               <option value={180}>6 meses</option>
-              <option value={365}>1 año</option>
+              <option value={365}>1 aÃ±o</option>
             </select>
           </div>
         </div>
@@ -1114,8 +1114,8 @@ function AdminPanel({authUser,supabaseClient}) {
                   return (
                     <tr key={u.email} style={{borderBottom:"1px solid "+C.bg}}>
                       <td style={{padding:"8px 10px",color:C.text}}>{u.email.split("@")[0]}</td>
-                      <td style={{padding:"8px 10px",color:C.textDim}}>{u.lastActivity?u.lastActivity.toLocaleDateString("es-AR"):"—"}</td>
-                      <td style={{padding:"8px 10px",color:clr,fontWeight:700}}>{daysInactive===null?"—":daysInactive+" dias"}</td>
+                      <td style={{padding:"8px 10px",color:C.textDim}}>{u.lastActivity?u.lastActivity.toLocaleDateString("es-AR"):"â€”"}</td>
+                      <td style={{padding:"8px 10px",color:clr,fontWeight:700}}>{daysInactive===null?"â€”":daysInactive+" dias"}</td>
                       <td style={{padding:"8px 10px"}}><span style={{fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:20,background:clr+"22",color:clr}}>{estado}</span></td>
                     </tr>
                   );
@@ -1174,7 +1174,7 @@ function AdminPanel({authUser,supabaseClient}) {
                     <tr key={s.id} style={{borderBottom:"1px solid "+C.bg}}>
                       <td style={{padding:"6px 10px",color:C.textMuted}}>{s.user_email.split("@")[0]}</td>
                       <td style={{padding:"6px 10px",color:C.text}}>{s.type_name}</td>
-                      <td style={{padding:"6px 10px",color:C.textDim}}>{s.subject_name||"—"}</td>
+                      <td style={{padding:"6px 10px",color:C.textDim}}>{s.subject_name||"â€”"}</td>
                       <td style={{padding:"6px 10px",color:C.accent}}>{s.is_image?"imagen":(s.tokens_input+s.tokens_output)}</td>
                       <td style={{padding:"6px 10px",color:C.textDim}}>{new Date(s.created_at).toLocaleDateString("es-AR")}</td>
                     </tr>
@@ -1274,7 +1274,7 @@ function AuthScreen({onAuth}) {
                     {schoolSuggestions.map(function(s){
                       return (
                         <div key={s.id} style={{padding:"9px 13px",cursor:"pointer",fontSize:13,color:C.text,borderBottom:"1px solid "+C.border}} onClick={function(){setSchool(s.name);setSchoolSuggestions([]);}}>
-                          {s.name}{s.city?" — "+s.city:""}
+                          {s.name}{s.city?" â€” "+s.city:""}
                         </div>
                       );
                     })}
@@ -1521,7 +1521,7 @@ useEffect(function(){
     });
     if (uploadRes.error) throw new Error("Error al subir el archivo: " + uploadRes.error.message);
 
-    // 2. Obtener la URL pública
+    // 2. Obtener la URL pÃºblica
     var urlData = supabase.storage.from("documentos").getPublicUrl(path);
     var publicUrl = urlData.data.publicUrl;
 
@@ -1643,7 +1643,7 @@ useEffect(function(){
     setDiffLoading(true);setDiffResult("");
     try{
       var sys="Sos especialista en diferenciacion pedagogica y educacion inclusiva. Responde en espanol rioplatense con Markdown.";
-      var usr="A partir del siguiente contenido educativo, genera 3 versiones diferenciadas para distintos niveles de aprendizaje:\n\n## CONTENIDO ORIGINAL:\n"+genResult.slice(0,3000)+"\n\n## VERSIONES A GENERAR:\n\n### VERSION 1 — BASICA (alumnos con dificultades o que necesitan apoyo)\n- Lenguaje simple y directo\n- Pasos muy detallados y secuenciados\n- Menos cantidad de consignas\n- Vocabulario accesible con definiciones de terminos clave\n- Ejemplos concretos y cercanos a la vida cotidiana\n\n### VERSION 2 — ESTANDAR (nivel esperado para el curso)\n- Fiel al contenido original con leves adaptaciones\n- Consignas claras con nivel de desafio apropiado\n\n### VERSION 3 — AVANZADA (alumnos con altas capacidades)\n- Mayor nivel de complejidad y abstraccion\n- Consignas que exigen analisis, sintesis y evaluacion (verbos Bloom superiores)\n- Contenido ampliado con conexiones interdisciplinarias\n- Desafios adicionales y preguntas de extension\n\nGenera las 3 versiones completas y utilizables en el aula.";
+      var usr="A partir del siguiente contenido educativo, genera 3 versiones diferenciadas para distintos niveles de aprendizaje:\n\n## CONTENIDO ORIGINAL:\n"+genResult.slice(0,3000)+"\n\n## VERSIONES A GENERAR:\n\n### VERSION 1 â€” BASICA (alumnos con dificultades o que necesitan apoyo)\n- Lenguaje simple y directo\n- Pasos muy detallados y secuenciados\n- Menos cantidad de consignas\n- Vocabulario accesible con definiciones de terminos clave\n- Ejemplos concretos y cercanos a la vida cotidiana\n\n### VERSION 2 â€” ESTANDAR (nivel esperado para el curso)\n- Fiel al contenido original con leves adaptaciones\n- Consignas claras con nivel de desafio apropiado\n\n### VERSION 3 â€” AVANZADA (alumnos con altas capacidades)\n- Mayor nivel de complejidad y abstraccion\n- Consignas que exigen analisis, sintesis y evaluacion (verbos Bloom superiores)\n- Contenido ampliado con conexiones interdisciplinarias\n- Desafios adicionales y preguntas de extension\n\nGenera las 3 versiones completas y utilizables en el aula.";
       var r=await callClaude(sys,[{role:"user",content:usr}],6000);
       setDiffResult(r);
     }catch(e){setDiffResult(msgError(e));}
@@ -1821,10 +1821,10 @@ async function loadChatDoc(file){
 
   function extractScore(text) {
     var patterns = [
-      /calificaci[oó]n\s*final[:\s]+(\d+(?:[.,]\d+)?)/i,
+      /calificaci[oÃ³]n\s*final[:\s]+(\d+(?:[.,]\d+)?)/i,
       /nota\s*final[:\s]+(\d+(?:[.,]\d+)?)/i,
       /puntaje\s*final[:\s]+(\d+(?:[.,]\d+)?)/i,
-      /calificaci[oó]n[:\s]+(\d+(?:[.,]\d+)?)\s*\/\s*10/i,
+      /calificaci[oÃ³]n[:\s]+(\d+(?:[.,]\d+)?)\s*\/\s*10/i,
       /(\d+(?:[.,]\d+)?)\s*\/\s*10/,
     ];
     for(var i=0;i<patterns.length;i++){
@@ -1855,7 +1855,7 @@ async function loadChatDoc(file){
         var t = trabajos[j];
         setBatchProgress(j+1);
         try {
-          var usr = "Corregi el trabajo usando la rubrica provista.\n\n## RUBRICA:\n"+corrR+"\n\n## TRABAJO DE "+t.name+":\n"+t.work+"\n\nEvalua cada criterio de forma justificada, da una Calificacion final: X/10 coherente con esa evaluacion, y escribí una devolucion constructiva que reconozca lo bueno y marque con claridad que puede mejorar y como. Se concreto y util."+instruccionRigor(corrRigor);
+          var usr = "Corregi el trabajo usando la rubrica provista.\n\n## RUBRICA:\n"+corrR+"\n\n## TRABAJO DE "+t.name+":\n"+t.work+"\n\nEvalua cada criterio de forma justificada, da una Calificacion final: X/10 coherente con esa evaluacion, y escribÃ­ una devolucion constructiva que reconozca lo bueno y marque con claridad que puede mejorar y como. Se concreto y util."+instruccionRigor(corrRigor);
           var r = await callClaude(sys,[{role:"user",content:usr}],3000);
           var score = extractScore(r);
           results.push({name:t.name,result:r,score:score,saved:false});
@@ -1885,7 +1885,7 @@ async function loadChatDoc(file){
     if(!corrR.trim()||!corrW.trim()) return;
     setCorrLoading(true);setCorrResult("");
     var sys="Sos docente evaluador experto. Materia: \""+(curSubj?curSubj.name:"General")+"\". Responde en espanol rioplatense con Markdown.";
-    var usr="Corregi el siguiente trabajo usando la rubrica provista.\n\n## RUBRICA:\n"+corrR+"\n\n## TRABAJO:\n"+corrW+"\n\nEvalua cada criterio de la rubrica de forma justificada (por que esa calificacion, basandote en el trabajo), da una calificacion final coherente con esa evaluacion, y escribí una devolucion para el alumno que reconozca lo bueno y le marque con claridad y en tono constructivo que puede mejorar y como. Se concreto y util, no generico."+instruccionRigor(corrRigor);
+    var usr="Corregi el siguiente trabajo usando la rubrica provista.\n\n## RUBRICA:\n"+corrR+"\n\n## TRABAJO:\n"+corrW+"\n\nEvalua cada criterio de la rubrica de forma justificada (por que esa calificacion, basandote en el trabajo), da una calificacion final coherente con esa evaluacion, y escribÃ­ una devolucion para el alumno que reconozca lo bueno y le marque con claridad y en tono constructivo que puede mejorar y como. Se concreto y util, no generico."+instruccionRigor(corrRigor);
     try{var r=await callClaude(sys,[{role:"user",content:usr}],4000);setCorrResult(r);}
     catch(e){setCorrResult(msgError(e));}
     setCorrLoading(false);
@@ -1910,21 +1910,21 @@ async function loadChatDoc(file){
       <div style={{width:420}}>
         <div style={{textAlign:"center",marginBottom:32}}>
           <i className="ti ti-lock-open" style={{fontSize:52,color:C.accent,display:"block",marginBottom:12}}/>
-          <h1 style={{color:C.accent,fontSize:26,fontWeight:700,margin:"0 0 6px"}}>Nueva contraseña</h1>
-          <p style={{color:C.textMuted,fontSize:15}}>Ingresá tu nueva contraseña</p>
+          <h1 style={{color:C.accent,fontSize:26,fontWeight:700,margin:"0 0 6px"}}>Nueva contraseÃ±a</h1>
+          <p style={{color:C.textMuted,fontSize:15}}>IngresÃ¡ tu nueva contraseÃ±a</p>
         </div>
         <div style={card}>
           {resetDone?(
             <div style={{textAlign:"center",padding:"16px 0"}}>
               <i className="ti ti-check" style={{fontSize:40,color:C.green,display:"block",marginBottom:12}}/>
-              <p style={{fontSize:15,color:C.text,marginBottom:20}}>Contraseña actualizada correctamente.</p>
+              <p style={{fontSize:15,color:C.text,marginBottom:20}}>ContraseÃ±a actualizada correctamente.</p>
               <Btn st={{width:"100%",justifyContent:"center"}} onClick={function(){setShowResetPassword(false);setResetDone(false);setNewPassword("");}}>
                 Ir a la app
               </Btn>
             </div>
           ):(
             <div>
-              <label style={lbl}>NUEVA CONTRASEÑA</label>
+              <label style={lbl}>NUEVA CONTRASEÃ‘A</label>
               <input style={Object.assign({},inp,{marginBottom:20})} type="password" value={newPassword} onChange={function(e){setNewPassword(e.target.value);}} placeholder="Minimo 6 caracteres"/>
               <Btn st={{width:"100%",justifyContent:"center",fontSize:14,padding:"11px 20px"}} disabled={resetLoading||newPassword.length<6} onClick={async function(){
                 setResetLoading(true);
@@ -1933,7 +1933,7 @@ async function loadChatDoc(file){
                 else{setResetDone(true);}
                 setResetLoading(false);
               }}>
-                {resetLoading?"Actualizando...":"Actualizar contraseña"}
+                {resetLoading?"Actualizando...":"Actualizar contraseÃ±a"}
               </Btn>
             </div>
           )}
@@ -1946,11 +1946,11 @@ async function loadChatDoc(file){
       <div style={{width:420}}>
         <div style={{textAlign:"center",marginBottom:32}}>
           <i className="ti ti-lock-plus" style={{fontSize:52,color:C.accent,display:"block",marginBottom:12}}/>
-          <h1 style={{color:C.accent,fontSize:26,fontWeight:700,margin:"0 0 6px"}}>Creá tu contraseña</h1>
-          <p style={{color:C.textMuted,fontSize:15}}>Definí una contraseña para poder ingresar siempre</p>
+          <h1 style={{color:C.accent,fontSize:26,fontWeight:700,margin:"0 0 6px"}}>CreÃ¡ tu contraseÃ±a</h1>
+          <p style={{color:C.textMuted,fontSize:15}}>DefinÃ­ una contraseÃ±a para poder ingresar siempre</p>
         </div>
         <div style={card}>
-          <label style={lbl}>CONTRASEÑA</label>
+          <label style={lbl}>CONTRASEÃ‘A</label>
           <input style={Object.assign({},inp,{marginBottom:20})} type="password" value={newPassword} onChange={function(e){setNewPassword(e.target.value);}} placeholder="Minimo 6 caracteres" autoFocus/>
           <Btn st={{width:"100%",justifyContent:"center",fontSize:14,padding:"11px 20px"}} disabled={resetLoading||newPassword.length<6} onClick={async function(){
             setResetLoading(true);
@@ -1959,7 +1959,7 @@ async function loadChatDoc(file){
             else{setNeedsPassword(false);setNewPassword("");}
             setResetLoading(false);
           }}>
-            {resetLoading?"Guardando...":"Crear contraseña y entrar"}
+            {resetLoading?"Guardando...":"Crear contraseÃ±a y entrar"}
           </Btn>
         </div>
       </div>
@@ -1969,30 +1969,9 @@ async function loadChatDoc(file){
     <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:C.bg}}>
       <div style={{width:480,textAlign:"center"}}>
         <i className="ti ti-coin-off" style={{fontSize:52,color:C.red,display:"block",marginBottom:12}}/>
-        <h2 style={{color:C.red,fontSize:24,fontWeight:700,margin:"0 0 8px"}}>Credito mensual agotado</h2>
-        <p style={{color:C.textMuted,fontSize:15,marginBottom:8}}>Usaste todo tu credito de $3 USD este mes.</p>
-        <p style={{color:C.textDim,fontSize:13,marginBottom:32}}>Compra credito adicional para seguir generando contenido.</p>
-        <div style={Object.assign({},card,{padding:28,textAlign:"left"})}>
-          <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:16}}>Credito adicional</div>
-          {[{usd:1,ars:1000,label:"Starter"},{usd:3,ars:2800,label:"Standard"},{usd:5,ars:4500,label:"Pro"}].map(function(pack){
-            return (
-              <div key={pack.usd} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid "+C.border}}>
-                <div>
-                  <div style={{fontSize:14,fontWeight:600,color:C.text}}>{pack.label+" — $"+pack.usd+" USD"}</div>
-                  <div style={{fontSize:12,color:C.textDim}}>{"$"+pack.ars+" ARS · ~"+(pack.usd===1?"40 generaciones":pack.usd===3?"120 generaciones":"200 generaciones")}</div>
-                </div>
-                <Btn st={{fontSize:13,padding:"7px 16px"}} onClick={async function(){
-                  try{
-                    var res=await fetch("/api/buy-credits",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:authUser.id,user_email:authUser.email,amount_ars:pack.ars,amount_usd:pack.usd,label:"AulaXpro - Credito $"+pack.usd+" USD"})});
-                    var data=await res.json();
-                    if(!res.ok) throw new Error(data.error);
-                    window.open(data.init_point,"_blank");
-                  }catch(e){alert("Error: "+e.message);}
-                }}>Comprar</Btn>
-              </div>
-            );
-          })}
-        </div>
+        <h2 style={{color:C.text,fontSize:24,fontWeight:700,margin:"0 0 12px"}}>Alcanzaste tu limite mensual</h2>
+        <p style={{color:C.textMuted,fontSize:15,marginBottom:8}}>Llegaste al maximo de uso incluido en tu plan por este mes.</p>
+        <p style={{color:C.textDim,fontSize:14,marginBottom:32,lineHeight:1.5}}>Tu uso se renueva automaticamente al comenzar el proximo periodo. Si necesitas seguir usando AulaXpro sin esperar, escribinos a hola@aulaxpro.com y te ayudamos.</p>
         <button style={{marginTop:20,background:"transparent",border:"none",cursor:"pointer",color:C.textDim,fontSize:13,fontFamily:"Quicksand,sans-serif",display:"inline-flex",alignItems:"center",gap:5}} onClick={function(){setBudgetExceeded(false);}}>
           <i className="ti ti-arrow-left" style={{fontSize:14}}/>Volver a la app
         </button>
@@ -2154,14 +2133,14 @@ async function loadChatDoc(file){
               <div style={{background:pct>=100?"#fee2e2":C.accentBg,border:"1px solid "+(pct>=100?C.red:C.accent),borderRadius:4,padding:"10px 16px",marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <div>
                   <span style={{fontSize:13,color:pct>=100?C.red:C.accent,fontWeight:600}}>
-                    {pct>=100?"Credito mensual agotado":"Credito casi agotado — "+pct+"% usado"}
+                    {pct>=100?"Alcanzaste tu limite mensual":"Estas cerca de tu limite mensual"}
                   </span>
                   <span style={{fontSize:12,color:C.textMuted,marginLeft:8}}>
-                    {pct>=100?"Compra credito adicional para seguir generando":"Restante: $"+remaining+" USD"}
+                    {pct>=100?"Tu uso se renueva el proximo periodo":"Ya usaste la mayor parte de tu plan este mes"}
                   </span>
                 </div>
                 <button style={{background:pct>=100?C.red:C.accent,border:"none",borderRadius:4,padding:"5px 14px",cursor:"pointer",fontWeight:700,fontSize:12,fontFamily:"Quicksand,sans-serif",color:"#fff"}} onClick={function(){setView("pricing");}}>
-                  <i className="ti ti-plus" style={{fontSize:12,marginRight:4}}/>Comprar credito
+                  <i className="ti ti-plus" style={{fontSize:12,marginRight:4}}/>Ver mi plan
                 </button>
               </div>
             );
@@ -2292,7 +2271,7 @@ async function loadChatDoc(file){
                     {gt&&<i className={"ti "+gt.icon} style={{fontSize:30,color:gt.color}}/>}
                     <div>
                       <h2 style={{margin:0,fontSize:19,fontWeight:700,color:C.text}}>{gt?gt.label:""}</h2>
-                      <div style={{fontSize:13,color:C.textDim}}>{"Materia: "+(curSubj?curSubj.name:"—")}</div>
+                      <div style={{fontSize:13,color:C.textDim}}>{"Materia: "+(curSubj?curSubj.name:"â€”")}</div>
                     </div>
                   </div>
                   {!curSubj?(
@@ -2313,7 +2292,7 @@ async function loadChatDoc(file){
                           {genDocLoading?"Procesando...":genDocText?genDocName:"Adjuntar PDF o texto"}
                           <input type="file" accept=".pdf,.txt" style={{display:"none"}} disabled={genDocLoading} onChange={async function(e){
                             var file=e.target.files[0]; if(!file) return;
-                            if(file.type==="application/pdf" && file.size > 3*1024*1024){alert("El PDF es demasiado grande. El límite es 3MB. Intentá con un PDF más pequeño o pegá el texto directamente en las instrucciones adicionales.");return;}
+                            if(file.type==="application/pdf" && file.size > 3*1024*1024){alert("El PDF es demasiado grande. El lÃ­mite es 3MB. IntentÃ¡ con un PDF mÃ¡s pequeÃ±o o pegÃ¡ el texto directamente en las instrucciones adicionales.");return;}
                             setGenDocLoading(true);
                             try{
                               if(file.type==="application/pdf"){
@@ -2453,7 +2432,7 @@ async function loadChatDoc(file){
                     </div>
                     <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid "+C.border}}>
                       <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:10}}>IMAGEN PARA EL DOCUMENTO (opcional)</div>
-                      <p style={{fontSize:12,color:C.textDim,marginBottom:10}}>Generá una imagen con IA o subí una desde tu dispositivo.</p>
+                      <p style={{fontSize:12,color:C.textDim,marginBottom:10}}>GenerÃ¡ una imagen con IA o subÃ­ una desde tu dispositivo.</p>
                       <input style={Object.assign({},inp,{marginBottom:10})} value={actImgDesc} onChange={function(e){setActImgDesc(e.target.value);}} placeholder="Ej: diagrama de la celula eucariota"/>
                       <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
                         <Btn v="secondary" st={{fontSize:12,padding:"5px 14px"}} onClick={generateActivityImage} disabled={actImgLoad}>
@@ -2594,7 +2573,7 @@ async function loadChatDoc(file){
                   <Btn st={{width:"100%",justifyContent:"center",fontSize:12,padding:"8px 0"}} onClick={function(){
                     setCurrentSessionId(null);setChatMsgs([]);
                   }}>
-                    <i className="ti ti-plus" style={{fontSize:13,marginRight:4}}/>Nueva conversación
+                    <i className="ti ti-plus" style={{fontSize:13,marginRight:4}}/>Nueva conversaciÃ³n
                   </Btn>
                 </div>
                 <div style={{flex:1,overflowY:"auto",padding:"8px 0"}}>
@@ -2610,7 +2589,7 @@ async function loadChatDoc(file){
                           });
                         }}>
                         <div style={{flex:1,overflow:"hidden"}}>
-                          <div style={{fontSize:12,fontWeight:600,color:currentSessionId===s.id?C.accent:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.title||"Nueva conversación"}</div>
+                          <div style={{fontSize:12,fontWeight:600,color:currentSessionId===s.id?C.accent:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.title||"Nueva conversaciÃ³n"}</div>
                           <div style={{fontSize:10,color:C.textDim,marginTop:2}}>{new Date(s.updated_at).toLocaleDateString("es-AR")}</div>
                         </div>
                         <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.textDim,padding:"2px 4px",opacity:0,transition:"opacity .15s"}} className="del-session"
@@ -2627,7 +2606,7 @@ async function loadChatDoc(file){
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
                     <span style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.6,whiteSpace:"nowrap"}}>CONTEXTO:</span>
                     <select style={Object.assign({},sel,{flex:1})} value={chatSid===null?"":chatSid||""} onChange={function(e){setChatSid(e.target.value||null);}}>
-                      <option value="">Sin materia específica</option>
+                      <option value="">Sin materia especÃ­fica</option>
                       {subjects.map(function(s){return <option key={s.id} value={s.id}>{s.name+" ("+s.level+")"}</option>;})}
                     </select>
                   </div>
@@ -2827,7 +2806,7 @@ async function loadChatDoc(file){
                   <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
                     <i className="ti ti-checklist" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
                     <h3 style={{color:C.textMuted,marginBottom:8}}>La correccion aparecera aqui</h3>
-                    <p style={{fontSize:13}}>Evaluacion por criterio · Calificacion · Fortalezas · Mejoras · Devolucion</p>
+                    <p style={{fontSize:13}}>Evaluacion por criterio Â· Calificacion Â· Fortalezas Â· Mejoras Â· Devolucion</p>
                   </div>
                 )}
               </div>
@@ -2859,7 +2838,7 @@ async function loadChatDoc(file){
                   <div style={card}>
                     <div style={{display:"flex",justifyContent:"space-between",marginBottom:16}}>
                       <div>
-                        <div style={{fontSize:12,color:C.textDim,marginBottom:4}}>{libItem.type_name+" · "+libItem.subject_name+" · "+new Date(libItem.created_at).toLocaleDateString("es-AR")}</div>
+                        <div style={{fontSize:12,color:C.textDim,marginBottom:4}}>{libItem.type_name+" Â· "+libItem.subject_name+" Â· "+new Date(libItem.created_at).toLocaleDateString("es-AR")}</div>
                         <h2 style={{margin:0,fontSize:19,fontWeight:700,color:C.text}}>{libItem.topic}</h2>
                       </div>
                       <div style={{display:"flex",gap:8}}>
@@ -2894,7 +2873,7 @@ async function loadChatDoc(file){
                         </div>
                         <Tag color={g?g.color:C.textMuted}>{item.type_name}</Tag>
                         <div style={{fontWeight:600,color:C.text,fontSize:14,marginTop:8,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.topic}</div>
-                        <div style={{fontSize:12,color:C.textDim,marginTop:3}}>{(item.subject_name||"")+" · "+new Date(item.created_at).toLocaleDateString("es-AR")}</div>
+                        <div style={{fontSize:12,color:C.textDim,marginTop:3}}>{(item.subject_name||"")+" Â· "+new Date(item.created_at).toLocaleDateString("es-AR")}</div>
                       </div>
                     );
                   })}
@@ -3032,7 +3011,7 @@ async function loadChatDoc(file){
                     <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}>
                       <div>
                         <div style={{fontWeight:700,fontSize:15,color:C.text,marginBottom:2}}>{item.topic}</div>
-                        <div style={{fontSize:12,color:C.textDim}}>{(item.subject_name||"")+" · "+new Date(item.created_at).toLocaleDateString("es-AR")}</div>
+                        <div style={{fontSize:12,color:C.textDim}}>{(item.subject_name||"")+" Â· "+new Date(item.created_at).toLocaleDateString("es-AR")}</div>
                       </div>
                       <Btn v="danger" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){delBank(item.id);}}>Eliminar</Btn>
                     </div>
@@ -3086,7 +3065,7 @@ async function loadChatDoc(file){
                           onClick={function(){setSeqView(s);}}>
                           <div>
                             <div style={{fontSize:13,fontWeight:600,color:C.text}}>{s.topic}</div>
-                            <div style={{fontSize:11,color:C.textDim}}>{s.subject_name+" · "+s.n_classes+" clases"}</div>
+                            <div style={{fontSize:11,color:C.textDim}}>{s.subject_name+" Â· "+s.n_classes+" clases"}</div>
                           </div>
                           <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.textDim}} onClick={function(e){e.stopPropagation();dbDelSequence(s.id).then(function(){setSequences(function(prev){return prev.filter(function(x){return x.id!==s.id;});});if(seqView&&seqView.id===s.id) setSeqView(null);});}}>
                             <i className="ti ti-trash" style={{fontSize:14}}/>
@@ -3122,7 +3101,7 @@ async function loadChatDoc(file){
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
                       <div>
                         <h2 style={{fontSize:18,fontWeight:700,color:C.text,margin:0}}>{seqView.topic}</h2>
-                        <div style={{fontSize:12,color:C.textDim,marginTop:3}}>{seqView.subject_name+" · "+seqView.n_classes+" clases · "+seqView.level}</div>
+                        <div style={{fontSize:12,color:C.textDim,marginTop:3}}>{seqView.subject_name+" Â· "+seqView.n_classes+" clases Â· "+seqView.level}</div>
                       </div>
                       <div style={{display:"flex",gap:8}}>
                         <Btn v="secondary" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportDocx(seqView.topic,"Secuencia Didactica",seqView.subject_name,seqView.content);}}>
@@ -3144,7 +3123,7 @@ async function loadChatDoc(file){
             <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"260px 1fr",gap:18}}>
               <div>
                 <div data-tour="students-list" style={card}>
-                  <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:12}}>{"ALUMNOS — "+(curSubj?curSubj.name:"Sin materia")}</div>
+                  <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:12}}>{"ALUMNOS â€” "+(curSubj?curSubj.name:"Sin materia")}</div>
                   {!curSubj?(
                     <p style={{fontSize:13,color:C.textDim}}>Selecciona una materia primero.</p>
                   ):(
@@ -3170,7 +3149,7 @@ async function loadChatDoc(file){
                             alert(added+" alumnos importados.");e.target.value="";
                           }}/>
                         </label>
-                        <p style={{fontSize:11,color:C.textDim,marginTop:6,marginBottom:0}}>Col A: Nombre · Col B: Notas</p>
+                        <p style={{fontSize:11,color:C.textDim,marginTop:6,marginBottom:0}}>Col A: Nombre Â· Col B: Notas</p>
                       </div>
                       <div style={{display:"flex",gap:8,marginBottom:12,marginTop:12}}>
                         <input style={Object.assign({},inp,{flex:1,fontSize:13})} value={newStudentName} onChange={function(e){setNewStudentName(e.target.value);}}
@@ -3217,7 +3196,7 @@ async function loadChatDoc(file){
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
                       <div>
                         <h2 style={{fontSize:18,fontWeight:700,color:C.text,margin:0}}>{selectedStudent.name}</h2>
-                        <div style={{fontSize:12,color:C.textDim,marginTop:3}}>{(curSubj?curSubj.name:"")+" · "+studentEvals.length+" evaluaciones"}</div>
+                        <div style={{fontSize:12,color:C.textDim,marginTop:3}}>{(curSubj?curSubj.name:"")+" Â· "+studentEvals.length+" evaluaciones"}</div>
                       </div>
                       <div style={{display:"flex",gap:8}}>
                         {studentEvals.length>0&&(
@@ -3241,7 +3220,7 @@ async function loadChatDoc(file){
                           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
                             <div>
                               <div style={{fontSize:14,fontWeight:600,color:C.text}}>{ev.topic}</div>
-                              <div style={{fontSize:11,color:C.textDim,marginTop:2}}>{(ev.rubric_name?ev.rubric_name+" · ":"")+new Date(ev.evaluated_at).toLocaleDateString("es-AR")}</div>
+                              <div style={{fontSize:11,color:C.textDim,marginTop:2}}>{(ev.rubric_name?ev.rubric_name+" Â· ":"")+new Date(ev.evaluated_at).toLocaleDateString("es-AR")}</div>
                             </div>
                             <div style={{display:"flex",alignItems:"center",gap:10}}>
                               <div style={{textAlign:"center"}}>
@@ -3295,7 +3274,7 @@ async function loadChatDoc(file){
                         </div>
                         <Tag color={g?g.color:C.textMuted}>{item.type_name}</Tag>
                         <div style={{fontWeight:600,color:C.text,fontSize:14,marginTop:8,marginBottom:4}}>{item.topic}</div>
-                        <div style={{fontSize:12,color:C.textDim,marginBottom:10}}>{(item.subject_name||"")+" · Por "+(item.user_name||"Docente")}</div>
+                        <div style={{fontSize:12,color:C.textDim,marginBottom:10}}>{(item.subject_name||"")+" Â· Por "+(item.user_name||"Docente")}</div>
                         <div style={{fontSize:12,color:C.textDim,marginBottom:12}}>{new Date(item.created_at).toLocaleDateString("es-AR")}</div>
                         <div style={{display:"flex",gap:8}}>
                           <Btn v="secondary" st={{fontSize:12,padding:"5px 12px",flex:1}} onClick={function(){saveLib(item.content,item.type,item.type_name,item.topic);}}>
@@ -3428,7 +3407,7 @@ async function loadChatDoc(file){
                         </div>
                         {!projectContents.length?(
                           <div style={{textAlign:"center",padding:"32px 0",color:C.textDim}}>
-                            <p style={{fontSize:13}}>No hay contenido todavia. Generá el primer material para este proyecto.</p>
+                            <p style={{fontSize:13}}>No hay contenido todavia. GenerÃ¡ el primer material para este proyecto.</p>
                           </div>
                         ):projectContents.map(function(c){
                           var g=GEN_TYPES.find(function(g){return g.id===c.type;});
@@ -3439,9 +3418,9 @@ async function loadChatDoc(file){
                                   <div style={{fontSize:14,fontWeight:700,color:C.text}}>{c.title}</div>
                                   <div style={{fontSize:11,color:C.textDim,marginTop:2,display:"flex",gap:8}}>
                                     <span>{c.subject_name}</span>
-                                    <span>·</span>
+                                    <span>Â·</span>
                                     <span>{c.type_name}</span>
-                                    <span>·</span>
+                                    <span>Â·</span>
                                     <span>{new Date(c.created_at).toLocaleDateString("es-AR")}</span>
                                   </div>
                                 </div>
@@ -3517,9 +3496,9 @@ async function loadChatDoc(file){
       {evalModal&&selectedStudent&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999}}>
           <div style={{background:C.surf,border:"1px solid "+C.border,borderRadius:4,padding:26,width:500,maxWidth:"92vw"}}>
-            <h2 style={{margin:"0 0 18px",fontSize:18,fontWeight:700,color:C.text}}>{"Nueva evaluacion — "+selectedStudent.name}</h2>
+            <h2 style={{margin:"0 0 18px",fontSize:18,fontWeight:700,color:C.text}}>{"Nueva evaluacion â€” "+selectedStudent.name}</h2>
             <label style={lbl}>TEMA / ACTIVIDAD *</label>
-            <input style={Object.assign({},inp,{marginBottom:12})} value={evalForm.topic} onChange={function(e){setEvalForm(Object.assign({},evalForm,{topic:e.target.value}));}} placeholder="Ej: Trabajo practico N°2"/>
+            <input style={Object.assign({},inp,{marginBottom:12})} value={evalForm.topic} onChange={function(e){setEvalForm(Object.assign({},evalForm,{topic:e.target.value}));}} placeholder="Ej: Trabajo practico NÂ°2"/>
             <label style={lbl}>RUBRICA (opcional)</label>
             <select style={Object.assign({},sel,{width:"100%",marginBottom:12})} value={evalForm.rubric_id} onChange={function(e){var r=library.find(function(i){return i.id===e.target.value;});setEvalForm(Object.assign({},evalForm,{rubric_id:e.target.value,rubric_name:r?r.topic:""}));}}>
               <option value="">Sin rubrica</option>
@@ -3669,3 +3648,5 @@ async function loadChatDoc(file){
     </div>
   );
 }
+
+
