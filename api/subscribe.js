@@ -41,7 +41,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           preapproval_plan_id: planId,
           payer_email: userEmail,
-          back_url: "https://eduai-pro-nine.vercel.app/",
+          back_url: "https://app.aulaxpro.com/",
           reason: planData.reason || "EduAI Pro",
           auto_recurring: planData.auto_recurring,
           status: "pending",
