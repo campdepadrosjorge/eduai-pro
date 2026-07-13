@@ -555,7 +555,7 @@ function PricingPanel({authUser}) {
   var plans=[
     {id:"e62d30a047a8442581b2a5b94b470577",name:"Docente",price:"$12.000",period:"por mes",users:1,color:C.blue,features:["Generador IA (8 tipos)","Multimedia + Imagenes","Chat Docente","Corrector de TPs","Exportacion Word y PDF","Biblioteca personal"]},
     {id:"d1ee77dd48f44b0f98d8b3ca1baa774e",name:"Directivo",price:"$16.000",period:"por mes",users:1,color:C.accent,features:["Todo lo del plan Docente","Panel de Directivos","Comunicados y Actas","Correccion de informes","Grabacion y transcripcion de reuniones"]},
-    {id:"institucional_basico",name:"Institucional Basico",price:"$100.000",period:"por mes",users:10,color:C.green,institutional:true,features:["Hasta 10 docentes","Biblioteca publica compartida","Panel admin institucional","Soporte dedicado"]},
+    {id:"institucional_basico",name:"Institucional Basico",price:"Consultar",period:"segun cantidad de docentes",users:10,color:C.green,institutional:true,features:["Hasta 10 docentes","Biblioteca publica compartida","Panel admin institucional","Soporte dedicado"]},
     {id:"institucional_consulta",name:"Institucional A Medida",price:"Consultar",period:"segun cantidad de docentes",users:999,color:C.purple,institutional:true,features:["Mas de 10 docentes","Todo Institucional Basico","Precio segun cantidad","Soporte dedicado"]},
   ];
   async function subscribe(plan) {
@@ -2018,6 +2018,7 @@ async function loadChatDoc(file){
               <div style={{width:26,height:26,background:"#0D3559",borderRadius:5,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden",flexShrink:0}}>
                 <div style={{position:"absolute",width:14,height:2,background:"#26C3D4",top:7,left:6,borderRadius:1}}/>
                 <div style={{position:"absolute",width:14,height:2,background:"#79BD9A",top:12,left:6,borderRadius:1}}/>
+                <div style={{position:"absolute",width:10,height:2,background:"#8FD9E8",top:17,left:6,borderRadius:1}}/>
                 <div style={{position:"absolute",width:8,height:8,background:"#26C3D4",borderRadius:"50%",top:5,right:4,opacity:.7}}/>
               </div>
               <span style={{fontSize:15,fontWeight:700,color:"#ffffff",whiteSpace:"nowrap"}}>Aula<span style={{color:"#26C3D4"}}>X</span>pro</span>
