@@ -22,14 +22,25 @@ const DIR_NAV = [
   { id:"tramites",    label:"Asistente de Trámites", icon:"ti-clipboard-text" },
 ];
 
+var _dirUser = { id: null, isAdmin: false };
+function msgError(e){
+  if(e && e.message==="__LIMIT__") return "Alcanzaste el limite de uso disponible este mes. El servicio se restablece automaticamente el proximo periodo. Si necesitas mas, escribinos a hola@aulaxpro.com.";
+  return "Error: "+(e && e.message ? e.message : e);
+}
 async function callClaude(system, messages, maxTokens, onStream) {
   if (!maxTokens) maxTokens = 4000;
   var useStreaming = typeof onStream === "function";
   var res = await fetch("/api/generate", {
     method:"POST", headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({ system, messages, maxTokens, stream:useStreaming }),
+    body:JSON.stringify({ system, messages, maxTokens, stream:useStreaming, userId:_dirUser.id, isAdmin:_dirUser.isAdmin }),
   });
-  if (!res.ok) { var err = {}; try { err = await res.json(); } catch(e) {} throw new Error(err.error || "Error " + res.status); }
+  if (!res.ok) {
+    var err = {};
+    try { err = await res.json(); } catch(e) {}
+    var errMsg = err.error || ("Error " + res.status);
+    if (res.status===402 || /limite de uso|usage limit|reached your/i.test(errMsg)) throw new Error("__LIMIT__");
+    throw new Error(errMsg);
+  }
   if (!useStreaming) {
     var data = await res.json();
     return data.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("");
@@ -94,13 +105,10 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
     window.addEventListener("resize",handleResize);
     return function(){window.removeEventListener("resize",handleResize);};
   },[]);
-  var [isMobile,setIsMobile] = useState(typeof window!=="undefined" && window.innerWidth<768);
-  var [mobileMenu,setMobileMenu] = useState(false);
   useEffect(function(){
-    function handleResize(){setIsMobile(window.innerWidth<768);}
-    window.addEventListener("resize",handleResize);
-    return function(){window.removeEventListener("resize",handleResize);};
-  },[]);
+    _dirUser.id = authUser ? authUser.id : null;
+    _dirUser.isAdmin = authUser ? (authUser.email===import.meta.env.VITE_ADMIN_EMAIL) : false;
+  },[authUser]);
   var userName = (authUser && authUser.user_metadata && authUser.user_metadata.name) || "Directivo";
 
   // Estado comunicados
@@ -133,7 +141,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
     try{
       var r = await callClaude(sysActa(), [{role:"user",content:userActa(actTipo,actDatos,actTemas,actAcuerdos)}], 3500, function(partial){setActResult(partial);});
       setActResult(r);
-    }catch(e){setActErr("Error: "+e.message);}
+    }catch(e){setActErr(msgError(e));}
     setActLoading(false);
   }
 
@@ -268,7 +276,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
 
       var nombreAlumno = infFile.name.replace(/\.(docx|doc|pdf)$/i,"");
       setInfResult({nombre:nombreAlumno, textoOriginal:texto, textoCorregido:r.trim()});
-    }catch(e){setInfErr("Error: "+e.message);}
+    }catch(e){setInfErr(msgError(e));}
     setInfLoading(false);
   }
 // Estado correccion por lote (ZIP)
@@ -326,7 +334,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
 
       var exportMod = await import("./exportUtils.js");
       await exportMod.exportInformesCorregidosZip(informes);
-    }catch(e){setInfZipErr("Error: "+e.message);}
+    }catch(e){setInfZipErr(msgError(e));}
     setInfZipLoading(false);
   }
 
@@ -345,7 +353,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
     try{
       var r = await callClaude(sysAcompanamiento(), [{role:"user",content:userAcompanamiento(acoTipo,acoFoco,acoContexto,acoSituacion)}], 4000, function(partial){setAcoResult(partial);});
       setAcoResult(r);
-    }catch(e){setAcoErr("Error: "+e.message);}
+    }catch(e){setAcoErr(msgError(e));}
     setAcoLoading(false);
   }
 // Estado asistente de tramites
@@ -392,7 +400,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
           }catch(e){}
         }
       }
-    }catch(e){setTraErr("Error: "+e.message);}
+    }catch(e){setTraErr(msgError(e));}
     setTraLoading(false);
   }
   // Estado revision de documentos
@@ -420,7 +428,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
       var observaciones = JSON.parse(clean);
       var nombre = revFile.name.replace(/\.(docx|doc|pdf)$/i,"");
       setRevResult({nombre:nombre, texto:texto, observaciones:observaciones});
-    }catch(e){setRevErr("Error: "+e.message);}
+    }catch(e){setRevErr(msgError(e));}
     setRevLoading(false);
   }
 
@@ -468,7 +476,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
       if(!docs.length) throw new Error("No se pudo procesar ningún documento del ZIP.");
       var exportMod = await import("./exportUtils.js");
       await exportMod.exportInformesZip(docs);
-    }catch(e){setRevZipErr("Error: "+e.message);}
+    }catch(e){setRevZipErr(msgError(e));}
     setRevZipLoading(false);
   }
   async function generarComunicado(){
@@ -477,7 +485,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
     try{
       var r = await callClaude(sysComunicado(), [{role:"user",content:userComunicado(comDest,comAsunto,comDetalles,comTono)}], 3000, function(partial){setComResult(partial);});
       setComResult(r);
-    }catch(e){setComErr("Error: "+e.message);}
+    }catch(e){setComErr(msgError(e));}
     setComLoading(false);
   }
 
