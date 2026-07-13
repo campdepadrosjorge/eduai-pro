@@ -94,6 +94,14 @@ export default async function handler(req, res) {
       current_period_start: new Date().toISOString(),
       current_period_end: endDate.toISOString(),
     }, { onConflict: "user_id" });
+
+    // Si el plan es Directivo, asignar el rol directivo al usuario
+    if (planId === "d1ee77dd48f44b0f98d8b3ca1baa774e" && (status === "authorized" || status === "active")) {
+      try {
+        var newMeta = Object.assign({}, user.user_metadata, { role: "directivo" });
+        await supabase.auth.admin.updateUserById(user.id, { user_metadata: newMeta });
+      } catch(e) { console.error("Error asignando rol directivo:", e.message); }
+    }
  
   } catch (error) {
     console.error("Webhook error:", error.message);
