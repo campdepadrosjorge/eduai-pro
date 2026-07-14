@@ -7,7 +7,21 @@ var supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
 );
- 
+async function fetchConReintento(url, options, intentos) {
+  intentos = intentos || 3;
+  var ultimoError;
+  for (var i = 0; i < intentos; i++) {
+    try {
+      var res = await fetch(url, options);
+      return res;
+    } catch (e) {
+      ultimoError = e;
+      // Esperar antes de reintentar (500ms, 1s, 1.5s...)
+      await new Promise(function(resolve){ setTimeout(resolve, 500 * (i + 1)); });
+    }
+  }
+  throw ultimoError;
+} 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
  
@@ -20,7 +34,7 @@ export default async function handler(req, res) {
   if (topic === "payment") {
     // Pago unico de creditos
     try {
-      var mpPayRes = await fetch("https://api.mercadopago.com/v1/payments/" + id, {
+      var mpPayRes = await fetchConReintento("https://api.mercadopago.com/v1/payments/" + id, {
         headers: { "Authorization": "Bearer " + process.env.MP_ACCESS_TOKEN },
       });
       if (!mpPayRes.ok) return;
@@ -44,7 +58,7 @@ export default async function handler(req, res) {
  
   try {
     // Obtener detalles de la suscripcion
-    var mpRes = await fetch("https://api.mercadopago.com/preapproval/" + id, {
+    var mpRes = await fetchConReintento("https://api.mercadopago.com/preapproval/" + id, {
       headers: { "Authorization": "Bearer " + process.env.MP_ACCESS_TOKEN },
     });
  
