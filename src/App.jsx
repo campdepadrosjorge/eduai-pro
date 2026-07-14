@@ -624,8 +624,8 @@ function PricingPanel({authUser}) {
               </div>
             ):(
               <div>
-                <h2 style={{margin:"0 0 6px",fontSize:18,fontWeight:700,color:C.text}}>{"Consulta â€” "+consultPlan}</h2>
-                <p style={{fontSize:13,color:C.textMuted,marginBottom:20}}>CompletÃ¡ el formulario y te contactamos a la brevedad.</p>
+                <h2 style={{margin:"0 0 6px",fontSize:18,fontWeight:700,color:C.text}}>{"Consulta - "+consultPlan}</h2>
+                <p style={{fontSize:13,color:C.textMuted,marginBottom:20}}>Completa el formulario y te contactamos a la brevedad.</p>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
                   <div>
                     <label style={lbl}>NOMBRE *</label>
@@ -3649,5 +3649,7 @@ async function loadChatDoc(file){
     </div>
   );
 }
+
+
 
 
