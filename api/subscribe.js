@@ -1,5 +1,6 @@
 // api/subscribe.js
-// Crea una suscripcion de MercadoPago asociada al plan, con checkout para el usuario
+// Usa el init_point del plan (que funciona para el checkout) y le agrega
+// el external_reference con el userId para que el webhook vincule al usuario
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
@@ -13,30 +14,32 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Crear la suscripcion asociada al plan.
-    // No enviamos payer_email ni status: dejamos que el usuario complete
-    // sus datos y tarjeta en el checkout de MercadoPago.
-    // El external_reference lleva el userId para que el webhook lo vincule.
-    var preapRes = await fetch("https://api.mercadopago.com/preapproval", {
-      method: "POST",
+    // Obtener el init_point del plan
+    var planRes = await fetch("https://api.mercadopago.com/preapproval_plan/" + planId, {
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer " + process.env.MP_ACCESS_TOKEN,
       },
-      body: JSON.stringify({
-        preapproval_plan_id: planId,
-        external_reference: userId || "",
-        back_url: "https://app.aulaxpro.com/",
-      }),
     });
 
-    var preapData = await preapRes.json();
+    var planData = await planRes.json();
 
-    if (!preapRes.ok) {
-      return res.status(preapRes.status).json({ error: preapData.message || "Error creando suscripcion" });
+    if (!planRes.ok) {
+      return res.status(planRes.status).json({ error: planData.message || "Plan no encontrado" });
     }
 
-    var initPoint = preapData.init_point || preapData.sandbox_init_point;
+    var initPoint = planData.init_point || planData.sandbox_init_point;
+
+    if (!initPoint) {
+      return res.status(500).json({ error: "El plan no tiene link de pago" });
+    }
+
+    // Agregar el external_reference (userId) como parametro en la URL del checkout
+    if (userId) {
+      var separador = initPoint.indexOf("?") >= 0 ? "&" : "?";
+      initPoint = initPoint + separador + "external_reference=" + encodeURIComponent(userId);
+    }
 
     return res.status(200).json({ init_point: initPoint });
 
