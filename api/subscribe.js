@@ -1,5 +1,5 @@
 // api/subscribe.js
-// Crea una suscripcion personalizada de MercadoPago para el usuario
+// Crea una suscripcion de MercadoPago asociada al plan, con checkout para el usuario
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
@@ -13,23 +13,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Obtener los datos del plan (para el auto_recurring y reason)
-    var planRes = await fetch("https://api.mercadopago.com/preapproval_plan/" + planId, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + process.env.MP_ACCESS_TOKEN,
-      },
-    });
-
-    var planData = await planRes.json();
-
-    if (!planRes.ok) {
-      return res.status(planRes.status).json({ error: planData.message || "Plan no encontrado" });
-    }
-
-    // Crear una suscripcion personalizada para ESTE usuario
-    // Incluye external_reference con el userId para que el webhook lo vincule
+    // Crear la suscripcion asociada al plan.
+    // No enviamos payer_email ni status: dejamos que el usuario complete
+    // sus datos y tarjeta en el checkout de MercadoPago.
+    // El external_reference lleva el userId para que el webhook lo vincule.
     var preapRes = await fetch("https://api.mercadopago.com/preapproval", {
       method: "POST",
       headers: {
@@ -38,12 +25,8 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         preapproval_plan_id: planId,
-        payer_email: userEmail,
         external_reference: userId || "",
         back_url: "https://app.aulaxpro.com/",
-        reason: planData.reason || "AulaXpro",
-        auto_recurring: planData.auto_recurring,
-        status: "pending",
       }),
     });
 
