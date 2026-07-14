@@ -547,11 +547,17 @@ const card = {background:"#fff",border:"1px solid #d4cfc6",borderRadius:4,paddin
 function PricingPanel({authUser}) {
   var [loading,setLoading]=useState(null);
   var [error,setError]=useState("");
+  var [subscription,setSubscription]=useState(null);
+  useEffect(function(){
+    if(authUser) dbCheckSubscription(authUser.id).then(function(s){setSubscription(s);});
+  },[authUser]);
   var [consultModal,setConsultModal]=useState(false);
   var [consultPlan,setConsultPlan]=useState("");
   var [consultForm,setConsultForm]=useState({nombre:"",cargo:"",colegio:"",telefono:"",email:"",docentes:""});
   var [consultLoading,setConsultLoading]=useState(false);
   var [consultSent,setConsultSent]=useState(false);
+  var [cancelLoading,setCancelLoading]=useState(false);
+  var [cancelConfirm,setCancelConfirm]=useState(false);
   var plans=[
     {id:"e62d30a047a8442581b2a5b94b470577",name:"Docente",price:"$12.000",period:"por mes",users:1,color:C.blue,features:["Generador IA (8 tipos)","Multimedia + Imagenes","Chat Docente","Corrector de TPs","Exportacion Word y PDF","Biblioteca personal"]},
     {id:"d1ee77dd48f44b0f98d8b3ca1baa774e",name:"Directivo",price:"$16.000",period:"por mes",users:1,color:C.accent,features:["Todo lo del plan Docente","Panel de Directivos","Comunicados y Actas","Correccion de informes","Grabacion y transcripcion de reuniones"]},
@@ -575,6 +581,18 @@ function PricingPanel({authUser}) {
       window.open(data.init_point,"_blank");
     } catch(e){setError("Error: "+e.message);}
     setLoading(null);
+  }
+  async function cancelSubscription(){
+    setCancelLoading(true);setError("");
+    try {
+      var res=await fetch("/api/cancelar-suscripcion",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:authUser.id})});
+      var data=await res.json();
+      if(!res.ok) throw new Error(data.error);
+      setCancelConfirm(false);
+      alert("Tu suscripcion fue cancelada. Podes seguir usando AulaXpro hasta el final del periodo ya pagado.");
+      window.location.reload();
+    } catch(e){setError("Error: "+e.message);}
+    setCancelLoading(false);
   }
   return (
     <div>
@@ -612,6 +630,24 @@ function PricingPanel({authUser}) {
         })}
       </div>
       <p style={{textAlign:"center",color:C.textDim,fontSize:12,marginTop:24}}>Pagos procesados por MercadoPago</p>
+      {subscription && subscription.status==="active" && !subscription.is_trial && (
+        <div style={{textAlign:"center",marginTop:32,paddingTop:24,borderTop:"1px solid "+C.border}}>
+          {!cancelConfirm?(
+            <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.textDim,fontSize:13,fontFamily:"Quicksand,sans-serif",textDecoration:"underline"}} onClick={function(){setCancelConfirm(true);}}>
+              Cancelar mi suscripcion
+            </button>
+          ):(
+            <div style={{maxWidth:420,margin:"0 auto"}}>
+              <p style={{fontSize:14,color:C.text,marginBottom:6,fontWeight:600}}>Estas seguro que queres cancelar?</p>
+              <p style={{fontSize:13,color:C.textMuted,marginBottom:16}}>Se detendran los cobros automaticos. Vas a poder seguir usando AulaXpro hasta el final del periodo que ya pagaste.</p>
+              <div style={{display:"flex",gap:10,justifyContent:"center"}}>
+                <button style={{background:"transparent",border:"1px solid "+C.border,borderRadius:4,padding:"8px 18px",cursor:"pointer",fontSize:13,fontFamily:"Quicksand,sans-serif",color:C.text}} onClick={function(){setCancelConfirm(false);}} disabled={cancelLoading}>No, volver</button>
+                <button style={{background:C.red,border:"none",borderRadius:4,padding:"8px 18px",cursor:cancelLoading?"not-allowed":"pointer",fontSize:13,fontWeight:700,fontFamily:"Quicksand,sans-serif",color:"#fff",opacity:cancelLoading?.7:1}} onClick={cancelSubscription} disabled={cancelLoading}>{cancelLoading?"Cancelando...":"Si, cancelar"}</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       {consultModal&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999}}>
           <div style={{background:C.surf,border:"1px solid "+C.border,borderRadius:4,padding:26,width:500,maxWidth:"92vw",maxHeight:"90vh",overflow:"auto"}}>
