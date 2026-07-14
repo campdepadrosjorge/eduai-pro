@@ -1512,6 +1512,26 @@ useEffect(function(){
             var userName=(authUser.user_metadata&&authUser.user_metadata.name)||"";
             fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:authUser.email,name:userName})}).catch(function(){});
           }
+          else if(sub.is_trial){
+            // Tiene trial: verificar si pago y hay que activarlo
+            fetch("/api/verificar-suscripcion",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:authUser.id})})
+              .then(function(r){return r.json();})
+              .then(function(vr){
+                if(vr && vr.activated){
+                  dbCheckSubscription(authUser.id).then(function(ns){
+                    setSubscription(ns);setSubChecked(true);
+                    dbGetUsage(authUser.id).then(function(u){setUsage(u);});
+                  });
+                } else {
+                  setSubscription(sub);setSubChecked(true);
+                  dbGetUsage(authUser.id).then(function(u){setUsage(u);});
+                }
+              })
+              .catch(function(){
+                setSubscription(sub);setSubChecked(true);
+                dbGetUsage(authUser.id).then(function(u){setUsage(u);});
+              });
+          }
           else{setSubscription(sub);setSubChecked(true);dbGetUsage(authUser.id).then(function(u){setUsage(u);});}
         });
       }).catch(function(){setDataLoading(false);});
