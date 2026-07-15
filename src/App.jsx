@@ -558,6 +558,7 @@ function PricingPanel({authUser}) {
   var [consultSent,setConsultSent]=useState(false);
   var [cancelLoading,setCancelLoading]=useState(false);
   var [cancelConfirm,setCancelConfirm]=useState(false);
+  var [cancelDone,setCancelDone]=useState(false);
   var plans=[
     {id:"e62d30a047a8442581b2a5b94b470577",name:"Docente",price:"$12.000",period:"por mes",users:1,color:C.blue,features:["Generador IA (8 tipos)","Multimedia + Imagenes","Chat Docente","Corrector de TPs","Exportacion Word y PDF","Biblioteca personal"]},
     {id:"d1ee77dd48f44b0f98d8b3ca1baa774e",name:"Directivo",price:"$16.000",period:"por mes",users:1,color:C.accent,features:["Todo lo del plan Docente","Panel de Directivos","Comunicados y Actas","Correccion de informes","Grabacion y transcripcion de reuniones"]},
@@ -588,9 +589,7 @@ function PricingPanel({authUser}) {
       var res=await fetch("/api/cancelar-suscripcion",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:authUser.id})});
       var data=await res.json();
       if(!res.ok) throw new Error(data.error);
-      setCancelConfirm(false);
-      alert("Tu suscripcion fue cancelada. Podes seguir usando AulaXpro hasta el final del periodo ya pagado.");
-      window.location.reload();
+      setCancelDone(true);
     } catch(e){setError("Error: "+e.message);}
     setCancelLoading(false);
   }
@@ -605,7 +604,7 @@ function PricingPanel({authUser}) {
           <span style={{fontSize:13,color:C.accent,fontWeight:600}}>
             <i className="ti ti-circle-check" style={{fontSize:14,marginRight:6}}/>Tenes una suscripcion activa
           </span>
-          <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.textMuted,fontSize:13,fontFamily:"Quicksand,sans-serif",textDecoration:"underline"}} onClick={function(){setCancelConfirm(true);window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});}}>
+          <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.textMuted,fontSize:13,fontFamily:"Quicksand,sans-serif",textDecoration:"underline"}} onClick={function(){setCancelConfirm(true);}}>
             Cancelar mi suscripcion
           </button>
         </div>
@@ -640,22 +639,29 @@ function PricingPanel({authUser}) {
         })}
       </div>
       <p style={{textAlign:"center",color:C.textDim,fontSize:12,marginTop:24}}>Pagos procesados por MercadoPago</p>
-      {subscription && subscription.status==="active" && !subscription.is_trial && (
-        <div style={{textAlign:"center",marginTop:32,paddingTop:24,borderTop:"1px solid "+C.border}}>
-          {!cancelConfirm?(
-            <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.textDim,fontSize:13,fontFamily:"Quicksand,sans-serif",textDecoration:"underline"}} onClick={function(){setCancelConfirm(true);}}>
-              Cancelar mi suscripcion
-            </button>
-          ):(
-            <div style={{maxWidth:420,margin:"0 auto"}}>
-              <p style={{fontSize:14,color:C.text,marginBottom:6,fontWeight:600}}>Estas seguro que queres cancelar?</p>
-              <p style={{fontSize:13,color:C.textMuted,marginBottom:16}}>Se detendran los cobros automaticos. Vas a poder seguir usando AulaXpro hasta el final del periodo que ya pagaste.</p>
-              <div style={{display:"flex",gap:10,justifyContent:"center"}}>
-                <button style={{background:"transparent",border:"1px solid "+C.border,borderRadius:4,padding:"8px 18px",cursor:"pointer",fontSize:13,fontFamily:"Quicksand,sans-serif",color:C.text}} onClick={function(){setCancelConfirm(false);}} disabled={cancelLoading}>No, volver</button>
-                <button style={{background:C.red,border:"none",borderRadius:4,padding:"8px 18px",cursor:cancelLoading?"not-allowed":"pointer",fontSize:13,fontWeight:700,fontFamily:"Quicksand,sans-serif",color:"#fff",opacity:cancelLoading?.7:1}} onClick={cancelSubscription} disabled={cancelLoading}>{cancelLoading?"Cancelando...":"Si, cancelar"}</button>
+     {cancelConfirm&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:20}}>
+          <div style={{background:C.surf,border:"1px solid "+C.border,borderRadius:6,padding:26,width:420,maxWidth:"92vw",textAlign:"center"}}>
+            {cancelDone?(
+              <div>
+                <i className="ti ti-circle-check" style={{fontSize:44,color:C.green,display:"block",marginBottom:12}}/>
+                <h3 style={{margin:"0 0 10px",fontSize:18,fontWeight:700,color:C.text}}>Suscripcion cancelada</h3>
+                <p style={{fontSize:13,color:C.textMuted,marginBottom:20,lineHeight:1.5}}>No se van a realizar mas cobros. Podes seguir usando AulaXpro hasta el final del periodo que ya pagaste.</p>
+                <button style={{background:C.accent,border:"none",borderRadius:4,padding:"9px 22px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"Quicksand,sans-serif",color:"#fff"}} onClick={function(){setCancelConfirm(false);setCancelDone(false);window.location.reload();}}>Entendido</button>
               </div>
-            </div>
-          )}
+            ):(
+              <div>
+                <i className="ti ti-alert-circle" style={{fontSize:40,color:C.red,display:"block",marginBottom:12}}/>
+                <h3 style={{margin:"0 0 10px",fontSize:18,fontWeight:700,color:C.text}}>Cancelar tu suscripcion?</h3>
+                <p style={{fontSize:13,color:C.textMuted,marginBottom:20,lineHeight:1.5}}>Se detendran los cobros automaticos. Vas a poder seguir usando AulaXpro hasta el final del periodo que ya pagaste.</p>
+                {error&&<div style={{marginBottom:14,color:C.red,fontSize:12}}>{error}</div>}
+                <div style={{display:"flex",gap:10,justifyContent:"center"}}>
+                  <button style={{background:"transparent",border:"1px solid "+C.border,borderRadius:4,padding:"9px 20px",cursor:"pointer",fontSize:13,fontFamily:"Quicksand,sans-serif",color:C.text}} onClick={function(){setCancelConfirm(false);setError("");}} disabled={cancelLoading}>No, volver</button>
+                  <button style={{background:C.red,border:"none",borderRadius:4,padding:"9px 20px",cursor:cancelLoading?"not-allowed":"pointer",fontSize:13,fontWeight:700,fontFamily:"Quicksand,sans-serif",color:"#fff",opacity:cancelLoading?.7:1}} onClick={cancelSubscription} disabled={cancelLoading}>{cancelLoading?"Cancelando...":"Si, cancelar"}</button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
       {consultModal&&(
