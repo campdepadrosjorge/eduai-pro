@@ -598,8 +598,18 @@ function PricingPanel({authUser}) {
     <div>
       <div style={{textAlign:"center",marginBottom:32}}>
         <h2 style={{fontSize:26,fontWeight:700,color:C.text,marginBottom:8}}>Planes y Precios</h2>
-        <p style={{color:C.textMuted,fontSize:15}}>ElegÃ­ el plan que mejor se adapta a tus necesidades</p>
+        <p style={{color:C.textMuted,fontSize:15}}>Elegi­ el plan que mejor se adapta a tus necesidades</p>
       </div>
+      {subscription && subscription.status==="active" && !subscription.is_trial && (
+        <div style={{background:C.accentBg,border:"1px solid "+C.accent,borderRadius:4,padding:"12px 18px",marginBottom:20,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+          <span style={{fontSize:13,color:C.accent,fontWeight:600}}>
+            <i className="ti ti-circle-check" style={{fontSize:14,marginRight:6}}/>Tenes una suscripcion activa
+          </span>
+          <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.textMuted,fontSize:13,fontFamily:"Quicksand,sans-serif",textDecoration:"underline"}} onClick={function(){setCancelConfirm(true);window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});}}>
+            Cancelar mi suscripcion
+          </button>
+        </div>
+      )}
       {error&&<div style={{background:"#fee2e2",border:"1px solid #fca5a5",borderRadius:4,padding:"10px 16px",marginBottom:20,color:C.red,fontSize:13}}>{error}</div>}
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:16}}>
         {plans.map(function(plan){
