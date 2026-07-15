@@ -1077,7 +1077,7 @@ function AdminPanel({authUser,supabaseClient}) {
               <option value={60}>60 dias</option>
               <option value={90}>90 dias</option>
               <option value={180}>6 meses</option>
-              <option value={365}>1 aÃ±o</option>
+              <option value={365}>1 anio</option>
             </select>
           </div>
         </div>
@@ -1587,7 +1587,7 @@ useEffect(function(){
     });
     if (uploadRes.error) throw new Error("Error al subir el archivo: " + uploadRes.error.message);
 
-    // 2. Obtener la URL pÃºblica
+    // 2. Obtener la URL publica
     var urlData = supabase.storage.from("documentos").getPublicUrl(path);
     var publicUrl = urlData.data.publicUrl;
 
@@ -1976,21 +1976,21 @@ async function loadChatDoc(file){
       <div style={{width:420}}>
         <div style={{textAlign:"center",marginBottom:32}}>
           <i className="ti ti-lock-open" style={{fontSize:52,color:C.accent,display:"block",marginBottom:12}}/>
-          <h1 style={{color:C.accent,fontSize:26,fontWeight:700,margin:"0 0 6px"}}>Nueva contraseÃ±a</h1>
-          <p style={{color:C.textMuted,fontSize:15}}>IngresÃ¡ tu nueva contraseÃ±a</p>
+          <h1 style={{color:C.accent,fontSize:26,fontWeight:700,margin:"0 0 6px"}}>Nueva clave</h1>
+          <p style={{color:C.textMuted,fontSize:15}}>Ingresa tu nueva clave</p>
         </div>
         <div style={card}>
           {resetDone?(
             <div style={{textAlign:"center",padding:"16px 0"}}>
               <i className="ti ti-check" style={{fontSize:40,color:C.green,display:"block",marginBottom:12}}/>
-              <p style={{fontSize:15,color:C.text,marginBottom:20}}>ContraseÃ±a actualizada correctamente.</p>
+              <p style={{fontSize:15,color:C.text,marginBottom:20}}>Clave actualizada correctamente.</p>
               <Btn st={{width:"100%",justifyContent:"center"}} onClick={function(){setShowResetPassword(false);setResetDone(false);setNewPassword("");}}>
                 Ir a la app
               </Btn>
             </div>
           ):(
             <div>
-              <label style={lbl}>NUEVA CONTRASEÃ‘A</label>
+              <label style={lbl}>NUEVA CLAVE</label>
               <input style={Object.assign({},inp,{marginBottom:20})} type="password" value={newPassword} onChange={function(e){setNewPassword(e.target.value);}} placeholder="Minimo 6 caracteres"/>
               <Btn st={{width:"100%",justifyContent:"center",fontSize:14,padding:"11px 20px"}} disabled={resetLoading||newPassword.length<6} onClick={async function(){
                 setResetLoading(true);
@@ -1999,7 +1999,7 @@ async function loadChatDoc(file){
                 else{setResetDone(true);}
                 setResetLoading(false);
               }}>
-                {resetLoading?"Actualizando...":"Actualizar contraseÃ±a"}
+                {resetLoading?"Actualizando...":"Actualizar clave"}
               </Btn>
             </div>
           )}
@@ -2012,11 +2012,11 @@ async function loadChatDoc(file){
       <div style={{width:420}}>
         <div style={{textAlign:"center",marginBottom:32}}>
           <i className="ti ti-lock-plus" style={{fontSize:52,color:C.accent,display:"block",marginBottom:12}}/>
-          <h1 style={{color:C.accent,fontSize:26,fontWeight:700,margin:"0 0 6px"}}>CreÃ¡ tu contraseÃ±a</h1>
-          <p style={{color:C.textMuted,fontSize:15}}>DefinÃ­ una contraseÃ±a para poder ingresar siempre</p>
+          <h1 style={{color:C.accent,fontSize:26,fontWeight:700,margin:"0 0 6px"}}>Crea tu clave</h1>
+          <p style={{color:C.textMuted,fontSize:15}}>Define­ una clave para poder ingresar siempre</p>
         </div>
         <div style={card}>
-          <label style={lbl}>CONTRASEÃ‘A</label>
+          <label style={lbl}>CLAVE</label>
           <input style={Object.assign({},inp,{marginBottom:20})} type="password" value={newPassword} onChange={function(e){setNewPassword(e.target.value);}} placeholder="Minimo 6 caracteres" autoFocus/>
           <Btn st={{width:"100%",justifyContent:"center",fontSize:14,padding:"11px 20px"}} disabled={resetLoading||newPassword.length<6} onClick={async function(){
             setResetLoading(true);
@@ -2025,7 +2025,7 @@ async function loadChatDoc(file){
             else{setNeedsPassword(false);setNewPassword("");}
             setResetLoading(false);
           }}>
-            {resetLoading?"Guardando...":"Crear contraseÃ±a y entrar"}
+            {resetLoading?"Guardando...":"Crear clave y entrar"}
           </Btn>
         </div>
       </div>
@@ -2499,7 +2499,7 @@ async function loadChatDoc(file){
                     </div>
                     <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid "+C.border}}>
                       <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:10}}>IMAGEN PARA EL DOCUMENTO (opcional)</div>
-                      <p style={{fontSize:12,color:C.textDim,marginBottom:10}}>GenerÃ¡ una imagen con IA o subÃ­ una desde tu dispositivo.</p>
+                      <p style={{fontSize:12,color:C.textDim,marginBottom:10}}>Genera una imagen con IA o subÃ­ una desde tu dispositivo.</p>
                       <input style={Object.assign({},inp,{marginBottom:10})} value={actImgDesc} onChange={function(e){setActImgDesc(e.target.value);}} placeholder="Ej: diagrama de la celula eucariota"/>
                       <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
                         <Btn v="secondary" st={{fontSize:12,padding:"5px 14px"}} onClick={generateActivityImage} disabled={actImgLoad}>
@@ -3474,7 +3474,7 @@ async function loadChatDoc(file){
                         </div>
                         {!projectContents.length?(
                           <div style={{textAlign:"center",padding:"32px 0",color:C.textDim}}>
-                            <p style={{fontSize:13}}>No hay contenido todavia. GenerÃ¡ el primer material para este proyecto.</p>
+                            <p style={{fontSize:13}}>No hay contenido todavia. Genera el primer material para este proyecto.</p>
                           </div>
                         ):projectContents.map(function(c){
                           var g=GEN_TYPES.find(function(g){return g.id===c.type;});
@@ -3715,6 +3715,7 @@ async function loadChatDoc(file){
     </div>
   );
 }
+
 
 
 
