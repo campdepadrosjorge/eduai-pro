@@ -2646,7 +2646,7 @@ async function loadChatDoc(file){
                   <Btn st={{width:"100%",justifyContent:"center",fontSize:12,padding:"8px 0"}} onClick={function(){
                     setCurrentSessionId(null);setChatMsgs([]);
                   }}>
-                    <i className="ti ti-plus" style={{fontSize:13,marginRight:4}}/>Nueva conversaciÃ³n
+                    <i className="ti ti-plus" style={{fontSize:13,marginRight:4}}/>Nueva conversacion
                   </Btn>
                 </div>
                 <div style={{flex:1,overflowY:"auto",padding:"8px 0"}}>
@@ -2679,7 +2679,7 @@ async function loadChatDoc(file){
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
                     <span style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.6,whiteSpace:"nowrap"}}>CONTEXTO:</span>
                     <select style={Object.assign({},sel,{flex:1})} value={chatSid===null?"":chatSid||""} onChange={function(e){setChatSid(e.target.value||null);}}>
-                      <option value="">Sin materia especÃ­fica</option>
+                      <option value="">Sin materia especifica</option>
                       {subjects.map(function(s){return <option key={s.id} value={s.id}>{s.name+" ("+s.level+")"}</option>;})}
                     </select>
                   </div>
