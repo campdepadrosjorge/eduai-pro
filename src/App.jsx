@@ -959,7 +959,7 @@ function AdminPanel({authUser,supabaseClient}) {
                   return (
                     <tr key={u.user_id} style={{borderBottom:"1px solid "+C.bg}}>
                       <td style={{padding:"8px 10px",color:C.text}}>{u.email}</td>
-                      <td style={{padding:"8px 10px",color:C.textDim}}>{u.institution||"â€”"}</td>
+                      <td style={{padding:"8px 10px",color:C.textDim}}>{u.institution||"-"}</td>
                       <td style={{padding:"8px 10px"}}>
                         <span style={{fontWeight:700,color:clr}}>{u.days_left>0?u.days_left+" dias":"Vencido"}</span>
                       </td>
@@ -1226,7 +1226,7 @@ function AdminPanel({authUser,supabaseClient}) {
                     <tr key={s.id} style={{borderBottom:"1px solid "+C.bg}}>
                       <td style={{padding:"6px 10px",color:C.textMuted}}>{s.user_email.split("@")[0]}</td>
                       <td style={{padding:"6px 10px",color:C.text}}>{s.type_name}</td>
-                      <td style={{padding:"6px 10px",color:C.textDim}}>{s.subject_name||"â€”"}</td>
+                      <td style={{padding:"6px 10px",color:C.textDim}}>{s.subject_name||"-"}</td>
                       <td style={{padding:"6px 10px",color:C.accent}}>{s.is_image?"imagen":(s.tokens_input+s.tokens_output)}</td>
                       <td style={{padding:"6px 10px",color:C.textDim}}>{new Date(s.created_at).toLocaleDateString("es-AR")}</td>
                     </tr>
@@ -2344,7 +2344,7 @@ async function loadChatDoc(file){
                     {gt&&<i className={"ti "+gt.icon} style={{fontSize:30,color:gt.color}}/>}
                     <div>
                       <h2 style={{margin:0,fontSize:19,fontWeight:700,color:C.text}}>{gt?gt.label:""}</h2>
-                      <div style={{fontSize:13,color:C.textDim}}>{"Materia: "+(curSubj?curSubj.name:"â€”")}</div>
+                      <div style={{fontSize:13,color:C.textDim}}>{"Materia: "+(curSubj?curSubj.name:"-")}</div>
                     </div>
                   </div>
                   {!curSubj?(
