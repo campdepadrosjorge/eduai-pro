@@ -20,6 +20,7 @@ const DIR_NAV = [
   { id:"revision",    label:"Revisión de Documentos", icon:"ti-file-search" },
   { id:"acompanamiento", label:"Acompañamiento Docente", icon:"ti-users-group" },
   { id:"tramites",    label:"Asistente de Trámites", icon:"ti-clipboard-text" },
+  { id:"horarios",    label:"Armado de Horarios", icon:"ti-calendar-time" },
 ];
 
 var _dirUser = { id: null, isAdmin: false };
@@ -894,6 +895,15 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                   </div>
                 )}
               </div>
+            </div>
+          )}
+          {view==="horarios"&&(
+            <div style={{height:"calc(100vh - 120px)",minHeight:500}}>
+              <iframe
+                src="https://smart-school-stereotyped-sync.base44.app"
+                style={{width:"100%",height:"100%",border:"1px solid "+C.border,borderRadius:6}}
+                title="Armado de Horarios"
+              />
             </div>
           )}
         </div>
