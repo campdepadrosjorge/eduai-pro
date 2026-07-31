@@ -658,7 +658,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
             <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"360px 1fr",gap:18}}>
               <div style={card}>
                 <h3 style={{margin:"0 0 4px",fontSize:17,fontWeight:700,color:C.text}}>Corregir informe</h3>
-                <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Subí un informe en Word (.docx) o PDF y la IA lo corrige y lo deja listo para entregar.</p>
+                <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Subi un informe en Word (.docx) o PDF y la IA corrige la redaccion, ortografia y tono. Te devuelve el texto corregido para que lo revises y lo pases a tu plantilla.</p>
                 <label style={lbl}>NIVEL / SALA</label>
                 <input style={Object.assign({},inp,{marginBottom:12})} value={infNivel} onChange={function(e){setInfNivel(e.target.value);}} placeholder="Ej: Sala de 5 años"/>
                 <label style={lbl}>PRESTAR ATENCIÓN A (opcional)</label>
