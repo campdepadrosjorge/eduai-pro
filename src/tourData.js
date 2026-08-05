@@ -3,26 +3,14 @@ export const TOURS = {
     {
       selector: null,
       title: "Bienvenido a AulaXpro!",
-      text: "Esta es tu pantalla de inicio. Desde aca podes ver un resumen de tus materias, biblioteca y accesos rapidos a las funciones principales.",
+      text: "En menos de un minuto vas a generar tu primera evaluacion lista para imprimir. Ya te dejamos una materia de ejemplo cargada para que puedas probar ahora mismo.",
       position: "center",
     },
     {
-      selector: "[data-tour='subjects-grid']",
-      title: "Tus Materias",
-      text: "Cada materia puede tener su programa, nivel y bibliografia en PDF. La IA usa ese contexto para generar material mas preciso.",
-      position: "bottom",
-    },
-    {
       selector: "[data-tour='quick-access']",
-      title: "Acceso Rapido",
-      text: "Los 4 botones te llevan directo a las funciones principales: Generador, Chat, Multimedia y Corrector.",
+      title: "Empecemos por el Generador",
+      text: "Vamos a generar contenido con IA. Hace clic en 'Generador' para crear tu primera evaluacion. Despues vas a poder crear tus propias materias.",
       position: "top",
-    },
-    {
-      selector: "[data-tour='add-subject-btn']",
-      title: "Crea tu primera materia",
-      text: "Hace clic aca para crear una materia. Podes cargar el programa completo y PDFs de bibliografia.",
-      position: "bottom",
     },
   ],
   generator: [
@@ -62,6 +50,12 @@ export const TOURS = {
       selector: "[data-tour='mm-form']",
       title: "Genera tu contenido",
       text: "Ingresa el tema y las instrucciones opcionales. Para imagenes, describe lo que queres: diagrama del ciclo del agua, mapa conceptual de la celula, etc.",
+      position: "left",
+    },
+    {
+      selector: "[data-tour='gen-form']",
+      title: "Probalo ahora!",
+      text: "Escribi un tema (por ejemplo 'La celula' o 'Segunda Guerra Mundial'), elegi Evaluacion y presiona Generar. En segundos vas a tener tu primera evaluacion lista. Despues podes exportarla a Word o PDF.",
       position: "left",
     },
   ],
