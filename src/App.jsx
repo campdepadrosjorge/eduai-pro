@@ -466,6 +466,15 @@ async function dbCheckSubscription(userId) {
 async function dbCreateTrial(userId) {
   var endDate = new Date(); endDate.setDate(endDate.getDate()+7);
   await supabase.from("subscriptions").insert({user_id:userId,type:"individual",status:"active",is_trial:true,max_users:1,current_period_start:new Date().toISOString(),current_period_end:endDate.toISOString()});
+  try {
+    await supabase.from("subjects").insert({
+      user_id: userId,
+      name: "Materia de ejemplo",
+      level: "Secundaria (ciclo superior)",
+      materials: "",
+      bibliography: ""
+    });
+  } catch(e) {}
 }
 
 function Btn({children,onClick,v,disabled,st}) {
