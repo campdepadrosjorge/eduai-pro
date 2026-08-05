@@ -466,16 +466,7 @@ async function dbCheckSubscription(userId) {
 async function dbCreateTrial(userId) {
   var endDate = new Date(); endDate.setDate(endDate.getDate()+7);
   await supabase.from("subscriptions").insert({user_id:userId,type:"individual",status:"active",is_trial:true,max_users:1,current_period_start:new Date().toISOString(),current_period_end:endDate.toISOString()});
-  try {
-    await supabase.from("subjects").insert({
-      user_id: userId,
-      name: "Materia de ejemplo",
-      level: "Secundaria (ciclo superior)",
-      materials: "",
-      bibliography: ""
-    });
-  } catch(e) {}
-}
+  }
 
 function Btn({children,onClick,v,disabled,st}) {
   if(!v) v="primary"; if(!st) st={}; if(!disabled) disabled=false;
@@ -1524,6 +1515,11 @@ useEffect(function(){
       .then(function(results){
         setSubjects(results[0]);setLibrary(results[1]);setBank(results[2]);setPublicLib(results[3]);setSequences(results[4]);setQuestionItems(results[5]);setProjects(results[6]);
         if(results[0].length) setCurSid(results[0][0].id);
+        else {
+          dbAddSubject(authUser.id,{name:"Materia de ejemplo",level:"Secundaria (ciclo superior)",materials:"",bibliography:""}).then(function(nuevaMateria){
+            setSubjects([nuevaMateria]);setCurSid(nuevaMateria.id);
+          }).catch(function(){});
+        }
         setDataLoading(false);
         dbLoadNotifications(authUser.id).then(setNotifications);
         dbCheckSubscription(authUser.id).then(function(sub){
