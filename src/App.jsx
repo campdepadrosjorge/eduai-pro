@@ -1518,7 +1518,7 @@ useEffect(function(){
         else {
           dbAddSubject(authUser.id,{name:"Materia de ejemplo",level:"Secundaria (ciclo superior)",materials:"",bibliography:""}).then(function(nuevaMateria){
             setSubjects([nuevaMateria]);setCurSid(nuevaMateria.id);
-          }).catch(function(){});
+          }).catch(function(e){console.error("Error creando materia ejemplo:",e);});
         }
         setDataLoading(false);
         dbLoadNotifications(authUser.id).then(setNotifications);
