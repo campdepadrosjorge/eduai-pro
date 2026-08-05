@@ -1526,7 +1526,7 @@ useEffect(function(){
               });
               dbAddSubject(authUser.id,{name:"Materia de ejemplo",level:"Secundaria (ciclo superior)",materials:"",bibliography:""}).then(function(nuevaMateria){
                 setSubjects([nuevaMateria]);setCurSid(nuevaMateria.id);
-              }).catch(function(e){console.error("Error creando materia ejemplo:",e);});
+              }).catch(function(){});
             });
             var userName=(authUser.user_metadata&&authUser.user_metadata.name)||"";
             fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:authUser.email,name:userName})}).catch(function(){});
