@@ -1514,12 +1514,7 @@ useEffect(function(){
     Promise.all([dbLoadSubjects(authUser.id),dbLoadLibrary(authUser.id),dbLoadBank(authUser.id),dbLoadPublicLib(),dbLoadSequences(authUser.id),dbLoadQuestionItems(authUser.id),dbLoadProjects(authUser.id)])
       .then(function(results){
         setSubjects(results[0]);setLibrary(results[1]);setBank(results[2]);setPublicLib(results[3]);setSequences(results[4]);setQuestionItems(results[5]);setProjects(results[6]);
-        if(results[0].length) setCurSid(results[0][0].id);
-        else {
-          dbAddSubject(authUser.id,{name:"Materia de ejemplo",level:"Secundaria (ciclo superior)",materials:"",bibliography:""}).then(function(nuevaMateria){
-            setSubjects([nuevaMateria]);setCurSid(nuevaMateria.id);
-          }).catch(function(e){console.error("Error creando materia ejemplo:",e);});
-        }
+        if(results[0] && results[0].length) setCurSid(results[0][0].id);
         setDataLoading(false);
         dbLoadNotifications(authUser.id).then(setNotifications);
         dbCheckSubscription(authUser.id).then(function(sub){
@@ -1529,6 +1524,9 @@ useEffect(function(){
                 setSubscription(ns);setSubChecked(true);
                 dbGetUsage(authUser.id).then(function(u){setUsage(u);});
               });
+              dbAddSubject(authUser.id,{name:"Materia de ejemplo",level:"Secundaria (ciclo superior)",materials:"",bibliography:""}).then(function(nuevaMateria){
+                setSubjects([nuevaMateria]);setCurSid(nuevaMateria.id);
+              }).catch(function(e){console.error("Error creando materia ejemplo:",e);});
             });
             var userName=(authUser.user_metadata&&authUser.user_metadata.name)||"";
             fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:authUser.email,name:userName})}).catch(function(){});
