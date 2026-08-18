@@ -372,7 +372,7 @@ async function dbLoadNotifications(userId) {
       id: m.id,
       type: "project_invite",
       title: "Te invitaron a un proyecto",
-      message: "Proyecto: " + (m.projects ? m.projects.title : "Sin tÃ­tulo"),
+      message: "Proyecto: " + (m.projects ? m.projects.title : "Sin ti­tulo"),
       date: m.invited_at,
       read: m.status === "active",
     };
@@ -1335,7 +1335,7 @@ function AuthScreen({onAuth}) {
                     {schoolSuggestions.map(function(s){
                       return (
                         <div key={s.id} style={{padding:"9px 13px",cursor:"pointer",fontSize:13,color:C.text,borderBottom:"1px solid "+C.border}} onClick={function(){setSchool(s.name);setSchoolSuggestions([]);}}>
-                          {s.name}{s.city?" â€” "+s.city:""}
+                          {s.name}{s.city?" - "+s.city:""}
                         </div>
                       );
                     })}
@@ -2518,7 +2518,7 @@ async function loadChatDoc(file){
                     </div>
                     <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid "+C.border}}>
                       <div style={{fontSize:11,color:C.textMuted,fontWeight:700,letterSpacing:.8,marginBottom:10}}>IMAGEN PARA EL DOCUMENTO (opcional)</div>
-                      <p style={{fontSize:12,color:C.textDim,marginBottom:10}}>Genera una imagen con IA o subÃ­ una desde tu dispositivo.</p>
+                      <p style={{fontSize:12,color:C.textDim,marginBottom:10}}>Genera una imagen con IA o subi­ una desde tu dispositivo.</p>
                       <input style={Object.assign({},inp,{marginBottom:10})} value={actImgDesc} onChange={function(e){setActImgDesc(e.target.value);}} placeholder="Ej: diagrama de la celula eucariota"/>
                       <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
                         <Btn v="secondary" st={{fontSize:12,padding:"5px 14px"}} onClick={generateActivityImage} disabled={actImgLoad}>
@@ -2892,7 +2892,7 @@ async function loadChatDoc(file){
                   <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
                     <i className="ti ti-checklist" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
                     <h3 style={{color:C.textMuted,marginBottom:8}}>La correccion aparecera aqui</h3>
-                    <p style={{fontSize:13}}>Evaluacion por criterio Â· Calificacion Â· Fortalezas Â· Mejoras Â· Devolucion</p>
+                   <p style={{fontSize:13}}>Evaluacion por criterio - Calificacion - Fortalezas - Mejoras - Devolucion</p>
                   </div>
                 )}
               </div>
@@ -3504,9 +3504,9 @@ async function loadChatDoc(file){
                                   <div style={{fontSize:14,fontWeight:700,color:C.text}}>{c.title}</div>
                                   <div style={{fontSize:11,color:C.textDim,marginTop:2,display:"flex",gap:8}}>
                                     <span>{c.subject_name}</span>
-                                    <span>Â·</span>
+                                    <span>-</span>
                                     <span>{c.type_name}</span>
-                                    <span>Â·</span>
+                                    <span>-</span>
                                     <span>{new Date(c.created_at).toLocaleDateString("es-AR")}</span>
                                   </div>
                                 </div>
