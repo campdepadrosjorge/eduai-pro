@@ -29,16 +29,16 @@ export default async function handler(req, res) {
           <div style="display:flex;align-items:flex-start;margin-bottom:14px">
             <div style="background:#0d9488;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-right:12px;text-align:center;line-height:24px">1</div>
             <div>
-              <p style="margin:0;font-weight:700;color:#111110;font-size:14px">Crea tu primera materia</p>
-              <p style="margin:4px 0 0;color:#555550;font-size:13px">Carga el nombre, nivel y programa. La IA usara ese contexto para generar material mas preciso.</p>
+              <p style="margin:0;font-weight:700;color:#111110;font-size:14px">Genera tu primera evaluacion</p>
+              <p style="margin:4px 0 0;color:#555550;font-size:13px">Ya te dejamos una materia de ejemplo cargada. Entra al Generador, escribi un tema y en segundos tenes tu primera evaluacion lista.</p>
             </div>
           </div>
 
           <div style="display:flex;align-items:flex-start;margin-bottom:14px">
             <div style="background:#0d9488;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-right:12px;text-align:center;line-height:24px">2</div>
             <div>
-              <p style="margin:0;font-weight:700;color:#111110;font-size:14px">Genera tu primer contenido</p>
-              <p style="margin:4px 0 0;color:#555550;font-size:13px">Desde el Generador IA elegis el tipo (actividad, evaluacion, rubrica) y en segundos tenes material listo para usar.</p>
+              <p style="margin:0;font-weight:700;color:#111110;font-size:14px">Crea tus propias materias</p>
+              <p style="margin:4px 0 0;color:#555550;font-size:13px">Carga tus materias reales con su programa y bibliografia. La IA usa ese contexto para generar material mas preciso y ajustado a tu curso.</p>
             </div>
           </div>
 

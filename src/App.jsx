@@ -463,10 +463,19 @@ async function dbCheckSubscription(userId) {
   if(sub.current_period_end && new Date(sub.current_period_end)<new Date()) return null;
   return sub;
 }
+
 async function dbCreateTrial(userId) {
   var endDate = new Date(); endDate.setDate(endDate.getDate()+7);
   await supabase.from("subscriptions").insert({user_id:userId,type:"individual",status:"active",is_trial:true,max_users:1,current_period_start:new Date().toISOString(),current_period_end:endDate.toISOString()});
-  }
+  try {
+    var { data: { user } } = await supabase.auth.getUser();
+    var userName = (user && user.user_metadata && user.user_metadata.name) || "";
+    var userEmail = user ? user.email : "";
+    if (userEmail) {
+      fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:userEmail,name:userName})}).catch(function(){});
+    }
+  } catch(e) {}
+}
 
 function Btn({children,onClick,v,disabled,st}) {
   if(!v) v="primary"; if(!st) st={}; if(!disabled) disabled=false;
@@ -1528,8 +1537,6 @@ useEffect(function(){
                 setSubjects([nuevaMateria]);setCurSid(nuevaMateria.id);
               }).catch(function(){});
             });
-            var userName=(authUser.user_metadata&&authUser.user_metadata.name)||"";
-            fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:authUser.email,name:userName})}).catch(function(){});
           }
           else if(sub.is_trial){
             // Tiene trial: verificar si pago y hay que activarlo
