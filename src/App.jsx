@@ -2,7 +2,7 @@
 import supabase from "./supabase.js";
 import { exportDocx, exportPdf, exportZip } from "./exportUtils.js";
 import { useTour, TourTooltip, TourLaunchButton, WelcomeModal } from "./TourSystem.jsx";
-import { generatePptx } from "./pptxUtils.js";
+import { parseSlides, generarPptx, SLIDE_TEMPLATES } from "./slidesTemplates.js";
 import DirectivoDashboard from "./DirectivoDashboard.jsx";
 var _currentUser = { id: null, isAdmin: false };
 
@@ -1407,6 +1407,7 @@ export default function AulaXpro() {
   var [notifications,setNotifications]=useState([]);
   var [showNotifications,setShowNotifications]=useState(false);
   var [genType,setGenType]=useState("planclase");
+  var [pptxTemplate,setPptxTemplate]=useState("profesional");
   var [genTopic,setGenTopic]=useState("");
   var [genLevel,setGenLevel]=useState("Secundaria (ciclo superior)");
   useEffect(function(){
@@ -2468,9 +2469,16 @@ async function loadChatDoc(file){
                           </Btn>
                         )}
                         {genType==="presentacion"&&(
-                          <Btn v="secondary" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){generatePptx(genTopic,curSubj?curSubj.name:"",genResult);}}>
-                            <i className="ti ti-presentation" style={{fontSize:13,marginRight:4}}/>PowerPoint
-                          </Btn>
+                          <>
+                            <select value={pptxTemplate} onChange={function(e){setPptxTemplate(e.target.value);}} style={{fontSize:12,padding:"5px 8px",borderRadius:4,border:"1px solid "+C.border,fontFamily:"Quicksand,sans-serif",color:C.text,background:C.surf}}>
+                              {Object.values(SLIDE_TEMPLATES).map(function(tpl){
+                                return <option key={tpl.id} value={tpl.id}>{tpl.nombre}</option>;
+                              })}
+                            </select>
+                            <Btn v="secondary" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){var data=parseSlides(genResult,genTopic,curSubj?curSubj.name:"","");generarPptx(data,pptxTemplate);}}>
+                              <i className="ti ti-presentation" style={{fontSize:13,marginRight:4}}/>PowerPoint
+                            </Btn>
+                          </>
                         )}
                       </div>
                     </div>
