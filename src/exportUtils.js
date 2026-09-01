@@ -511,67 +511,39 @@ export async function exportInformesCorregidosZip(informes) {
   downloadBlob(zipBlob, "informes-corregidos.zip");
 }
 export async function exportFicha(titulo, materia, content) {
-  // Extraer consignas del contenido generado
-  const lineas = content.split("\n").map(l => l.trim()).filter(Boolean);
-  const consignas = [];
-  lineas.forEach(l => {
+  const AZUL = "0D3559", CELESTE = "26C3D4", CELESTEBG = "E8F7FA";
+  const NB = { top:{style:BorderStyle.NONE}, bottom:{style:BorderStyle.NONE}, left:{style:BorderStyle.NONE}, right:{style:BorderStyle.NONE} };
+
+  const consignas = content.split("\n").map(l => l.trim()).filter(Boolean).map(l => {
     const m = l.match(/^(?:\d+[\.\)]|[-*•])\s+(.+)/);
-    if (m) {
-      const t = m[1].replace(/\*\*/g, "").replace(/^\*+|\*+$/g, "").trim();
-      if (t.length > 3) consignas.push(t);
-    }
-  });
+    return m ? m[1].replace(/\*\*/g, "").replace(/^\*+|\*+$/g, "").trim() : null;
+  }).filter(t => t && t.length > 3);
 
-  const children = [];
-  const AZUL = "0D3559", CELESTE = "26C3D4", GRIS_F = "555555";
+  const ch = [];
 
-  const celda = (label) => new TableCell({
-    width: { size: 33, type: WidthType.PERCENTAGE },
-    borders: { top:{style:BorderStyle.NONE}, bottom:{style:BorderStyle.NONE}, left:{style:BorderStyle.NONE}, right:{style:BorderStyle.NONE} },
-    children: [new Paragraph({ children: [new TextRun({ text: label, size: 20, color: GRIS_F, bold: true })] })],
-  });
-  children.push(new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
-    borders: { top:{style:BorderStyle.NONE}, bottom:{style:BorderStyle.NONE}, left:{style:BorderStyle.NONE}, right:{style:BorderStyle.NONE}, insideHorizontal:{style:BorderStyle.NONE}, insideVertical:{style:BorderStyle.NONE} },
-    rows: [ new TableRow({ children: [ celda("Nombre: ______________________"), celda("Curso: ____________"), celda("Fecha: ___________") ] }) ],
-  }));
+  // Banda superior con titulo
+  ch.push(new Table({ width:{size:100,type:WidthType.PERCENTAGE}, borders:NB, rows:[new TableRow({children:[new TableCell({
+    shading:{fill:AZUL,type:ShadingType.CLEAR,color:"auto"}, margins:{top:200,bottom:200,left:200,right:200}, borders:NB,
+    children:[
+      new Paragraph({children:[new TextRun({text:materia||"Actividad",size:18,color:"8FD9E8",bold:true})]}),
+      new Paragraph({spacing:{before:40},children:[new TextRun({text:titulo,size:32,color:"FFFFFF",bold:true})]}),
+    ]})]})]}));
 
-  if (materia) {
-    children.push(new Paragraph({
-      spacing: { before: 120, after: 0 },
-      children: [new TextRun({ text: materia, size: 20, color: CELESTE, bold: true })],
-    }));
-  }
+  // Datos del alumno
+  const cd = (l) => new TableCell({ width:{size:33,type:WidthType.PERCENTAGE}, shading:{fill:CELESTEBG,type:ShadingType.CLEAR,color:"auto"}, margins:{top:120,bottom:120,left:150,right:150}, borders:NB, children:[new Paragraph({children:[new TextRun({text:l,size:20,color:AZUL,bold:true})]})] });
+  ch.push(new Table({ width:{size:100,type:WidthType.PERCENTAGE}, borders:NB, rows:[new TableRow({children:[cd("Nombre:"),cd("Curso:"),cd("Fecha:")]})]}));
+  ch.push(new Paragraph({ spacing:{after:160}, children:[new TextRun({text:"",size:8})]}));
 
-  children.push(new Paragraph({
-    spacing: { before: 160, after: 60 },
-    border: { bottom: { color: CELESTE, size: 12, style: BorderStyle.SINGLE, space: 4 } },
-    children: [new TextRun({ text: titulo, size: 32, bold: true, color: AZUL })],
-  }));
-
+  // Consignas con numero en cuadradito
   consignas.forEach((c, i) => {
-    children.push(new Paragraph({
-      spacing: { before: 240, after: 0 },
-      children: [
-        new TextRun({ text: (i+1) + ". ", size: 24, bold: true, color: AZUL }),
-        new TextRun({ text: c, size: 24, color: "222222" }),
-      ],
-    }));
-    for (let k = 0; k < 3; k++) {
-      children.push(new Paragraph({
-        spacing: { before: 120, after: 0 },
-        border: { bottom: { color: "CCCCCC", size: 6, style: BorderStyle.SINGLE, space: 1 } },
-        children: [new TextRun({ text: " ", size: 22 })],
-      }));
-    }
+    const numCell = new TableCell({ width:{size:500,type:WidthType.DXA}, shading:{fill:CELESTE,type:ShadingType.CLEAR,color:"auto"}, verticalAlign:"center", margins:{top:80,bottom:80,left:0,right:0}, borders:NB, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:String(i+1),size:26,bold:true,color:"FFFFFF"})]})] });
+    const txtCell = new TableCell({ width:{size:9500,type:WidthType.DXA}, verticalAlign:"center", margins:{top:80,bottom:80,left:200,right:100}, borders:NB, children:[new Paragraph({children:[new TextRun({text:c,size:24,color:"222222"})]})] });
+    ch.push(new Table({ width:{size:100,type:WidthType.PERCENTAGE}, layout:"fixed", borders:NB, columnWidths:[500,9500], rows:[new TableRow({children:[numCell,txtCell]})]}));
+    for (let k = 0; k < 3; k++) ch.push(new Paragraph({ spacing:{before:150,after:0}, border:{bottom:{color:"BBBBBB",size:6,style:BorderStyle.SINGLE,space:1}}, children:[new TextRun({text:" ",size:22})]}));
+    ch.push(new Paragraph({ spacing:{after:140}, children:[new TextRun({text:"",size:8})]}));
   });
 
-  const doc = new Document({
-    sections: [{
-      properties: { page: { margin: { top: 1000, bottom: 1000, left: 1000, right: 1000 } } },
-      children,
-    }],
-  });
+  const doc = new Document({ sections:[{ properties:{page:{margin:{top:800,bottom:800,left:900,right:900}}}, children:ch }] });
   const blob = await Packer.toBlob(doc);
   downloadBlob(blob, `${sanitize(titulo)}.docx`);
 }
