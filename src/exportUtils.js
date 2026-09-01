@@ -510,3 +510,68 @@ export async function exportInformesCorregidosZip(informes) {
   const zipBlob = await zip.generateAsync({ type: "blob" });
   downloadBlob(zipBlob, "informes-corregidos.zip");
 }
+export async function exportFicha(titulo, materia, content) {
+  // Extraer consignas del contenido generado
+  const lineas = content.split("\n").map(l => l.trim()).filter(Boolean);
+  const consignas = [];
+  lineas.forEach(l => {
+    const m = l.match(/^(?:\d+[\.\)]|[-*•])\s+(.+)/);
+    if (m) {
+      const t = m[1].replace(/\*\*/g, "").replace(/^\*+|\*+$/g, "").trim();
+      if (t.length > 3) consignas.push(t);
+    }
+  });
+
+  const children = [];
+  const AZUL = "0D3559", CELESTE = "26C3D4", GRIS_F = "555555";
+
+  const celda = (label) => new TableCell({
+    width: { size: 33, type: WidthType.PERCENTAGE },
+    borders: { top:{style:BorderStyle.NONE}, bottom:{style:BorderStyle.NONE}, left:{style:BorderStyle.NONE}, right:{style:BorderStyle.NONE} },
+    children: [new Paragraph({ children: [new TextRun({ text: label, size: 20, color: GRIS_F, bold: true })] })],
+  });
+  children.push(new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: { top:{style:BorderStyle.NONE}, bottom:{style:BorderStyle.NONE}, left:{style:BorderStyle.NONE}, right:{style:BorderStyle.NONE}, insideHorizontal:{style:BorderStyle.NONE}, insideVertical:{style:BorderStyle.NONE} },
+    rows: [ new TableRow({ children: [ celda("Nombre: ______________________"), celda("Curso: ____________"), celda("Fecha: ___________") ] }) ],
+  }));
+
+  if (materia) {
+    children.push(new Paragraph({
+      spacing: { before: 120, after: 0 },
+      children: [new TextRun({ text: materia, size: 20, color: CELESTE, bold: true })],
+    }));
+  }
+
+  children.push(new Paragraph({
+    spacing: { before: 160, after: 60 },
+    border: { bottom: { color: CELESTE, size: 12, style: BorderStyle.SINGLE, space: 4 } },
+    children: [new TextRun({ text: titulo, size: 32, bold: true, color: AZUL })],
+  }));
+
+  consignas.forEach((c, i) => {
+    children.push(new Paragraph({
+      spacing: { before: 240, after: 0 },
+      children: [
+        new TextRun({ text: (i+1) + ". ", size: 24, bold: true, color: AZUL }),
+        new TextRun({ text: c, size: 24, color: "222222" }),
+      ],
+    }));
+    for (let k = 0; k < 3; k++) {
+      children.push(new Paragraph({
+        spacing: { before: 120, after: 0 },
+        border: { bottom: { color: "CCCCCC", size: 6, style: BorderStyle.SINGLE, space: 1 } },
+        children: [new TextRun({ text: " ", size: 22 })],
+      }));
+    }
+  });
+
+  const doc = new Document({
+    sections: [{
+      properties: { page: { margin: { top: 1000, bottom: 1000, left: 1000, right: 1000 } } },
+      children,
+    }],
+  });
+  const blob = await Packer.toBlob(doc);
+  downloadBlob(blob, `${sanitize(titulo)}.docx`);
+}

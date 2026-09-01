@@ -1,8 +1,9 @@
 ﻿import { useState, useEffect, useRef } from "react";
 import supabase from "./supabase.js";
-import { exportDocx, exportPdf, exportZip } from "./exportUtils.js";
+import { exportDocx, exportPdf, exportZip, exportFicha } from "./exportUtils.js";
 import { useTour, TourTooltip, TourLaunchButton, WelcomeModal } from "./TourSystem.jsx";
 import { parseSlides, generarPptx, SLIDE_TEMPLATES } from "./slidesTemplates.js";
+
 import DirectivoDashboard from "./DirectivoDashboard.jsx";
 var _currentUser = { id: null, isAdmin: false };
 
@@ -2463,6 +2464,11 @@ async function loadChatDoc(file){
                         <Btn v="secondary" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportDocx(genTopic,gt?gt.label:"",curSubj?curSubj.name:"",genResult,actImgBase64);}}>
                           <i className="ti ti-file-text" style={{fontSize:13,marginRight:4}}/>Word
                         </Btn>
+                        {genType==="actividad"&&(
+                          <Btn v="secondary" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportFicha(genTopic,curSubj?curSubj.name:"",genResult);}}>
+                            <i className="ti ti-clipboard-list" style={{fontSize:13,marginRight:4}}/>Ficha
+                          </Btn>
+                        )}
                         {(genType==="evaluacion"||genType==="rubrica"||genType==="planclase")&&(
                           <Btn v="secondary" st={{fontSize:12,padding:"5px 12px"}} onClick={function(){exportPdf(genTopic,gt?gt.label:"",curSubj?curSubj.name:"",genResult,actImgBase64);}}>
                             <i className="ti ti-file-invoice" style={{fontSize:13,marginRight:4}}/>PDF
