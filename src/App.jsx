@@ -465,8 +465,9 @@ async function dbCheckSubscription(userId) {
   return sub;
 }
 
-async function dbCreateTrial(userId) {
-  var endDate = new Date(); endDate.setDate(endDate.getDate()+7);
+async function dbCreateTrial(userId, trialDays) {
+  if(!trialDays || trialDays < 1) trialDays = 7;
+  var endDate = new Date(); endDate.setDate(endDate.getDate()+trialDays);
   await supabase.from("subscriptions").insert({user_id:userId,type:"individual",status:"active",is_trial:true,max_users:1,current_period_start:new Date().toISOString(),current_period_end:endDate.toISOString()});
   try {
     var { data: { user } } = await supabase.auth.getUser();
@@ -476,6 +477,13 @@ async function dbCreateTrial(userId) {
       fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:userEmail,name:userName})}).catch(function(){});
     }
   } catch(e) {}
+}
+
+async function dbValidarPromo(code) {
+  if(!code) return null;
+  var r = await supabase.from("promo_codes").select("code,trial_days,active").eq("code", code).eq("active", true).single();
+  if(r.error || !r.data) return null;
+  return r.data;
 }
 
 function Btn({children,onClick,v,disabled,st}) {
@@ -1257,6 +1265,7 @@ function AuthScreen({onAuth}) {
   var [password,setPass]=useState("");
   var [name,setName]=useState("");
   var [school,setSchool]=useState("");
+  var [promoCode,setPromoCode]=useState("");
   var [role,setRole]=useState("docente");
   var [schoolSuggestions,setSchoolSuggestions]=useState([]);
   var [loading,setLoading]=useState(false);
@@ -1275,7 +1284,13 @@ function AuthScreen({onAuth}) {
   async function handleRegister() {
     if(!email||!password||!name) return;
     setLoading(true);setError("");
-    var result=await supabase.auth.signUp({email,password,options:{data:{name,school:school||"",role}}});
+    var promoDays = 0;
+    if(promoCode){
+      var promo = await dbValidarPromo(promoCode);
+      if(!promo){ setError("El codigo de promocion no es valido."); setLoading(false); return; }
+      promoDays = promo.trial_days;
+    }
+    var result=await supabase.auth.signUp({email,password,options:{data:{name,school:school||"",role,promo_days:promoDays}}});
     if(result.error){setError(result.error.message);}
     else{
       if(school) dbAddOrUpdateSchool(school,"").catch(function(){});
@@ -1346,6 +1361,8 @@ function AuthScreen({onAuth}) {
                   </div>
                 )}
               </div>
+              <label style={lbl}>CODIGO DE PROMOCION (opcional)</label>
+              <input style={Object.assign({},inp,{marginBottom:12})} value={promoCode} onChange={function(e){setPromoCode(e.target.value.toUpperCase().trim());}} placeholder="Si tenes un codigo, ingresalo aca"/>
             </div>
           )}
           <label style={lbl}>EMAIL</label>
@@ -1536,7 +1553,7 @@ useEffect(function(){
         dbLoadNotifications(authUser.id).then(setNotifications);
         dbCheckSubscription(authUser.id).then(function(sub){
           if(!sub){
-            dbCreateTrial(authUser.id).then(function(){
+            dbCreateTrial(authUser.id, authUser.user_metadata && authUser.user_metadata.promo_days).then(function(){
               dbCheckSubscription(authUser.id).then(function(ns){
                 setSubscription(ns);setSubChecked(true);
                 dbGetUsage(authUser.id).then(function(u){setUsage(u);});
