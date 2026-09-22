@@ -466,11 +466,21 @@ async function dbCheckSubscription(userId) {
 }
 
 async function dbCreateTrial(userId, trialDays) {
-  if(!trialDays || trialDays < 1) trialDays = 7;
-  var endDate = new Date(); endDate.setDate(endDate.getDate()+trialDays);
+  var user = null;
+  try {
+    var r = await supabase.auth.getUser();
+    user = r.data ? r.data.user : null;
+  } catch(e) {}
+  // Priorizar los dias que vengan del parametro; si no, leerlos del metadata
+  var dias = parseInt(trialDays, 10);
+  if(!dias || dias < 1){
+    var meta = (user && user.user_metadata) || {};
+    dias = parseInt(meta.promo_days, 10);
+  }
+  if(!dias || dias < 1) dias = 7;
+  var endDate = new Date(); endDate.setDate(endDate.getDate()+dias);
   await supabase.from("subscriptions").insert({user_id:userId,type:"individual",status:"active",is_trial:true,max_users:1,current_period_start:new Date().toISOString(),current_period_end:endDate.toISOString()});
   try {
-    var { data: { user } } = await supabase.auth.getUser();
     var userName = (user && user.user_metadata && user.user_metadata.name) || "";
     var userEmail = user ? user.email : "";
     if (userEmail) {
