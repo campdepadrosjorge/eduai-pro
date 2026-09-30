@@ -1448,6 +1448,8 @@ export default function AulaXpro() {
   var [genLoading,setGenLoading]=useState(false);
   var [genSaved,setGenSaved]=useState(false);
   var [genErr,setGenErr]=useState("");
+  var [ajusteText,setAjusteText]=useState("");
+  var [ajusteLoading,setAjusteLoading]=useState(false);
   var [genDocText,setGenDocText]=useState("");
   var [genDocName,setGenDocName]=useState("");
   var [genDocLoading,setGenDocLoading]=useState(false);
@@ -1794,6 +1796,30 @@ useEffect(function(){
     setGenLoading(false);
   }
 
+  async function ajustarGeneracion(){
+    if(!ajusteText.trim()||!genResult) return;
+    var esAdmin = authUser.email===import.meta.env.VITE_ADMIN_EMAIL;
+    var hasBudget = esAdmin || await dbCheckBudget(authUser.id);
+    if(!hasBudget){setBudgetExceeded(true);return;}
+    setAjusteLoading(true);setGenErr("");
+    try{
+      var sys=sysGen(genType,curSubj.name,genLevel,curSubj.materials,curSubj.bibliography);
+      var usr="Este es un contenido que generaste antes:\n\n"+genResult+"\n\n---\n\nEl docente pide el siguiente ajuste: "+ajusteText+"\n\nDevolve el contenido COMPLETO con ese ajuste aplicado, manteniendo todo lo demas igual y el mismo formato. No expliques los cambios, devolve solo el contenido corregido.";
+      var maxTokPorTipo={ material:16000, guia:16000, planclase:12000, secuencia:14000, presentacion:12000, actividad:10000, evaluacion:16000, rubrica:6000, adaptado:12000 };
+      var maxTok=maxTokPorTipo[genType]||10000;
+      var r=await callClaude(sys,[{role:"user",content:usr}],maxTok,false,function(partial){
+        setGenResult(partial);
+      });
+      setGenResult(r);
+      setAjusteText("");
+      var tokIn=Math.round((sys.length+usr.length)/4);
+      var tokOut=Math.round(r.length/4);
+      var costUsd=(tokIn*0.000003)+(tokOut*0.000015);
+      dbLogUsage(authUser.id,authUser.email,genType,"ajuste",curSubj?curSubj.name:"",tokIn,tokOut,false);
+      dbAddUsageCost(authUser.id,costUsd).then(function(){dbGetUsage(authUser.id).then(function(u){setUsage(u);});});
+    }catch(e){setGenErr(msgError(e));}
+    setAjusteLoading(false);
+  }
   async function generateMM(){
     if(!mmTopic.trim()||!curSubj) return;
     setMmLoading(true);setMmResult("");
@@ -2529,6 +2555,14 @@ async function loadChatDoc(file){
                         </a>
                       </div>
                     )}
+                                        <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid "+C.border}}>
+                      <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:3}}>Ajustar el resultado</div>
+                      <div style={{fontSize:12,color:C.textDim,marginBottom:10}}>Pedí un cambio y la IA lo aplica sin regenerar todo. Ej: "sacá la pregunta 3", "hacé las consignas más simples", "agregá un ejercicio de opción múltiple".</div>
+                      <textarea style={Object.assign({},inp,{height:60,resize:"vertical",marginBottom:10})} value={ajusteText} onChange={function(e){setAjusteText(e.target.value);}} placeholder="Escribí qué querés cambiar..." disabled={ajusteLoading}/>
+                      <Btn v="secondary" st={{fontSize:12,padding:"6px 14px"}} onClick={ajustarGeneracion} disabled={ajusteLoading||!ajusteText.trim()}>
+                        {ajusteLoading?"Ajustando...":<><i className="ti ti-wand" style={{fontSize:13,marginRight:4}}/>Aplicar ajuste</>}
+                      </Btn>
+                    </div>
                     <div data-tour="gen-diff" style={{marginTop:16,paddingTop:16,borderTop:"1px solid "+C.border}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                         <div>
