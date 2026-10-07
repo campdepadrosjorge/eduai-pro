@@ -14,6 +14,7 @@ const lbl = {fontSize:11,color:C.textMuted,marginBottom:5,display:"block",fontWe
 const card = {background:"#fff",border:"1px solid #d4cfc6",borderRadius:4,padding:"18px 20px",marginBottom:16};
 
 const DIR_NAV = [
+  { id:"docentes", label:"Mis Docentes", icon:"ti-users" },
   { id:"comunicados", label:"Comunicados", icon:"ti-speakerphone" },
   { id:"actas",       label:"Actas",       icon:"ti-file-description" },
   { id:"informes",    label:"Corrección de Informes", icon:"ti-report" },
@@ -96,6 +97,190 @@ function Btn({children,onClick,disabled,v,st}) {
   var bd = v==="ghost"?"1px solid #d4cfc6":"none";
   return <button onClick={disabled?undefined:onClick} disabled={disabled} style={Object.assign({padding:"9px 18px",borderRadius:4,cursor:disabled?"not-allowed":"pointer",fontWeight:600,fontSize:13,fontFamily:"Quicksand,sans-serif",opacity:disabled?.45:1,background:bg,color:col,border:bd},st)}>{children}</button>;
 }
+// ============================================================
+// Sección "Mis Docentes" para el Panel del Directivo
+// Pegar este componente en src/DirectivoDashboard.jsx (antes del
+// export default function DirectivoDashboard). Usa C, Btn, supabase,
+// useState, useEffect (ya disponibles en ese archivo).
+// ============================================================
+function MisDocentesPanel({ authUser }) {
+  var [madre, setMadre] = useState(null);
+  var [cuentas, setCuentas] = useState([]);
+  var [loading, setLoading] = useState(true);
+  var [email, setEmail] = useState("");
+  var [nombre, setNombre] = useState("");
+  var [rol, setRol] = useState("docente");
+  var [enviando, setEnviando] = useState(false);
+  var [msg, setMsg] = useState("");
+  var [err, setErr] = useState("");
+
+  function cargar() {
+    if (!authUser) return;
+    setLoading(true);
+    supabase.from("subscriptions")
+      .select("id,max_users,status,institution_name")
+      .eq("user_id", authUser.id).eq("type", "institutional").limit(1)
+      .then(function (r) {
+        var m = (r.data && r.data.length > 0) ? r.data[0] : null;
+        setMadre(m);
+        if (!m) { setLoading(false); return; }
+        supabase.from("institutional_users")
+          .select("id,email,name,role,status,invited_at,activated_at")
+          .eq("subscription_id", m.id)
+          .order("invited_at", { ascending: true })
+          .then(function (r2) {
+            setCuentas(r2.data || []);
+            setLoading(false);
+          });
+      });
+  }
+  useEffect(cargar, [authUser]);
+
+  function invitar() {
+    setErr(""); setMsg("");
+    var mail = email.trim().toLowerCase();
+    if (!mail || mail.indexOf("@") < 0) { setErr("Ingresá un email válido."); return; }
+    setEnviando(true);
+    fetch("/api/invitar-docente", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ directivo_id: authUser.id, email: mail, name: nombre.trim(), role: rol }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.error) { setErr(d.error); }
+        else { setMsg("Invitación enviada a " + mail); setEmail(""); setNombre(""); cargar(); }
+        setEnviando(false);
+      })
+      .catch(function () { setErr("No se pudo enviar la invitación."); setEnviando(false); });
+  }
+
+  function quitar(id, status) {
+    if (status === "active") {
+      if (!window.confirm("Esta cuenta ya está activa. ¿Seguro que querés quitarla de la institución?")) return;
+    }
+    supabase.from("institutional_users").delete().eq("id", id).then(function () { cargar(); });
+  }
+
+  if (loading) return <div style={{ padding: 30, color: C.textMuted }}>Cargando…</div>;
+
+  if (!madre) {
+    return (
+      <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 6, padding: 28, textAlign: "center" }}>
+        <i className="ti ti-building" style={{ fontSize: 40, color: C.textDim, display: "block", marginBottom: 12 }} />
+        <h3 style={{ margin: "0 0 8px", fontSize: 17, color: C.text }}>No tenés un plan institucional activo</h3>
+        <p style={{ color: C.textMuted, fontSize: 14, margin: 0 }}>Contratá un plan institucional desde "Planes y Precios" para habilitar cuentas a tus docentes.</p>
+      </div>
+    );
+  }
+
+  var usados = cuentas.length;
+  var totales = madre.max_users || 0;
+  var libres = Math.max(0, totales - usados);
+  var activos = cuentas.filter(function (c) { return c.status === "active"; }).length;
+
+  function badge(status) {
+    var map = {
+      invited: { t: "Invitado", bg: "#fef3c7", c: "#92400e" },
+      active: { t: "Activo", bg: "#d1fae5", c: "#065f46" },
+      pending_manual: { t: "Ya tenía cuenta propia", bg: "#e0e7ff", c: "#3730a3" },
+    };
+    var m = map[status] || { t: status, bg: "#eee", c: "#555" };
+    return <span style={{ background: m.bg, color: m.c, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>{m.t}</span>;
+  }
+
+  return (
+    <div>
+      {/* Resumen de cupos */}
+      <div style={{ display: "flex", gap: 14, marginBottom: 20, flexWrap: "wrap" }}>
+        <Cupo label="Cuentas del plan" valor={totales} color={C.accent} />
+        <Cupo label="Activas" valor={activos} color={C.green} />
+        <Cupo label="Disponibles" valor={libres} color={C.blue} />
+      </div>
+
+      {/* Form de invitación */}
+      <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 6, padding: 20, marginBottom: 22 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 12 }}>Invitar una cuenta</div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <div style={{ flex: "2 1 220px" }}>
+            <label style={{ fontSize: 11, color: C.textMuted, display: "block", marginBottom: 4 }}>Email del docente</label>
+            <input value={email} onChange={function (e) { setEmail(e.target.value); }} placeholder="docente@colegio.edu.ar"
+              style={{ width: "100%", padding: "9px 11px", borderRadius: 4, border: "1px solid " + C.border, fontSize: 13, fontFamily: "Quicksand,sans-serif", boxSizing: "border-box" }} />
+          </div>
+          <div style={{ flex: "1 1 150px" }}>
+            <label style={{ fontSize: 11, color: C.textMuted, display: "block", marginBottom: 4 }}>Nombre (opcional)</label>
+            <input value={nombre} onChange={function (e) { setNombre(e.target.value); }} placeholder="Nombre y apellido"
+              style={{ width: "100%", padding: "9px 11px", borderRadius: 4, border: "1px solid " + C.border, fontSize: 13, fontFamily: "Quicksand,sans-serif", boxSizing: "border-box" }} />
+          </div>
+          <div style={{ flex: "0 1 130px" }}>
+            <label style={{ fontSize: 11, color: C.textMuted, display: "block", marginBottom: 4 }}>Tipo</label>
+            <select value={rol} onChange={function (e) { setRol(e.target.value); }}
+              style={{ width: "100%", padding: "9px 11px", borderRadius: 4, border: "1px solid " + C.border, fontSize: 13, fontFamily: "Quicksand,sans-serif" }}>
+              <option value="docente">Docente</option>
+              <option value="directivo">Directivo</option>
+            </select>
+          </div>
+          <Btn onClick={invitar} disabled={enviando || libres < 1}>{enviando ? "Enviando…" : "Invitar"}</Btn>
+        </div>
+        {libres < 1 && <div style={{ fontSize: 12, color: C.red, marginTop: 10 }}>No te quedan cupos. Ampliá tu plan para agregar más cuentas.</div>}
+        {err && <div style={{ fontSize: 12, color: C.red, marginTop: 10 }}>{err}</div>}
+        {msg && <div style={{ fontSize: 12, color: C.green, marginTop: 10 }}>{msg}</div>}
+      </div>
+
+      {/* Lista de cuentas */}
+      <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 6, overflow: "hidden" }}>
+        {cuentas.length === 0 ? (
+          <div style={{ padding: 28, textAlign: "center", color: C.textMuted, fontSize: 14 }}>
+            Todavía no cargaste ninguna cuenta. Invitá a tus docentes con el formulario de arriba.
+          </div>
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr style={{ background: C.bg }}>
+                <th style={thSt}>Email</th>
+                <th style={thSt}>Nombre</th>
+                <th style={thSt}>Tipo</th>
+                <th style={thSt}>Estado</th>
+                <th style={thSt}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {cuentas.map(function (c) {
+                return (
+                  <tr key={c.id} style={{ borderTop: "1px solid " + C.border }}>
+                    <td style={tdSt}>{c.email}</td>
+                    <td style={tdSt}>{c.name || "—"}</td>
+                    <td style={tdSt}>{c.role === "directivo" ? "Directivo" : "Docente"}</td>
+                    <td style={tdSt}>{badge(c.status)}</td>
+                    <td style={{ padding: "10px 14px", textAlign: "right" }}>
+                      <button onClick={function () { quitar(c.id, c.status); }}
+                        style={{ background: "transparent", border: "none", cursor: "pointer", color: C.red, fontSize: 12, fontFamily: "Quicksand,sans-serif" }}>
+                        Quitar
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+      <p style={{ fontSize: 12, color: C.textDim, marginTop: 14, lineHeight: 1.5 }}>
+        Cada docente recibe un mail para activar su cuenta entrando con ese email. Si ya se había registrado en una capacitación con el mismo email, su cuenta se activa automáticamente al ingresar.
+      </p>
+    </div>
+  );
+}
+
+function Cupo({ label, valor, color }) {
+  return (
+    <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 6, padding: "14px 20px", flex: "1 1 120px", textAlign: "center" }}>
+      <div style={{ fontSize: 26, fontWeight: 700, color: color }}>{valor}</div>
+      <div style={{ fontSize: 12, color: C.textMuted }}>{label}</div>
+    </div>
+  );
+}
+var thSt = { textAlign: "left", padding: "10px 14px", fontSize: 11, fontWeight: 700, color: "#555550", textTransform: "uppercase", letterSpacing: "0.3px" };
+var tdSt = { padding: "10px 14px", color: "#111110" };
 
 export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignOut }) {
   var [view,setView] = useState("comunicados");
@@ -528,6 +713,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
         </div>
 
         <div style={{flex:1,overflow:"auto",padding:"22px 26px"}}>
+          {view==="docentes"&&<MisDocentesPanel authUser={authUser} />}
           {view==="comunicados"&&(
             <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"360px 1fr",gap:18}}>
               <div style={card}>

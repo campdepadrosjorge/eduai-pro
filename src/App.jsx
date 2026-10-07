@@ -1697,13 +1697,37 @@ useEffect(function(){
         setDataLoading(false);
         dbLoadNotifications(authUser.id).then(setNotifications);
         dbCheckSubscription(authUser.id).then(function(sub){
+           dbCheckSubscription(authUser.id).then(function(sub){
           if(!sub){
-            dbCreateTrial(authUser.id, authUser.user_metadata && authUser.user_metadata.promo_days).then(function(){
-              dbCheckSubscription(authUser.id).then(function(ns){
-                setSubscription(ns);setSubChecked(true);
-                dbGetUsage(authUser.id).then(function(u){setUsage(u);});
+            // ¿Fue invitado a una institución? Intentar activar primero.
+            fetch("/api/activar-institucional",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:authUser.id})})
+              .then(function(r){return r.json();})
+              .then(function(act){
+                if(act && act.activated){
+                  // Quedó activado como cuenta institucional
+                  dbCheckSubscription(authUser.id).then(function(ns){
+                    setSubscription(ns);setSubChecked(true);
+                    dbGetUsage(authUser.id).then(function(u){setUsage(u);});
+                  });
+                } else {
+                  // No fue invitado (o ya tiene pago): crear trial normal
+                  dbCreateTrial(authUser.id, authUser.user_metadata && authUser.user_metadata.promo_days).then(function(){
+                    dbCheckSubscription(authUser.id).then(function(ns){
+                      setSubscription(ns);setSubChecked(true);
+                      dbGetUsage(authUser.id).then(function(u){setUsage(u);});
+                    });
+                  });
+                }
+              })
+              .catch(function(){
+                // Si el endpoint falla, crear trial normal (no bloquear el login)
+                dbCreateTrial(authUser.id, authUser.user_metadata && authUser.user_metadata.promo_days).then(function(){
+                  dbCheckSubscription(authUser.id).then(function(ns){
+                    setSubscription(ns);setSubChecked(true);
+                    dbGetUsage(authUser.id).then(function(u){setUsage(u);});
+                  });
+                });
               });
-            });
           }
           else if(sub.is_trial){
             // Tiene trial: verificar si pago y hay que activarlo
