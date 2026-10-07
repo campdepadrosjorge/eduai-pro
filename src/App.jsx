@@ -1697,7 +1697,6 @@ useEffect(function(){
         setDataLoading(false);
         dbLoadNotifications(authUser.id).then(setNotifications);
         dbCheckSubscription(authUser.id).then(function(sub){
-           dbCheckSubscription(authUser.id).then(function(sub){
           if(!sub){
             // ¿Fue invitado a una institución? Intentar activar primero.
             fetch("/api/activar-institucional",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:authUser.id})})
