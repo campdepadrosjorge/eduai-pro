@@ -726,8 +726,7 @@ function PricingPanel({authUser}) {
   var plans=[
     {id:"e62d30a047a8442581b2a5b94b470577",name:"Docente",price:"$12.000",period:"por mes",users:1,color:C.blue,features:["Generador IA (8 tipos)","Multimedia + Imagenes","Chat Docente","Corrector de TPs","Exportacion Word y PDF","Biblioteca personal"]},
     {id:"d1ee77dd48f44b0f98d8b3ca1baa774e",name:"Directivo",price:"$16.000",period:"por mes",users:1,color:C.accent,features:["Todo lo del plan Docente","Panel de Directivos","Comunicados y Actas","Correccion de informes","Grabacion y transcripcion de reuniones"]},
-    {id:"institucional_basico",name:"Institucional Basico",price:"Consultar",period:"segun cantidad de docentes",users:10,color:C.green,institutional:true,features:["Hasta 10 docentes","Biblioteca publica compartida","Panel admin institucional","Soporte dedicado"]},
-    {id:"institucional_consulta",name:"Institucional A Medida",price:"Consultar",period:"segun cantidad de docentes",users:999,color:C.purple,institutional:true,features:["Mas de 10 docentes","Todo Institucional Basico","Precio segun cantidad","Soporte dedicado"]},
+    {id:"institucional",name:"Institucional",price:"Desde $12.000",period:"por cuenta / mes",users:999,color:C.green,institutional:true,features:["Cuentas para todo tu equipo","Precio por cantidad de cuentas","Descuentos por volumen","Panel admin institucional","Soporte dedicado"]},
   ];
   async function subscribe(plan) {
     if(!authUser){setError("Tenes que iniciar sesion para suscribirte.");return;}
