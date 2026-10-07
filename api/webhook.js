@@ -70,6 +70,59 @@ export default async function handler(req, res) {
     var payerEmail = sub.payer_email;
     var planId = sub.preapproval_plan_id;
     var externalRef = sub.external_reference;
+      // ===== RAMA INSTITUCIONAL =====
+    // external_reference formato: INST|{userId}|{qDocentes}|{qDirectivos}|{maxUsers}
+    if (externalRef && externalRef.indexOf("INST|") === 0) {
+      var ip = externalRef.split("|");
+      var instUserId = ip[1];
+      var instMaxUsers = parseInt(ip[4]) || parseInt(ip[2]) + parseInt(ip[3]) || 1;
+
+      // Fecha de vencimiento (1 mes)
+      var instEnd = new Date();
+      if (sub.auto_recurring && sub.auto_recurring.frequency_type === "months") {
+        instEnd.setMonth(instEnd.getMonth() + (sub.auto_recurring.frequency || 1));
+      } else {
+        instEnd.setMonth(instEnd.getMonth() + 1);
+      }
+
+      var instStatus = (status === "authorized") ? "active" : status;
+
+      // Crear/actualizar la fila MADRE de la institución.
+      // Nota: onConflict user_id — un directivo = una suscripción madre.
+      var upMadre = await supabase.from("subscriptions").upsert({
+        user_id: instUserId,
+        type: "institutional",
+        status: instStatus,
+        institution_name: sub.reason || "Institución",
+        max_users: instMaxUsers,
+        stripe_subscription_id: sub.id,
+        current_period_start: new Date().toISOString(),
+        current_period_end: instEnd.toISOString(),
+        tokens_limit: 3,
+        tokens_used: 0,
+      }, { onConflict: "user_id" }).select("id").single();
+
+      // Enlazar la madre consigo misma por institution_id (para agrupar)
+      if (upMadre.data && upMadre.data.id) {
+        await supabase.from("subscriptions")
+          .update({ institution_id: upMadre.data.id })
+          .eq("id", upMadre.data.id);
+      }
+
+      // Marcar al pagador como directivo
+      if (instStatus === "active") {
+        try {
+          var instUserRes = await supabase.auth.admin.getUserById(instUserId);
+          var curMeta = (instUserRes.data && instUserRes.data.user) ? instUserRes.data.user.user_metadata : {};
+          var instMeta = Object.assign({}, curMeta, { role: "directivo", is_institutional: true });
+          await supabase.auth.admin.updateUserById(instUserId, { user_metadata: instMeta });
+        } catch (e) { console.error("Error marcando directivo institucional:", e.message); }
+      }
+
+      return; // No seguir con la lógica individual
+    }
+    // ===== FIN RAMA INSTITUCIONAL =====
+
  
     // Buscar el plan en Supabase
     var planResult = await supabase

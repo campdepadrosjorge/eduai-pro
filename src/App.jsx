@@ -572,8 +572,144 @@ const inp = {background:"#fff",border:"1px solid #d4cfc6",borderRadius:4,padding
 const sel = {background:"#fff",border:"1px solid #d4cfc6",borderRadius:4,padding:"9px 13px",color:C.text,fontSize:13,outline:"none",fontFamily:"Quicksand,sans-serif"};
 const lbl = {fontSize:11,color:C.textMuted,marginBottom:5,display:"block",fontWeight:600,letterSpacing:.5};
 const card = {background:"#fff",border:"1px solid #d4cfc6",borderRadius:4,padding:"18px 20px",marginBottom:16};
+// ============================================================
+// Componente InstitucionalPanel
+// Pegar en src/App.jsx JUSTO ANTES de  function PricingPanel({authUser}) {
+// (usa los mismos helpers globales: C, Btn, useState, useEffect)
+// ============================================================
+function InstitucionalPanel({authUser,onBack}) {
+  var [docentes,setDocentes]=useState(1);
+  var [directivos,setDirectivos]=useState(1);
+  var [colegio,setColegio]=useState((authUser&&authUser.user_metadata&&authUser.user_metadata.school)||"");
+  var [precio,setPrecio]=useState(null);
+  var [calcLoading,setCalcLoading]=useState(false);
+  var [loading,setLoading]=useState(false);
+  var [error,setError]=useState("");
+
+  // Recalcular precio en vivo cada vez que cambian las cantidades
+  useEffect(function(){
+    var total=docentes+directivos;
+    if(total<1){setPrecio(null);return;}
+    setCalcLoading(true);
+    fetch("/api/subscribe-institucional?docentes="+docentes+"&directivos="+directivos)
+      .then(function(r){return r.json();})
+      .then(function(d){ if(!d.error) setPrecio(d); setCalcLoading(false); })
+      .catch(function(){setCalcLoading(false);});
+  },[docentes,directivos]);
+
+  function fmt(n){ return "$"+Number(n).toLocaleString("es-AR"); }
+
+  async function contratar(){
+    if(!authUser){setError("Tenes que iniciar sesion.");return;}
+    if(!colegio.trim()){setError("Indicá el nombre de la institución.");return;}
+    var total=docentes+directivos;
+    if(total<1){setError("Indicá al menos una cuenta.");return;}
+    setLoading(true);setError("");
+    try{
+      var res=await fetch("/api/subscribe-institucional",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          institution_name:colegio,
+          payer_email:authUser.email,
+          user_id:authUser.id,
+          docentes:docentes,
+          directivos:directivos,
+        }),
+      });
+      var data=await res.json();
+      if(!res.ok) throw new Error(data.error||"No se pudo crear la suscripción");
+      window.open(data.init_point,"_blank");
+    }catch(e){setError("Error: "+e.message);}
+    setLoading(false);
+  }
+
+  var totalCuentas=docentes+directivos;
+  var descLabel = precio ? (precio.descuento>0 ? "-"+Math.round(precio.descuento*100)+"% por volumen" : "Sin descuento (desde 5 cuentas hay descuento)") : "";
+
+  return (
+    <div style={{maxWidth:640,margin:"0 auto"}}>
+      <div style={{marginBottom:20}}>
+        <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.textMuted,fontSize:13,fontFamily:"Quicksand,sans-serif"}} onClick={onBack}>
+          <i className="ti ti-arrow-left" style={{fontSize:13,marginRight:5}}/>Volver a planes
+        </button>
+      </div>
+      <div style={{textAlign:"center",marginBottom:28}}>
+        <h2 style={{fontSize:24,fontWeight:700,color:C.text,marginBottom:8}}>Plan Institucional</h2>
+        <p style={{color:C.textMuted,fontSize:14}}>Elegí cuántas cuentas necesitás. El precio baja cuanto más cuentas contratás.</p>
+      </div>
+
+      <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:26}}>
+        {/* Nombre institución */}
+        <label style={{display:"block",fontSize:12,fontWeight:700,color:C.text,marginBottom:6}}>NOMBRE DE LA INSTITUCIÓN</label>
+        <input value={colegio} onChange={function(e){setColegio(e.target.value);}} placeholder="Ej: Colegio San Martín"
+          style={{width:"100%",padding:"10px 12px",borderRadius:4,border:"1px solid "+C.border,fontSize:14,fontFamily:"Quicksand,sans-serif",marginBottom:22,boxSizing:"border-box"}}/>
+
+        {/* Contadores */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:22}}>
+          <Contador label="Cuentas Docente" sub="$12.000 c/u" color={C.blue} value={docentes} setValue={setDocentes} min={0}/>
+          <Contador label="Cuentas Directivo" sub="$16.000 c/u" color={C.accent} value={directivos} setValue={setDirectivos} min={0}/>
+        </div>
+
+        {/* Resumen de precio */}
+        <div style={{background:C.bg,borderRadius:4,padding:"16px 18px",marginBottom:22}}>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:C.textMuted,marginBottom:6}}>
+            <span>Total de cuentas</span><span style={{fontWeight:700,color:C.text}}>{totalCuentas}</span>
+          </div>
+          {precio&&(
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:C.textMuted,marginBottom:6}}>
+              <span>Subtotal</span><span>{fmt(precio.subtotal)}</span>
+            </div>
+          )}
+          {precio&&precio.descuento>0&&(
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:C.green,marginBottom:6}}>
+              <span>{descLabel}</span><span>-{fmt(precio.subtotal-precio.total)}</span>
+            </div>
+          )}
+          <div style={{borderTop:"1px solid "+C.border,marginTop:8,paddingTop:10,display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
+            <span style={{fontSize:14,fontWeight:700,color:C.text}}>Total mensual</span>
+            <span style={{fontSize:26,fontWeight:700,color:C.accent}}>{calcLoading?"...":precio?fmt(precio.total):"-"}</span>
+          </div>
+          {precio&&precio.descuento===0&&totalCuentas>0&&totalCuentas<5&&(
+            <div style={{fontSize:11,color:C.textDim,marginTop:8,textAlign:"center"}}>Desde 5 cuentas: 10% · desde 11: 17% · desde 21: 25%</div>
+          )}
+        </div>
+
+        {error&&<div style={{background:"#fee2e2",border:"1px solid #fca5a5",borderRadius:4,padding:"10px 14px",marginBottom:16,color:C.red,fontSize:13}}>{error}</div>}
+
+        <button style={{width:"100%",padding:"13px 0",borderRadius:4,border:"none",cursor:(loading||totalCuentas<1)?"not-allowed":"pointer",fontWeight:700,fontSize:15,fontFamily:"Quicksand,sans-serif",background:C.accent,color:"#fff",opacity:(loading||totalCuentas<1)?.6:1}}
+          onClick={contratar} disabled={loading||totalCuentas<1}>
+          {loading?"Procesando...":"Contratar y pagar con MercadoPago"}
+        </button>
+        <p style={{textAlign:"center",color:C.textDim,fontSize:11,marginTop:14,lineHeight:1.5}}>
+          Autorizás un débito mensual automático. Después del pago vas a poder cargar los mails de tus docentes desde el Panel del Directivo.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Contador +/- reutilizable
+function Contador({label,sub,color,value,setValue,min}) {
+  if(min===undefined) min=0;
+  return (
+    <div style={{border:"1px solid "+C.border,borderRadius:4,padding:"14px 16px"}}>
+      <div style={{fontSize:13,fontWeight:700,color:C.text}}>{label}</div>
+      <div style={{fontSize:11,color:C.textMuted,marginBottom:12}}>{sub}</div>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <button style={{width:32,height:32,borderRadius:4,border:"1px solid "+C.border,background:C.card,cursor:"pointer",fontSize:18,color:color,fontWeight:700}}
+          onClick={function(){setValue(Math.max(min,value-1));}}>−</button>
+        <span style={{fontSize:22,fontWeight:700,color:C.text,minWidth:40,textAlign:"center"}}>{value}</span>
+        <button style={{width:32,height:32,borderRadius:4,border:"1px solid "+C.border,background:C.card,cursor:"pointer",fontSize:18,color:color,fontWeight:700}}
+          onClick={function(){setValue(value+1);}}>+</button>
+      </div>
+    </div>
+  );
+}
+
 function PricingPanel({authUser}) {
   var [loading,setLoading]=useState(null);
+  var [showInst,setShowInst]=useState(false);
   var [error,setError]=useState("");
   var [subscription,setSubscription]=useState(null);
   useEffect(function(){
@@ -596,12 +732,9 @@ function PricingPanel({authUser}) {
   async function subscribe(plan) {
     if(!authUser){setError("Tenes que iniciar sesion para suscribirte.");return;}
     if(plan.institutional){
-      setConsultPlan(plan.name);
-      setConsultForm({nombre:(authUser.user_metadata&&authUser.user_metadata.name)||"",cargo:"",colegio:(authUser.user_metadata&&authUser.user_metadata.school)||"",telefono:"",email:authUser.email||"",docentes:""});
-      setConsultSent(false);
-      setConsultModal(true);
-      return;
-    }
+    setShowInst(true);
+    return;
+       }
     setLoading(plan.id);setError("");
     try {
       var res=await fetch("/api/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({plan_id:plan.id,user_email:authUser.email,user_name:(authUser.user_metadata&&authUser.user_metadata.name)||"",user_id:authUser.id})});
@@ -621,6 +754,7 @@ function PricingPanel({authUser}) {
     } catch(e){setError("Error: "+e.message);}
     setCancelLoading(false);
   }
+  if(showInst) return <InstitucionalPanel authUser={authUser} onBack={function(){setShowInst(false);}}/>;
   return (
     <div>
       <div style={{textAlign:"center",marginBottom:32}}>
