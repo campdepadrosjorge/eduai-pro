@@ -771,7 +771,7 @@ function PricingPanel({authUser}) {
         </div>
       )}
       {error&&<div style={{background:"#fee2e2",border:"1px solid #fca5a5",borderRadius:4,padding:"10px 16px",marginBottom:20,color:C.red,fontSize:13}}>{error}</div>}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:16}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
         {plans.map(function(plan){
           return (
             <div key={plan.id} style={{background:C.card,border:"2px solid "+plan.color+"44",borderRadius:4,padding:24,display:"flex",flexDirection:"column"}}>
