@@ -1697,58 +1697,55 @@ useEffect(function(){
         setDataLoading(false);
         dbLoadNotifications(authUser.id).then(setNotifications);
         dbCheckSubscription(authUser.id).then(function(sub){
-          if(!sub){
-            // ¿Fue invitado a una institución? Intentar activar primero.
-            fetch("/api/activar-institucional",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:authUser.id})})
-              .then(function(r){return r.json();})
-              .then(function(act){
-                if(act && act.activated){
-                  // Quedó activado como cuenta institucional
-                  dbCheckSubscription(authUser.id).then(function(ns){
-                    setSubscription(ns);setSubChecked(true);
-                    dbGetUsage(authUser.id).then(function(u){setUsage(u);});
-                  });
-                } else {
-                  // No fue invitado (o ya tiene pago): crear trial normal
-                  dbCreateTrial(authUser.id, authUser.user_metadata && authUser.user_metadata.promo_days).then(function(){
+          function seguirSinInstitucional(){
+            if(!sub){
+              dbCreateTrial(authUser.id, authUser.user_metadata && authUser.user_metadata.promo_days).then(function(){
+                dbCheckSubscription(authUser.id).then(function(ns){
+                  setSubscription(ns);setSubChecked(true);
+                  dbGetUsage(authUser.id).then(function(u){setUsage(u);});
+                });
+              });
+            } else if(sub.is_trial){
+              fetch("/api/verificar-suscripcion",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:authUser.id})})
+                .then(function(r){return r.json();})
+                .then(function(vr){
+                  if(vr && vr.activated){
                     dbCheckSubscription(authUser.id).then(function(ns){
                       setSubscription(ns);setSubChecked(true);
                       dbGetUsage(authUser.id).then(function(u){setUsage(u);});
                     });
-                  });
-                }
-              })
-              .catch(function(){
-                // Si el endpoint falla, crear trial normal (no bloquear el login)
-                dbCreateTrial(authUser.id, authUser.user_metadata && authUser.user_metadata.promo_days).then(function(){
-                  dbCheckSubscription(authUser.id).then(function(ns){
-                    setSubscription(ns);setSubChecked(true);
+                  } else {
+                    setSubscription(sub);setSubChecked(true);
                     dbGetUsage(authUser.id).then(function(u){setUsage(u);});
-                  });
+                  }
+                })
+                .catch(function(){
+                  setSubscription(sub);setSubChecked(true);
+                  dbGetUsage(authUser.id).then(function(u){setUsage(u);});
                 });
-              });
+            } else {
+              setSubscription(sub);setSubChecked(true);
+              dbGetUsage(authUser.id).then(function(u){setUsage(u);});
+            }
           }
-          else if(sub.is_trial){
-            // Tiene trial: verificar si pago y hay que activarlo
-            fetch("/api/verificar-suscripcion",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:authUser.id})})
+          // Si NO tiene suscripcion o tiene TRIAL, intentar activar institucional primero.
+          if(!sub || sub.is_trial){
+            fetch("/api/activar-institucional",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:authUser.id})})
               .then(function(r){return r.json();})
-              .then(function(vr){
-                if(vr && vr.activated){
+              .then(function(act){
+                if(act && act.activated){
                   dbCheckSubscription(authUser.id).then(function(ns){
                     setSubscription(ns);setSubChecked(true);
                     dbGetUsage(authUser.id).then(function(u){setUsage(u);});
                   });
                 } else {
-                  setSubscription(sub);setSubChecked(true);
-                  dbGetUsage(authUser.id).then(function(u){setUsage(u);});
+                  seguirSinInstitucional();
                 }
               })
-              .catch(function(){
-                setSubscription(sub);setSubChecked(true);
-                dbGetUsage(authUser.id).then(function(u){setUsage(u);});
-              });
+              .catch(function(){ seguirSinInstitucional(); });
+          } else {
+            seguirSinInstitucional();
           }
-          else{setSubscription(sub);setSubChecked(true);dbGetUsage(authUser.id).then(function(u){setUsage(u);});}
         });
       }).catch(function(){setDataLoading(false);});
   },[authUser]);
