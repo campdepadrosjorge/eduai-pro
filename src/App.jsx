@@ -636,7 +636,7 @@ function InstitucionalPanel({authUser,onBack}) {
       </div>
       <div style={{textAlign:"center",marginBottom:28}}>
         <h2 style={{fontSize:24,fontWeight:700,color:C.text,marginBottom:8}}>Plan Institucional</h2>
-        <p style={{color:C.textMuted,fontSize:14}}>Elegí cuántas cuentas necesitás. El precio baja cuanto más cuentas contratás.</p>
+        <p style={{color:C.textMuted,fontSize:14}}>Elige cuántas cuentas necesitas. El precio baja cuanto más cuentas contratas.</p>
       </div>
 
       <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:26}}>
@@ -2710,8 +2710,8 @@ async function loadChatDoc(file){
                     )}
                                         <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid "+C.border}}>
                       <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:3}}>Ajustar el resultado</div>
-                      <div style={{fontSize:12,color:C.textDim,marginBottom:10}}>Pedí un cambio y la IA lo aplica sin regenerar todo. Ej: "sacá la pregunta 3", "hacé las consignas más simples", "agregá un ejercicio de opción múltiple".</div>
-                      <textarea style={Object.assign({},inp,{height:60,resize:"vertical",marginBottom:10})} value={ajusteText} onChange={function(e){setAjusteText(e.target.value);}} placeholder="Escribí qué querés cambiar..." disabled={ajusteLoading}/>
+                      <div style={{fontSize:12,color:C.textDim,marginBottom:10}}>Pide un cambio y la IA lo aplica sin regenerar todo. Ej: "quita la pregunta 3", "haz las consignas más simples", "agrega un ejercicio de opción múltiple".</div>
+                      <textarea style={Object.assign({},inp,{height:60,resize:"vertical",marginBottom:10})} value={ajusteText} onChange={function(e){setAjusteText(e.target.value);}} placeholder="Escribe qué quieres cambiar..." disabled={ajusteLoading}/>
                       <Btn v="secondary" st={{fontSize:12,padding:"6px 14px"}} onClick={ajustarGeneracion} disabled={ajusteLoading||!ajusteText.trim()}>
                         {ajusteLoading?"Ajustando...":<><i className="ti ti-wand" style={{fontSize:13,marginRight:4}}/>Aplicar ajuste</>}
                       </Btn>

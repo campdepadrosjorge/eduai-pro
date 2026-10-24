@@ -157,7 +157,7 @@ function MisDocentesPanel({ authUser }) {
 
   function quitar(id, status) {
     if (status === "active") {
-      if (!window.confirm("Esta cuenta ya está activa. ¿Seguro que querés quitarla de la institución?")) return;
+      if (!window.confirm("Esta cuenta ya está activa. ¿Seguro que quieres quitarla de la institución?")) return;
     }
     supabase.from("institutional_users").delete().eq("id", id).then(function () { cargar(); });
   }
@@ -168,7 +168,7 @@ function MisDocentesPanel({ authUser }) {
     return (
       <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 6, padding: 28, textAlign: "center" }}>
         <i className="ti ti-building" style={{ fontSize: 40, color: C.textDim, display: "block", marginBottom: 12 }} />
-        <h3 style={{ margin: "0 0 8px", fontSize: 17, color: C.text }}>No tenés un plan institucional activo</h3>
+        <h3 style={{ margin: "0 0 8px", fontSize: 17, color: C.text }}>No tienes un plan institucional activo</h3>
         <p style={{ color: C.textMuted, fontSize: 14, margin: 0 }}>Contratá un plan institucional desde "Planes y Precios" para habilitar cuentas a tus docentes.</p>
       </div>
     );
@@ -755,7 +755,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                   <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
                     <i className="ti ti-speakerphone" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
                     <h3 style={{color:C.textMuted,marginBottom:8}}>El comunicado aparecerá acá</h3>
-                    <p style={{fontSize:13}}>Completá el formulario y generá tu primer comunicado.</p>
+                    <p style={{fontSize:13}}>Completa el formulario y genera tu primer comunicado.</p>
                   </div>
                 )}
               </div>
@@ -835,7 +835,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                   <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
                     <i className="ti ti-file-description" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
                     <h3 style={{color:C.textMuted,marginBottom:8}}>El acta aparecerá acá</h3>
-                    <p style={{fontSize:13}}>Completá el formulario y generá el acta.</p>
+                    <p style={{fontSize:13}}>Completa el formulario y genera el acta.</p>
                   </div>
                 )}
               </div>
@@ -1032,7 +1032,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                   <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
                     <i className="ti ti-users-group" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
                     <h3 style={{color:C.textMuted,marginBottom:8}}>El plan aparecerá acá</h3>
-                    <p style={{fontSize:13}}>Describí la situación y generá el plan de acompañamiento.</p>
+                    <p style={{fontSize:13}}>Describe la situación y genera el plan de acompañamiento.</p>
                   </div>
                 )}
               </div>
@@ -1078,7 +1078,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                   <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
                     <i className="ti ti-clipboard-text" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
                     <h3 style={{color:C.textMuted,marginBottom:8}}>El resultado aparecerá acá</h3>
-                    <p style={{fontSize:13}}>Subí la normativa, elegí qué necesitás y procesá.</p>
+                    <p style={{fontSize:13}}>Sube la normativa, elige qué necesitas y procesa.</p>
                   </div>
                 )}
               </div>
