@@ -1410,6 +1410,7 @@ function AuthScreen({onAuth}) {
   var [school,setSchool]=useState("");
   var [promoCode,setPromoCode]=useState("");
   var [role,setRole]=useState("docente");
+  var [pais,setPais]=useState("AR");
   var [schoolSuggestions,setSchoolSuggestions]=useState([]);
   var [loading,setLoading]=useState(false);
   var [error,setError]=useState("");
@@ -1433,7 +1434,7 @@ function AuthScreen({onAuth}) {
       if(!promo){ setError("El codigo de promocion no es valido."); setLoading(false); return; }
       promoDays = promo.trial_days;
     }
-    var result=await supabase.auth.signUp({email,password,options:{data:{name,school:school||"",role,promo_days:promoDays}}});
+    var result=await supabase.auth.signUp({email,password,options:{data:{name,school:school||"",role,pais,promo_days:promoDays}}});
     if(result.error){setError(result.error.message);}
     else{
       if(school) dbAddOrUpdateSchool(school,"").catch(function(){});
@@ -1476,6 +1477,16 @@ function AuthScreen({onAuth}) {
                   return <button key={r.id} type="button" style={{flex:1,padding:"9px 0",borderRadius:4,border:"1px solid "+(role===r.id?C.accent:C.border),background:role===r.id?C.accentBg:"transparent",color:role===r.id?C.accent:C.textMuted,cursor:"pointer",fontWeight:role===r.id?700:400,fontSize:13,fontFamily:"Quicksand,sans-serif"}} onClick={function(){setRole(r.id);}}>{r.label}</button>;
                 })}
               </div>
+              <label style={lbl}>PAÍS</label>
+              <select style={Object.assign({},inp,{marginBottom:12})} value={pais} onChange={function(e){setPais(e.target.value);}}>
+                <option value="AR">Argentina</option>
+                <option value="MX">México</option>
+                <option value="CL">Chile</option>
+                <option value="CO">Colombia</option>
+                <option value="PE">Perú</option>
+                <option value="UY">Uruguay</option>
+                <option value="OT">Otro país</option>
+              </select>
               <label style={lbl}>NOMBRE</label>
               <input style={Object.assign({},inp,{marginBottom:12})} value={name} onChange={function(e){setName(e.target.value);}} placeholder="Prof. Garcia"/>
               <label style={lbl}>COLEGIO (opcional)</label>
