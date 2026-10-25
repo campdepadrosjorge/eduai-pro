@@ -673,6 +673,11 @@ function InstitucionalPanel({authUser,onBack}) {
     if(!colegio.trim()){setError("Indicá el nombre de la institución.");return;}
     var total=docentes+directivos;
     if(total<1){setError("Indicá al menos una cuenta.");return;}
+    var _paisInst=(authUser.user_metadata&&authUser.user_metadata.pais)||"AR";
+    if(_paisInst!=="AR"){
+      setError("Por ahora el pago online esta disponible solo en Argentina. Escribinos a hola@aulaxpro.com con la cantidad de cuentas que necesitas y coordinamos la activacion para tu institucion. Muy pronto habilitamos el pago automatico en tu pais.");
+      return;
+    }
     setLoading(true);setError("");
     try{
       var res=await fetch("/api/subscribe-institucional",{
