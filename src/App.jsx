@@ -817,6 +817,11 @@ function PricingPanel({authUser}) {
     setShowInst(true);
     return;
        }
+    // Cobro online solo disponible en Argentina por ahora. Otros paises: contacto directo.
+    if(_pais!=="AR"){
+      setError("Por ahora el pago online esta disponible solo en Argentina. Estas en tu prueba gratuita: para activar tu plan, escribinos a hola@aulaxpro.com y te ayudamos a abonar. Muy pronto habilitamos el pago automatico en tu pais.");
+      return;
+    }
     setLoading(plan.id);setError("");
     try {
       var res=await fetch("/api/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({plan_id:plan.id,user_email:authUser.email,user_name:(authUser.user_metadata&&authUser.user_metadata.name)||"",user_id:authUser.id})});
@@ -876,7 +881,7 @@ function PricingPanel({authUser}) {
                 })}
               </div>
               <button style={{width:"100%",padding:"11px 0",borderRadius:4,border:"none",cursor:loading===plan.id?"not-allowed":"pointer",fontWeight:700,fontSize:14,fontFamily:"Quicksand,sans-serif",background:plan.color,color:"#fff",opacity:loading===plan.id?.7:1}} onClick={function(){subscribe(plan);}} disabled={loading===plan.id}>
-                {loading===plan.id?"Procesando...":plan.institutional?"Consultar":"Suscribirme"}
+                {loading===plan.id?"Procesando...":plan.institutional?"Consultar":(_pais==="AR"?"Suscribirme":"Activar mi plan")}
               </button>
             </div>
           );
