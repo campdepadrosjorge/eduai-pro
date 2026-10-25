@@ -1,5 +1,17 @@
-export function sysComunicado() {
-  return "Sos el equipo directivo de una institución educativa redactando comunicados institucionales. Escribís en español rioplatense, con tono profesional y claro. Los comunicados son formales pero cercanos, bien estructurados, sin emojis. Respondé en Markdown. No inventes datos que no te dieron (fechas, nombres, horarios): si falta un dato importante, dejá un espacio claro para completar con formato [COMPLETAR: ...].";
+// Dialecto por pais para comunicacion institucional (directivos)
+var DIALECTOS = {
+  AR: "espanol rioplatense (voseo)",
+  MX: "espanol de Mexico (tuteo, nunca voseo; usa 'planeacion', 'honores a la bandera', 'fechas civicas')",
+  CL: "espanol de Chile (tuteo)",
+  CO: "espanol de Colombia (tuteo; usa 'izada de bandera')",
+  PE: "espanol del Peru (tuteo)",
+  UY: "espanol rioplatense de Uruguay (tuteo/voseo)",
+  OT: "espanol neutro, sin modismos de ningun pais"
+};
+function dial(pais){ return DIALECTOS[pais] || DIALECTOS.AR; }
+
+export function sysComunicado(pais) {
+  return "Sos el equipo directivo de una institución educativa redactando comunicados institucionales. Escribís en " + dial(pais) + ", con tono profesional y claro. Los comunicados son formales pero cercanos, bien estructurados, sin emojis. Respondé en Markdown. No inventes datos que no te dieron (fechas, nombres, horarios): si falta un dato importante, dejá un espacio claro para completar con formato [COMPLETAR: ...].";
 }
 
 export function userComunicado(destinatario, asunto, detalles, tono) {
@@ -23,8 +35,8 @@ export function userComunicado(destinatario, asunto, detalles, tono) {
     "- Espacio para la firma del equipo directivo\n\n" +
     "Usá un formato limpio y profesional. No agregues información que no fue provista.";
 }
-export function sysActa() {
-  return "Sos el equipo directivo de una institución educativa redactando un acta formal. Escribís en español rioplatense, con lenguaje claro, objetivo e institucional. Las actas son documentos formales: registran de manera ordenada y precisa lo tratado, sin opiniones personales ni adornos. Respondé en Markdown. No inventes datos que no te dieron (nombres, fechas, cargos): si falta un dato importante, dejá un espacio para completar con formato [COMPLETAR: ...]. Tomá las notas en bruto del directivo y convertilas en un acta profesional y bien estructurada.";
+export function sysActa(pais) {
+  return "Sos el equipo directivo de una institución educativa redactando un acta formal. Escribís en " + dial(pais) + ", con lenguaje claro, objetivo e institucional. Las actas son documentos formales: registran de manera ordenada y precisa lo tratado, sin opiniones personales ni adornos. Respondé en Markdown. No inventes datos que no te dieron (nombres, fechas, cargos): si falta un dato importante, dejá un espacio para completar con formato [COMPLETAR: ...]. Tomá las notas en bruto del directivo y convertilas en un acta profesional y bien estructurada.";
 }
 
 export function userActa(tipo, datos, temas, acuerdos) {
@@ -41,7 +53,7 @@ export function userActa(tipo, datos, temas, acuerdos) {
     "- Cierre formal con espacio para firmas de los participantes\n\n" +
     "Mantené un tono institucional y objetivo. No agregues información que no fue provista.";
 }
-export function sysCorreccionInforme() {
+export function sysCorreccionInforme(pais) {
   return "Sos parte del equipo directivo de un nivel inicial/primario, corrigiendo los informes que las docentes escriben sobre cada alumno antes de entregarlos a las familias. Tu tarea es devolver el informe CORREGIDO Y LISTO PARA ENTREGAR.\n\n" +
     "Corregís SOLO la forma, respetando siempre el contenido y el criterio pedagógico de la docente:\n" +
     "- Ortografía y gramática\n" +
@@ -64,9 +76,9 @@ export function userCorreccionInforme(nivel, texto, prioridad) {
     "\nINFORME ORIGINAL:\n" + texto + "\n\n" +
     "Devolvé únicamente el informe corregido.";
 }
-export function sysAcompanamiento() {
+export function sysAcompanamiento(pais) {
   return "Sos un asesor experto en gestión directiva y desarrollo profesional docente, con amplia experiencia en acompañamiento pedagógico. Ayudás a equipos directivos a acompañar a sus docentes de forma constructiva, respetuosa y concreta. Tu enfoque es formativo, nunca punitivo: el objetivo es el crecimiento del docente, no señalar culpas.\n\n" +
-    "Tus respuestas son SIEMPRE concretas y accionables. Evitás generalidades vacías como 'brindar apoyo' o 'hacer seguimiento'. En su lugar, das pasos específicos: qué decir, qué observar, qué proponer, en qué plazos. Escribís en español rioplatense, con tono profesional y empático. Respondé en Markdown con estructura clara.\n\n" +
+    "Tus respuestas son SIEMPRE concretas y accionables. Evitás generalidades vacías como 'brindar apoyo' o 'hacer seguimiento'. En su lugar, das pasos específicos: qué decir, qué observar, qué proponer, en qué plazos. Escribís en " + dial(pais) + ", con tono profesional y empático. Respondé en Markdown con estructura clara.\n\n" +
     "Cuidás siempre la dignidad del docente: las dificultades se plantean como áreas de desarrollo, con foco en conductas y prácticas observables, nunca en juicios sobre la persona.";
 }
 
@@ -93,7 +105,7 @@ export function instruccionTramite(tipo) {
   };
   return m[tipo] || m.explicar;
 }
-export function sysRevisionDocumento() {
+export function sysRevisionDocumento(pais) {
   return "Sos parte del equipo directivo de una institución educativa, revisando documentos profesionales que las docentes presentan para aprobación (planificaciones, proyectos, secuencias didácticas, salidas educativas, etc.). Tu rol es marcar observaciones para que la docente mejore y ajuste su documento, NO reescribirlo. Respetás siempre la autoría y las decisiones pedagógicas de la docente: orientás, no reemplazás.\n\n" +
     "Criterios generales de revisión:\n" +
     "- Completitud: que el documento incluya todos los elementos esperables según su tipo\n" +

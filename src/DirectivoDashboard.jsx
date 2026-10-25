@@ -284,6 +284,7 @@ var thSt = { textAlign: "left", padding: "10px 14px", fontSize: 11, fontWeight: 
 var tdSt = { padding: "10px 14px", color: "#111110" };
 
 export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignOut }) {
+  var paisDir = (authUser && authUser.user_metadata && authUser.user_metadata.pais) || "AR";
   var [view,setView] = useState("comunicados");
   var [isMobile,setIsMobile] = useState(typeof window!=="undefined" && window.innerWidth<768);
   var [mobileMenu,setMobileMenu] = useState(false);
@@ -326,7 +327,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
     if(!actTemas.trim()) return;
     setActLoading(true);setActResult("");setActErr("");
     try{
-      var r = await callClaude(sysActa(), [{role:"user",content:userActa(actTipo,actDatos,actTemas,actAcuerdos)}], 3500, function(partial){setActResult(partial);});
+      var r = await callClaude(sysActa(paisDir), [{role:"user",content:userActa(actTipo,actDatos,actTemas,actAcuerdos)}], 3500, function(partial){setActResult(partial);});
       setActResult(r);
     }catch(e){setActErr(msgError(e));}
     setActLoading(false);
@@ -457,7 +458,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
       var texto = await extraerTextoInforme(infFile);
       if(!texto || !texto.trim()) throw new Error("No se pudo extraer texto del documento.");
 
-      var sys = sysCorreccionInforme();
+      var sys = sysCorreccionInforme(paisDir);
       var usr = userCorreccionInforme(infNivel, texto, infPrioridad);
       var r = await callClaude(sys, [{role:"user",content:usr}], 4000);
 
@@ -509,7 +510,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
           }
           if(!texto || !texto.trim()) continue;
 
-          var r = await callClaude(sysCorreccionInforme(), [{role:"user",content:userCorreccionInforme(infNivel, texto, infPrioridad)}], 4000);
+          var r = await callClaude(sysCorreccionInforme(paisDir), [{role:"user",content:userCorreccionInforme(infNivel, texto, infPrioridad)}], 4000);
 
           var nombre = nombreArch.replace(/\.(docx|pdf)$/i,"");
           informes.push({nombre:nombre, textoCorregido:r.trim()});
@@ -538,7 +539,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
     if(!acoSituacion.trim()) return;
     setAcoLoading(true);setAcoResult("");setAcoErr("");
     try{
-      var r = await callClaude(sysAcompanamiento(), [{role:"user",content:userAcompanamiento(acoTipo,acoFoco,acoContexto,acoSituacion)}], 4000, function(partial){setAcoResult(partial);});
+      var r = await callClaude(sysAcompanamiento(paisDir), [{role:"user",content:userAcompanamiento(acoTipo,acoFoco,acoContexto,acoSituacion)}], 4000, function(partial){setAcoResult(partial);});
       setAcoResult(r);
     }catch(e){setAcoErr(msgError(e));}
     setAcoLoading(false);
@@ -610,7 +611,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
     try{
       var texto = await extraerTextoInforme(revFile);
       if(!texto || !texto.trim()) throw new Error("No se pudo extraer texto del documento.");
-      var r = await callClaude(sysRevisionDocumento(), [{role:"user",content:userRevisionDocumento(revTipo, texto, revCriterios)}], 3000);
+      var r = await callClaude(sysRevisionDocumento(paisDir), [{role:"user",content:userRevisionDocumento(revTipo, texto, revCriterios)}], 3000);
       var clean = r.replace(/```json\n?/g,"").replace(/```\n?/g,"").trim();
       var observaciones = JSON.parse(clean);
       var nombre = revFile.name.replace(/\.(docx|doc|pdf)$/i,"");
@@ -652,7 +653,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
           }
           if(!texto || !texto.trim()) continue;
 
-          var r = await callClaude(sysRevisionDocumento(), [{role:"user",content:userRevisionDocumento(revTipo, texto, revCriterios)}], 3000);
+          var r = await callClaude(sysRevisionDocumento(paisDir), [{role:"user",content:userRevisionDocumento(revTipo, texto, revCriterios)}], 3000);
           var clean = r.replace(/```json\n?/g,"").replace(/```\n?/g,"").trim();
           var observaciones = JSON.parse(clean);
           var nombre = nombreArch.replace(/\.(docx|pdf)$/i,"");
@@ -670,7 +671,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
     if(!comAsunto.trim()) return;
     setComLoading(true);setComResult("");setComErr("");
     try{
-      var r = await callClaude(sysComunicado(), [{role:"user",content:userComunicado(comDest,comAsunto,comDetalles,comTono)}], 3000, function(partial){setComResult(partial);});
+      var r = await callClaude(sysComunicado(paisDir), [{role:"user",content:userComunicado(comDest,comAsunto,comDetalles,comTono)}], 3000, function(partial){setComResult(partial);});
       setComResult(r);
     }catch(e){setComErr(msgError(e));}
     setComLoading(false);
