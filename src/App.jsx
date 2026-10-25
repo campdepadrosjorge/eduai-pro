@@ -776,6 +776,18 @@ function Contador({label,sub,color,value,setValue,min}) {
   );
 }
 
+// Precios por pais (visual). Argentina = piso validado; techo < USD 20.
+var PRECIOS = {
+  AR: { sym:"$",  suf:" ARS", docente:"12.000", directivo:"16.000", desdeDoc:"12.000", period:"por mes", periodInst:"por cuenta / mes" },
+  MX: { sym:"$",  suf:" MXN", docente:"249",    directivo:"329",    desdeDoc:"249",    period:"por mes", periodInst:"por cuenta / mes" },
+  CL: { sym:"$",  suf:" CLP", docente:"9.900",  directivo:"12.900", desdeDoc:"9.900",  period:"por mes", periodInst:"por cuenta / mes" },
+  CO: { sym:"$",  suf:" COP", docente:"39.900", directivo:"52.900", desdeDoc:"39.900", period:"por mes", periodInst:"por cuenta / mes" },
+  PE: { sym:"S/ ",suf:" PEN", docente:"39",     directivo:"52",     desdeDoc:"39",     period:"por mes", periodInst:"por cuenta / mes" },
+  UY: { sym:"$",  suf:" USD", docente:"11",     directivo:"15",     desdeDoc:"11",     period:"por mes", periodInst:"por cuenta / mes" },
+  OT: { sym:"US$ ",suf:"",    docente:"11",     directivo:"15",     desdeDoc:"11",     period:"per month", periodInst:"per account / month" }
+};
+function preciosPais(pais){ return PRECIOS[pais] || PRECIOS.AR; }
+
 function PricingPanel({authUser}) {
   var [loading,setLoading]=useState(null);
   var [showInst,setShowInst]=useState(false);
@@ -792,10 +804,12 @@ function PricingPanel({authUser}) {
   var [cancelLoading,setCancelLoading]=useState(false);
   var [cancelConfirm,setCancelConfirm]=useState(false);
   var [cancelDone,setCancelDone]=useState(false);
+  var _pais=(authUser&&authUser.user_metadata&&authUser.user_metadata.pais)||"AR";
+  var _pr=preciosPais(_pais);
   var plans=[
-    {id:"e62d30a047a8442581b2a5b94b470577",name:"Docente",price:"$12.000",period:"por mes",users:1,color:C.blue,features:["Generador IA (8 tipos)","Multimedia + Imagenes","Chat Docente","Corrector de TPs","Exportacion Word y PDF","Biblioteca personal"]},
-    {id:"d1ee77dd48f44b0f98d8b3ca1baa774e",name:"Directivo",price:"$16.000",period:"por mes",users:1,color:C.accent,features:["Todo lo del plan Docente","Panel de Directivos","Comunicados y Actas","Correccion de informes","Grabacion y transcripcion de reuniones"]},
-    {id:"institucional",name:"Institucional",price:"Desde $12.000",period:"por cuenta / mes",users:999,color:C.green,institutional:true,features:["Cuentas para todo tu equipo","Precio por cantidad de cuentas","Descuentos por volumen","Panel admin institucional","Soporte dedicado"]},
+    {id:"e62d30a047a8442581b2a5b94b470577",name:"Docente",price:_pr.sym+_pr.docente+_pr.suf,period:_pr.period,users:1,color:C.blue,features:["Generador IA (8 tipos)","Multimedia + Imagenes","Chat Docente","Corrector de TPs","Exportacion Word y PDF","Biblioteca personal"]},
+    {id:"d1ee77dd48f44b0f98d8b3ca1baa774e",name:"Directivo",price:_pr.sym+_pr.directivo+_pr.suf,period:_pr.period,users:1,color:C.accent,features:["Todo lo del plan Docente","Panel de Directivos","Comunicados y Actas","Correccion de informes","Grabacion y transcripcion de reuniones"]},
+    {id:"institucional",name:"Institucional",price:"Desde "+_pr.sym+_pr.desdeDoc+_pr.suf,period:_pr.periodInst,users:999,color:C.green,institutional:true,features:["Cuentas para todo tu equipo","Precio por cantidad de cuentas","Descuentos por volumen","Panel admin institucional","Soporte dedicado"]},
   ];
   async function subscribe(plan) {
     if(!authUser){setError("Tenes que iniciar sesion para suscribirte.");return;}
