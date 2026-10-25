@@ -647,6 +647,7 @@ const card = {background:"#fff",border:"1px solid #d4cfc6",borderRadius:4,paddin
 // (usa los mismos helpers globales: C, Btn, useState, useEffect)
 // ============================================================
 function InstitucionalPanel({authUser,onBack}) {
+  var _esAR=((authUser&&authUser.user_metadata&&authUser.user_metadata.pais)||"AR")==="AR";
   var [docentes,setDocentes]=useState(1);
   var [directivos,setDirectivos]=useState(1);
   var [colegio,setColegio]=useState((authUser&&authUser.user_metadata&&authUser.user_metadata.school)||"");
@@ -753,10 +754,10 @@ function InstitucionalPanel({authUser,onBack}) {
 
         <button style={{width:"100%",padding:"13px 0",borderRadius:4,border:"none",cursor:(loading||totalCuentas<1)?"not-allowed":"pointer",fontWeight:700,fontSize:15,fontFamily:"Quicksand,sans-serif",background:C.accent,color:"#fff",opacity:(loading||totalCuentas<1)?.6:1}}
           onClick={contratar} disabled={loading||totalCuentas<1}>
-          {loading?"Procesando...":"Contratar y pagar con MercadoPago"}
+          {loading?"Procesando...":(_esAR?"Contratar y pagar con MercadoPago":"Activar mi plan institucional")}
         </button>
         <p style={{textAlign:"center",color:C.textDim,fontSize:11,marginTop:14,lineHeight:1.5}}>
-          Autorizás un débito mensual automático. Después del pago vas a poder cargar los mails de tus docentes desde el Panel del Directivo.
+          {_esAR?"Autorizás un débito mensual automático. Después del pago vas a poder cargar los mails de tus docentes desde el Panel del Directivo.":"Estás en tu prueba gratuita. Al activar, coordinamos el pago por hola@aulaxpro.com y ya podés cargar los mails de tus docentes desde el Panel del Directivo."}
         </p>
       </div>
     </div>
@@ -892,7 +893,7 @@ function PricingPanel({authUser}) {
           );
         })}
       </div>
-      <p style={{textAlign:"center",color:C.textDim,fontSize:12,marginTop:24}}>Pagos procesados por MercadoPago</p>
+      <p style={{textAlign:"center",color:C.textDim,fontSize:12,marginTop:24}}>{_pais==="AR"?"Pagos procesados por MercadoPago":"7 días de prueba gratis · Sin tarjeta de crédito"}</p>
      {cancelConfirm&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:20}}>
           <div style={{background:C.surf,border:"1px solid "+C.border,borderRadius:6,padding:26,width:420,maxWidth:"92vw",textAlign:"center"}}>
