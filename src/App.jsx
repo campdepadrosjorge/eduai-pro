@@ -49,11 +49,79 @@ const LEVELS = [
   "Terciario / Universitario","Formacion Docente","Capacitacion Profesional",
 ];
 
-function sysGen(type, subject, level, materials, bibliography) {
+// Contexto educativo por pais (alimenta los prompts para localizar el material)
+var PAISES = {
+  AR: {
+    nombre: "Argentina", dialecto: "espanol rioplatense (voseo)",
+    niveles: "Nivel inicial, Primaria (1 a 6/7), Secundaria (ciclo basico y ciclo orientado)",
+    vocab: "trabajo practico (TP), prueba/evaluacion, carpeta, planificacion, acto escolar, efemerides",
+    ciclo: "ciclo lectivo de marzo a diciembre, con receso invernal en julio",
+    curriculo: "Nucleos de Aprendizajes Prioritarios (NAP) y disenos curriculares jurisdiccionales",
+    calif: "escala 1 a 10, aprobacion habitual en 6 o 7 segun jurisdiccion"
+  },
+  MX: {
+    nombre: "Mexico", dialecto: "espanol de Mexico (tuteo, voseo nunca)",
+    niveles: "Preescolar, Primaria (1 a 6), Secundaria (1 a 3), Media superior (preparatoria/bachillerato)",
+    vocab: "actividad/tarea/proyecto, examen, cuaderno/libreta, planeacion, honores a la bandera, fechas civicas",
+    ciclo: "ciclo escolar de septiembre a julio, con registro de calificaciones en noviembre, marzo y julio",
+    curriculo: "Nueva Escuela Mexicana (NEM): campos formativos (Lenguajes; Saberes y pensamiento cientifico; Etica, naturaleza y sociedades; De lo humano y lo comunitario) y ejes articuladores. Usa 'planeacion' y 'situaciones de aprendizaje'",
+    calif: "escala 5 a 10, con 6 como minimo aprobatorio"
+  },
+  CL: {
+    nombre: "Chile", dialecto: "espanol de Chile (tuteo)",
+    niveles: "Educacion parvularia, Ensenanza basica (1 a 8), Ensenanza media (1 a 4)",
+    vocab: "guia/trabajo, prueba, cuaderno, planificacion, efemerides",
+    ciclo: "ano escolar de marzo a diciembre",
+    curriculo: "Bases Curriculares del Mineduc (Objetivos de Aprendizaje, OA)",
+    calif: "escala 1,0 a 7,0, aprobacion en 4,0"
+  },
+  CO: {
+    nombre: "Colombia", dialecto: "espanol de Colombia (tuteo)",
+    niveles: "Preescolar, Basica primaria (1 a 5), Basica secundaria (6 a 9), Media (10 a 11)",
+    vocab: "taller/trabajo, evaluacion, cuaderno, planeacion, izada de bandera",
+    ciclo: "calendario A (febrero a noviembre) o B (septiembre a junio) segun region",
+    curriculo: "Estandares Basicos de Competencias y Derechos Basicos de Aprendizaje (DBA) del MEN",
+    calif: "escala 1,0 a 5,0, aprobacion en 3,0 (desempeno basico/alto/superior)"
+  },
+  PE: {
+    nombre: "Peru", dialecto: "espanol del Peru (tuteo)",
+    niveles: "Inicial, Primaria (1 a 6), Secundaria (1 a 5)",
+    vocab: "actividad/ficha, evaluacion, cuaderno, planificacion/sesion de aprendizaje, formacion",
+    ciclo: "ano escolar de marzo a diciembre",
+    curriculo: "Curriculo Nacional de Educacion Basica (CNEB): competencias y desempenos del Minedu",
+    calif: "escala literal AD, A, B, C (logro destacado a inicio)"
+  },
+  UY: {
+    nombre: "Uruguay", dialecto: "espanol rioplatense (tuteo/voseo)",
+    niveles: "Educacion inicial, Primaria (1 a 6), Educacion media (ciclo basico y bachillerato)",
+    vocab: "trabajo, prueba/escrito, cuaderno, planificacion, acto",
+    ciclo: "ano lectivo de marzo a diciembre",
+    curriculo: "Marco Curricular Nacional de la ANEP",
+    calif: "escala 1 a 12, aprobacion en 6"
+  },
+  OT: {
+    nombre: "", dialecto: "espanol neutro (tuteo, sin modismos de ningun pais)",
+    niveles: "", vocab: "", ciclo: "", curriculo: "", calif: ""
+  }
+};
+function paisCtx(pais) {
+  var p = PAISES[pais] || PAISES.AR;
+  var partes = ["Dialecto: " + p.dialecto];
+  if (p.niveles) partes.push("Niveles educativos del pais: " + p.niveles);
+  if (p.vocab) partes.push("Vocabulario escolar local: " + p.vocab);
+  if (p.ciclo) partes.push("Calendario: " + p.ciclo);
+  if (p.curriculo) partes.push("Marco curricular: " + p.curriculo);
+  if (p.calif) partes.push("Calificacion: " + p.calif);
+  var head = p.nombre ? ("CONTEXTO DEL PAIS (" + p.nombre + "): genera el material usando la terminologia, el curriculo y el calendario de este pais, de modo que un docente local lo sienta propio.\n") : "CONTEXTO: usa espanol neutro sin modismos de ningun pais.\n";
+  return head + partes.join(". ") + ".";
+}
+
+function sysGen(type, subject, level, materials, bibliography, pais) {
   var ctx = "Materia: \"" + subject + "\" | Nivel: " + level + "." +
     (materials ? "\n\nPrograma de la materia:\n" + materials : "") +
     (bibliography ? "\n\nBibliografia de referencia:\n" + bibliography.slice(0, 8000) : "");
-  var base = "Sos un docente experto con 20 anos de experiencia en " + subject + " nivel " + level + ", especializado en diseno de materiales educativos de alta calidad. Usa el nivel educativo tal como se te indica, sin agregar rangos de grados o anos especificos (como '4to a 6to'), ya que la organizacion de grados varia segun la jurisdiccion y el pais. " + ctx;
+  var pctx = paisCtx(pais) + "\n\n";
+  var base = pctx + "Sos un docente experto con 20 anos de experiencia en " + subject + " nivel " + level + ", especializado en diseno de materiales educativos de alta calidad. Usa el nivel educativo tal como se te indica, sin agregar rangos de grados o anos especificos (como '4to a 6to'), ya que la organizacion de grados varia segun la jurisdiccion y el pais. " + ctx;
   var p = {
     planclase:    base + "\n\nTu tarea es crear un PLAN DE CLASE de excelencia que un docente pueda llevar directamente al aula, pensado con criterio pedagogico real y no como un formulario a completar. Un buen plan de clase tiene una secuencia didactica clara (inicio, desarrollo y cierre) con tiempos, objetivos bien formulados, y consignas concretas para los alumnos. DesarrollÃ¡ bien lo importante y decidÃ­ con criterio que incluir segun el tema; no fuerces secciones de relleno. Como minimo deben quedar claros: los objetivos, la secuencia didactica con momentos y tiempos, y como se evalua.",
     actividad:   base + "\n\nTu tarea es crear una ACTIVIDAD DIDACTICA de excelencia, lista para usar en el aula y pensada con criterio pedagogico real, no como un formulario a completar. Una buena actividad es clara, motivadora, bien secuenciada y directamente aplicable; incluye consignas precisas que el alumno entiende sin ayuda, y propone un desafio genuino adecuado al nivel. Decidi vos que secciones y en que profundidad segun lo que el tema realmente necesita, priorizando la calidad y la usabilidad por sobre la exhaustividad. No fuerces secciones que no aporten. Como minimo, la actividad debe dejar claros: los objetivos de aprendizaje, el desarrollo paso a paso, y como se evalua.",
@@ -64,10 +132,11 @@ function sysGen(type, subject, level, materials, bibliography) {
     guia:         base + "\n\nTu tarea es crear GUIAS DE ESTUDIO completas y autonomas. IncluÃ­ siempre: objetivos de aprendizaje, mapa conceptual en texto, preguntas orientadoras antes de cada seccion, desarrollo por unidades con ejemplos, actividades de comprension lectora integradas, cuadros comparativos, autoevaluacion con respuestas, estrategias de repaso y memoria, recursos adicionales sugeridos.",
     adaptado:     base + "\n\nSos especialista en educacion inclusiva y NEE con experiencia en adaptaciones curriculares. Tu tarea es crear materiales adaptados especificos, practicos y listos para usar con un alumno concreto.",
   };
-  return (p[type] || base) + "\n\nResponde siempre en espanol rioplatense. Usa Markdown con estructura visual clara (tablas, listas, encabezados). El material debe ser de calidad profesional, listo para usar sin modificaciones.";
+  var pp = PAISES[pais] || PAISES.AR;
+  return (p[type] || base) + "\n\nResponde siempre en " + pp.dialecto + ". Usa Markdown con estructura visual clara (tablas, listas, encabezados). El material debe ser de calidad profesional, listo para usar sin modificaciones.";
 }
 
-function userGen(type, topic, diff, extra, subject, docText) {
+function userGen(type, topic, diff, extra, subject, docText, pais) {
   var docCtx = docText ? "\n\nDOCUMENTO DE CONTEXTO (usÃ¡ este material como base para generar el contenido, respetando su enfoque, vocabulario y nivel):\n" + docText.slice(0, 8000) : "";
   var e = (extra ? "\n\nInstrucciones adicionales del docente: " + extra : "") + docCtx;
   var makecodeText = (topic + " " + (extra || "")).toLowerCase();
@@ -1936,8 +2005,9 @@ useEffect(function(){
     if(!hasBudget){setBudgetExceeded(true);return;}
     setGenLoading(true);setGenResult("");setGenSaved(false);setGenErr("");setMakeCodeUrl(null);setActImgUrl(null);
     try{
-      var sys=sysGen(genType,curSubj.name,genLevel,curSubj.materials,curSubj.bibliography);
-      var usr=userGen(genType,genTopic,genDiff,genExtra,curSubj,genDocText);
+      var pais=(authUser.user_metadata&&authUser.user_metadata.pais)||"AR";
+      var sys=sysGen(genType,curSubj.name,genLevel,curSubj.materials,curSubj.bibliography,pais);
+      var usr=userGen(genType,genTopic,genDiff,genExtra,curSubj,genDocText,pais);
       var maxTokPorTipo={ material:16000, guia:16000, planclase:12000, secuencia:14000, presentacion:12000, actividad:10000, evaluacion:16000, rubrica:6000, adaptado:12000 };
       var maxTok=maxTokPorTipo[genType]||10000;
       var r=await callClaude(sys,[{role:"user",content:usr}],maxTok,false,function(partial){
@@ -1967,7 +2037,8 @@ useEffect(function(){
     if(!hasBudget){setBudgetExceeded(true);return;}
     setAjusteLoading(true);setGenErr("");
     try{
-      var sys=sysGen(genType,curSubj.name,genLevel,curSubj.materials,curSubj.bibliography);
+      var pais=(authUser.user_metadata&&authUser.user_metadata.pais)||"AR";
+      var sys=sysGen(genType,curSubj.name,genLevel,curSubj.materials,curSubj.bibliography,pais);
       var usr="Este es un contenido que generaste antes:\n\n"+genResult+"\n\n---\n\nEl docente pide el siguiente ajuste: "+ajusteText+"\n\nDevolve el contenido COMPLETO con ese ajuste aplicado, manteniendo todo lo demas igual y el mismo formato. No expliques los cambios, devolve solo el contenido corregido.";
       var maxTokPorTipo={ material:16000, guia:16000, planclase:12000, secuencia:14000, presentacion:12000, actividad:10000, evaluacion:16000, rubrica:6000, adaptado:12000 };
       var maxTok=maxTokPorTipo[genType]||10000;
@@ -3717,7 +3788,8 @@ async function loadChatDoc(file){
                                 var materiasCtx=members.map(function(m){return m.subject_name;}).filter(Boolean).join(", ");
                                 var gt3=GEN_TYPES.find(function(g){return g.id===(projectGenResult.type||"actividad");});
                                 var sys="Sos experto en proyectos interdisciplinarios. Materia del docente: "+(curSubj?curSubj.name:"General")+". Materias colaboradoras: "+materiasCtx+". Responde en espanol rioplatense con Markdown.";
-                                var usr=userGen(projectGenResult.type||"actividad",projectGenResult.topic,"Intermedio","Proyecto interdisciplinario que conecta: "+(curSubj?curSubj.name:"")+(materiasCtx?" con "+materiasCtx:""),curSubj);
+                                var paisP=(authUser.user_metadata&&authUser.user_metadata.pais)||"AR";
+                                var usr=userGen(projectGenResult.type||"actividad",projectGenResult.topic,"Intermedio","Proyecto interdisciplinario que conecta: "+(curSubj?curSubj.name:"")+(materiasCtx?" con "+materiasCtx:""),curSubj,null,paisP);
                                 var r=await callClaude(sys,[{role:"user",content:usr}]);
                                 await dbAddProjectContent(authUser.id,currentProject.id,{subject_name:curSubj?curSubj.name:"General",type:projectGenResult.type||"actividad",type_name:gt3?gt3.label:"Contenido",title:projectGenResult.topic,content:r});
                                 var updated=await dbLoadProjectContents(currentProject.id);
