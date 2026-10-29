@@ -137,13 +137,144 @@ function SimpleCrud({ uid, tabla, titulo, singular, campos }) {
   );
 }
 
-// ---------- Jornada (placeholder Fase 1, se completa después) ----------
+// ---------- Jornada: turnos + dias + modulos (bloques y recreos) ----------
 function JornadaTab({ uid }) {
+  var [jornadas, setJornadas] = useState([]);
+  var [modulos, setModulos] = useState({});   // { jornada_id: [modulos] }
+  var [loading, setLoading] = useState(true);
+
+  function cargar() {
+    if(!uid) return;
+    setLoading(true);
+    supabase.from("hor_jornadas").select("*").eq("owner_id",uid).order("turno",{ascending:true}).then(function(rj){
+      var js=rj.data||[];
+      setJornadas(js);
+      if(js.length===0){ setModulos({}); setLoading(false); return; }
+      supabase.from("hor_modulos").select("*").eq("owner_id",uid).order("orden",{ascending:true}).then(function(rm){
+        var byJ={};
+        (rm.data||[]).forEach(function(m){ (byJ[m.jornada_id]=byJ[m.jornada_id]||[]).push(m); });
+        setModulos(byJ); setLoading(false);
+      });
+    });
+  }
+  useEffect(cargar, [uid]);
+
+  function crearTurno(turno, nombre) {
+    supabase.from("hor_jornadas").insert({owner_id:uid,turno:turno,nombre:nombre,dias:"Lunes,Martes,Miercoles,Jueves,Viernes",hora_inicio:turno==="manana"?"08:00":"13:00"}).then(function(){cargar();});
+  }
+  function borrarTurno(id) {
+    supabase.from("hor_jornadas").delete().eq("id",id).then(function(){cargar();});
+  }
+
+  var tieneM = jornadas.some(function(j){return j.turno==="manana";});
+  var tieneT = jornadas.some(function(j){return j.turno==="tarde";});
+
+  if(loading) return <div style={{color:C.textMuted,fontSize:13}}>Cargando…</div>;
+
   return (
     <div>
       <h3 style={{fontSize:17,fontWeight:700,color:C.text,marginBottom:4}}>Jornada escolar</h3>
-      <p style={{fontSize:13,color:C.textMuted,marginBottom:16}}>Configurá los turnos, días y módulos (bloques de clase y recreos). <strong>Esta sección se completa en el próximo paso.</strong></p>
-      <div style={{background:C.accentBg,border:"1px solid "+C.accent,borderRadius:6,padding:16,fontSize:13,color:C.accent}}>En construcción — ya podés cargar materias, cursos, espacios y docentes en las otras pestañas.</div>
+      <p style={{fontSize:13,color:C.textMuted,marginBottom:16}}>Configurá cada turno: días, hora de inicio y los módulos del día (bloques de clase y recreos, en orden).</p>
+
+      {jornadas.length===0 && (
+        <div style={{display:"flex",gap:14,flexWrap:"wrap",marginBottom:18}}>
+          <button onClick={function(){crearTurno("manana","Jornada");}}
+            style={{flex:"1 1 220px",background:C.card,border:"2px solid "+C.border,borderRadius:8,padding:"22px 20px",cursor:"pointer",textAlign:"left",fontFamily:"Quicksand,sans-serif"}}>
+            <i className="ti ti-sun" style={{fontSize:26,color:C.accent,display:"block",marginBottom:8}}/>
+            <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:4}}>Jornada simple</div>
+            <div style={{fontSize:12,color:C.textMuted}}>Un solo turno. Lo más común.</div>
+          </button>
+          <button onClick={function(){crearTurno("manana","Turno mañana");crearTurno("tarde","Turno tarde");}}
+            style={{flex:"1 1 220px",background:C.card,border:"2px solid "+C.border,borderRadius:8,padding:"22px 20px",cursor:"pointer",textAlign:"left",fontFamily:"Quicksand,sans-serif"}}>
+            <i className="ti ti-moon" style={{fontSize:26,color:C.accent,display:"block",marginBottom:8}}/>
+            <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:4}}>Doble jornada</div>
+            <div style={{fontSize:12,color:C.textMuted}}>Turno mañana y turno tarde.</div>
+          </button>
+        </div>
+      )}
+
+      {jornadas.map(function(j){
+        var esSimple = jornadas.length===1 && jornadas[0].turno==="manana";
+        return <TurnoCard key={j.id} jornada={j} modulos={modulos[j.id]||[]} uid={uid} onChange={cargar} onDelete={function(){borrarTurno(j.id);}} simple={esSimple} />;
+      })}
+
+      {jornadas.length===1 && jornadas[0].turno==="manana" ? (
+        <button style={Object.assign({},btnGhost,{marginTop:4})} onClick={function(){crearTurno("tarde","Turno tarde");}}>+ Convertir en doble jornada (agregar turno tarde)</button>
+      ) : (jornadas.length>0 && jornadas.length<2 && (
+        <div style={{marginTop:14}}>
+          {!tieneM && <button style={btnGhost} onClick={function(){crearTurno("manana","Turno mañana");}}>+ Agregar turno mañana</button>}
+          {!tieneT && <button style={btnGhost} onClick={function(){crearTurno("tarde","Turno tarde");}}>+ Agregar turno tarde</button>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TurnoCard({ jornada, modulos, uid, onChange, onDelete, simple }) {
+  var [dias, setDias] = useState(jornada.dias||"");
+  var [horaInicio, setHoraInicio] = useState(jornada.hora_inicio||"08:00");
+  var [savedMsg, setSavedMsg] = useState("");
+
+  function guardarJornada() {
+    supabase.from("hor_jornadas").update({dias:dias,hora_inicio:horaInicio}).eq("id",jornada.id).then(function(){
+      setSavedMsg("Guardado"); setTimeout(function(){setSavedMsg("");},1500);
+    });
+  }
+  function agregarModulo(tipo) {
+    var orden = (modulos.length? Math.max.apply(null,modulos.map(function(m){return m.orden;})) : 0) + 1;
+    supabase.from("hor_modulos").insert({owner_id:uid,jornada_id:jornada.id,orden:orden,tipo:tipo,duracion_minutos:tipo==="recreo"?15:60}).then(function(){onChange();});
+  }
+  function cambiarDuracion(id,val) {
+    supabase.from("hor_modulos").update({duracion_minutos:parseInt(val)||0}).eq("id",id).then(function(){onChange();});
+  }
+  function borrarModulo(id) {
+    supabase.from("hor_modulos").delete().eq("id",id).then(function(){onChange();});
+  }
+
+  return (
+    <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:18,marginBottom:16}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+        <div style={{fontSize:15,fontWeight:700,color:C.accent}}>
+          <i className={"ti "+(jornada.turno==="manana"?"ti-sun":"ti-sunset")} style={{marginRight:6}}/>
+          {simple?"Jornada":(jornada.turno==="manana"?"Turno mañana":"Turno tarde")}
+        </div>
+        <button onClick={onDelete} style={{background:"transparent",border:"none",cursor:"pointer",color:C.red,fontSize:12,fontFamily:"Quicksand,sans-serif"}}>Eliminar turno</button>
+      </div>
+
+      <div style={{display:"flex",gap:12,flexWrap:"wrap",alignItems:"flex-end",marginBottom:16}}>
+        <div style={{flex:"2 1 280px"}}>
+          <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>Días (separados por coma)</label>
+          <input style={inp} value={dias} onChange={function(e){setDias(e.target.value);}} placeholder="Lunes,Martes,Miercoles,Jueves,Viernes" />
+        </div>
+        <div style={{flex:"0 1 120px"}}>
+          <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>Hora de inicio</label>
+          <input style={inp} value={horaInicio} onChange={function(e){setHoraInicio(e.target.value);}} placeholder="08:00" />
+        </div>
+        <button style={btnGhost} onClick={guardarJornada}>Guardar</button>
+        {savedMsg && <span style={{color:C.green,fontSize:12}}>{savedMsg}</span>}
+      </div>
+
+      <div style={{fontSize:12,fontWeight:700,color:C.textMuted,marginBottom:8,textTransform:"uppercase",letterSpacing:.5}}>Módulos del día</div>
+      {modulos.length===0 ? (
+        <div style={{color:C.textDim,fontSize:13,marginBottom:10}}>Agregá los bloques del día en orden (clases y recreos).</div>
+      ) : (
+        <div style={{marginBottom:10}}>
+          {modulos.sort(function(a,b){return a.orden-b.orden;}).map(function(m,i){
+            return (
+              <div key={m.id} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 10px",background:m.tipo==="recreo"?"#fff7ed":C.accentBg,borderRadius:4,marginBottom:5}}>
+                <span style={{fontSize:12,fontWeight:700,color:m.tipo==="recreo"?C.amber:C.accent,minWidth:70}}>{m.tipo==="recreo"?"Recreo":"Clase "+(i+1)}</span>
+                <input style={Object.assign({},inp,{width:70,padding:"5px 8px",fontSize:13})} type="number" value={m.duracion_minutos} onChange={function(e){cambiarDuracion(m.id,e.target.value);}} />
+                <span style={{fontSize:12,color:C.textMuted}}>min</span>
+                <button onClick={function(){borrarModulo(m.id);}} style={{marginLeft:"auto",background:"transparent",border:"none",cursor:"pointer",color:C.red,fontSize:12,fontFamily:"Quicksand,sans-serif"}}>Quitar</button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <div style={{display:"flex",gap:8}}>
+        <button style={Object.assign({},btnGhost,{fontSize:12,padding:"6px 12px"})} onClick={function(){agregarModulo("clase");}}>+ Bloque de clase</button>
+        <button style={Object.assign({},btnGhost,{fontSize:12,padding:"6px 12px"})} onClick={function(){agregarModulo("recreo");}}>+ Recreo</button>
+      </div>
     </div>
   );
 }
