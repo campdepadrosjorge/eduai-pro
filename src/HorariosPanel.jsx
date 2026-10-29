@@ -285,11 +285,179 @@ function CursosTab({ uid }) {
     campos={[{k:"nombre",label:"Nombre (ej: 1°A)",req:true},{k:"anio",label:"Año",tipo:"number"},{k:"division",label:"División"},{k:"cantidad_alumnos",label:"Alumnos",tipo:"number"},{k:"turno",label:"Turno",tipo:"select",opciones:["manana","tarde"]}]} />;
 }
 function DocentesTab({ uid }) {
+  var [docentes,setDocentes]=useState([]);
+  var [jornadas,setJornadas]=useState([]);
+  var [modulos,setModulos]=useState([]);
+  var [loading,setLoading]=useState(true);
+  var [nombre,setNombre]=useState("");
+  var [email,setEmail]=useState("");
+  var [saving,setSaving]=useState(false);
+  var [err,setErr]=useState("");
+  var [editDisp,setEditDisp]=useState(null); // docente al que se le edita disponibilidad
+
+  function cargar(){
+    if(!uid) return;
+    setLoading(true);
+    Promise.all([
+      supabase.from("hor_docentes").select("*").eq("owner_id",uid).order("created_at",{ascending:true}),
+      supabase.from("hor_jornadas").select("*").eq("owner_id",uid),
+      supabase.from("hor_modulos").select("*").eq("owner_id",uid).eq("tipo","clase").order("orden",{ascending:true})
+    ]).then(function(res){
+      setDocentes(res[0].data||[]);
+      setJornadas(res[1].data||[]);
+      setModulos(res[2].data||[]);
+      setLoading(false);
+    });
+  }
+  useEffect(cargar,[uid]);
+
+  function agregar(){
+    setErr("");
+    if(!nombre.trim()){setErr("Poné el nombre del docente");return;}
+    setSaving(true);
+    supabase.from("hor_docentes").insert({owner_id:uid,nombre:nombre.trim(),email:email.trim()||null}).then(function(r){
+      if(r.error)setErr(r.error.message); else {setNombre("");setEmail("");cargar();}
+      setSaving(false);
+    });
+  }
+  function borrar(id){ supabase.from("hor_docentes").delete().eq("id",id).then(function(){cargar();}); }
+
+  // Dias unicos de todas las jornadas
+  var dias = [];
+  jornadas.forEach(function(j){ (j.dias||"").split(",").forEach(function(d){ d=d.trim(); if(d&&dias.indexOf(d)<0)dias.push(d); }); });
+  // Cantidad de modulos de clase (indice 0..n-1)
+  var nModulos = modulos.length;
+
+  if(loading) return <div style={{color:C.textMuted,fontSize:13}}>Cargando…</div>;
+
   return (
     <div>
-      <SimpleCrud uid={uid} tabla="hor_docentes" titulo="Docentes" singular="docente"
-        campos={[{k:"nombre",label:"Nombre",req:true},{k:"email",label:"Email"}]} />
-      <p style={{fontSize:12,color:C.textDim,marginTop:14}}>La disponibilidad horaria de cada docente (grilla por clic) se agrega en el próximo paso.</p>
+      <h3 style={{fontSize:17,fontWeight:700,color:C.text,marginBottom:4}}>Docentes</h3>
+      <p style={{fontSize:13,color:C.textMuted,marginBottom:16}}>Cargá los docentes y marcá en qué bloques está disponible cada uno.</p>
+
+      <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:16,marginBottom:18,display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
+        <div style={{flex:"2 1 200px"}}>
+          <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>Nombre</label>
+          <input style={inp} value={nombre} onChange={function(e){setNombre(e.target.value);}} placeholder="Prof. García"/>
+        </div>
+        <div style={{flex:"2 1 200px"}}>
+          <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>Email (opcional)</label>
+          <input style={inp} value={email} onChange={function(e){setEmail(e.target.value);}} placeholder="garcia@escuela.edu"/>
+        </div>
+        <button style={btnPrimary} onClick={agregar} disabled={saving}>{saving?"Guardando…":"Agregar"}</button>
+      </div>
+      {err && <div style={{color:C.red,fontSize:12,marginBottom:12}}>{err}</div>}
+
+      {docentes.length===0 ? <div style={{color:C.textDim,fontSize:13}}>Todavía no cargaste docentes.</div> : (
+        <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:6,overflow:"hidden"}}>
+          {docentes.map(function(d,idx){
+            var slots = d.disponibilidad ? d.disponibilidad.split(";").filter(Boolean).length : 0;
+            return (
+              <div key={d.id} style={{display:"flex",alignItems:"center",padding:"10px 14px",borderTop:idx>0?"1px solid "+C.border:"none",gap:12}}>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:14,color:C.text,fontWeight:600}}>{d.nombre}</div>
+                  <div style={{fontSize:11,color:C.textDim}}>{d.email||""}{d.email&&" · "}{d.disponibilidad?(slots+" bloques disponibles"):"disponible en todos los bloques"}</div>
+                </div>
+                <button style={Object.assign({},btnGhost,{fontSize:12,padding:"6px 12px"})} onClick={function(){setEditDisp(d);}}>Disponibilidad</button>
+                <button onClick={function(){borrar(d.id);}} style={{background:"transparent",border:"none",cursor:"pointer",color:C.red,fontSize:12,fontFamily:"Quicksand,sans-serif"}}>Quitar</button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {editDisp && (
+        <DisponibilidadModal docente={editDisp} dias={dias} nModulos={nModulos}
+          onClose={function(){setEditDisp(null);}}
+          onSave={function(){ setEditDisp(null); cargar(); }} />
+      )}
+    </div>
+  );
+}
+
+function DisponibilidadModal({ docente, dias, nModulos, onClose, onSave }) {
+  // set de slots marcados "Dia-Modulo"
+  var inicial = {};
+  if(docente.disponibilidad){ docente.disponibilidad.split(";").filter(Boolean).forEach(function(sl){ inicial[sl]=true; }); }
+  var [sel,setSel]=useState(inicial);
+  var [saving,setSaving]=useState(false);
+  var todosLibres = !docente.disponibilidad; // vacio = todos
+
+  function toggle(dia,mod){
+    var k=dia+"-"+mod;
+    var n=Object.assign({},sel);
+    if(n[k]) delete n[k]; else n[k]=true;
+    setSel(n);
+  }
+  function marcarTodo(val){
+    var n={};
+    if(val){ dias.forEach(function(d){ for(var m=0;m<nModulos;m++) n[d+"-"+m]=true; }); }
+    setSel(n);
+  }
+  function guardar(){
+    setSaving(true);
+    var keys=Object.keys(sel);
+    // Si marco TODOS los slots, guardamos vacio (= disponible en todos)
+    var total = dias.length*nModulos;
+    var disp = (keys.length===0 || keys.length===total) ? null : keys.join(";");
+    supabase.from("hor_docentes").update({disponibilidad:disp}).eq("id",docente.id).then(function(){ setSaving(false); onSave(); });
+  }
+
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:20}}>
+      <div style={{background:C.surf,border:"1px solid "+C.border,borderRadius:8,padding:24,maxWidth:"92vw",maxHeight:"88vh",overflow:"auto"}}>
+        <h3 style={{fontSize:16,fontWeight:700,color:C.text,marginBottom:4}}>Disponibilidad — {docente.nombre}</h3>
+        <p style={{fontSize:12,color:C.textMuted,marginBottom:14}}>Marcá los bloques en los que el docente puede dar clase. Verde = disponible.</p>
+
+        {(dias.length===0||nModulos===0) ? (
+          <div style={{color:C.amber,fontSize:13,marginBottom:16}}>Primero configurá la jornada (días y módulos de clase) en la pestaña Jornada.</div>
+        ) : (
+          <div style={{overflowX:"auto",marginBottom:16}}>
+            <table style={{borderCollapse:"collapse"}}>
+              <thead>
+                <tr>
+                  <th style={{padding:6}}></th>
+                  {Array.from({length:nModulos}).map(function(_,m){
+                    return <th key={m} style={{padding:"6px 8px",fontSize:11,color:C.textMuted,fontWeight:700}}>Clase {m+1}</th>;
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {dias.map(function(dia){
+                  return (
+                    <tr key={dia}>
+                      <td style={{padding:"6px 10px 6px 0",fontSize:12,color:C.text,fontWeight:600,whiteSpace:"nowrap"}}>{dia}</td>
+                      {Array.from({length:nModulos}).map(function(_,m){
+                        var k=dia+"-"+m;
+                        var on = todosLibres ? true : !!sel[k];
+                        var onReal = Object.keys(sel).length===0 && todosLibres ? true : !!sel[k];
+                        return (
+                          <td key={m} style={{padding:4}}>
+                            <button onClick={function(){toggle(dia,m);}}
+                              style={{width:44,height:34,borderRadius:4,border:"1px solid "+(sel[k]?C.accent:C.border),background:sel[k]?C.accent:"#fff",cursor:"pointer",color:sel[k]?"#fff":C.textDim,fontSize:14,fontFamily:"Quicksand,sans-serif"}}>
+                              {sel[k]?"✓":""}
+                            </button>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div style={{display:"flex",gap:8,marginBottom:16}}>
+          <button style={Object.assign({},btnGhost,{fontSize:12,padding:"5px 10px"})} onClick={function(){marcarTodo(true);}}>Marcar todo</button>
+          <button style={Object.assign({},btnGhost,{fontSize:12,padding:"5px 10px"})} onClick={function(){marcarTodo(false);}}>Limpiar</button>
+        </div>
+
+        <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+          <button style={btnGhost} onClick={onClose}>Cancelar</button>
+          <button style={btnPrimary} onClick={guardar} disabled={saving}>{saving?"Guardando…":"Guardar disponibilidad"}</button>
+        </div>
+      </div>
     </div>
   );
 }
