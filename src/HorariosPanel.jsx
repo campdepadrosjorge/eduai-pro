@@ -27,6 +27,7 @@ var TABS = [
   { id:"asignaciones",label:"Asignaciones", icon:"ti-link" },
   { id:"generar",     label:"Generar",      icon:"ti-sparkles" },
   { id:"ver",         label:"Ver horario",  icon:"ti-calendar" },
+  { id:"cambios",     label:"Cambios",      icon:"ti-arrows-exchange" },
 ];
 
 export default function HorariosPanel({ authUser }) {
@@ -56,6 +57,7 @@ export default function HorariosPanel({ authUser }) {
       {tab==="asignaciones" && <AsignacionesTab uid={uid} />}
       {tab==="generar"      && <GenerarTab uid={uid} />}
       {tab==="ver"          && <VerHorarioTab uid={uid} />}
+      {tab==="cambios"      && <CambiosTab uid={uid} />}
     </div>
   );
 }
@@ -1152,6 +1154,310 @@ function EditarClaseModal(p) {
   );
 }
 
+// ---------- Asistente de cambios (reubicación automática, sin IA) ----------
+function CambiosTab({ uid }) {
+  var [loading, setLoading] = useState(true);
+  var [horario, setHorario] = useState([]);
+  var [docentes, setDocentes] = useState([]);
+  var [cursos, setCursos] = useState([]);
+  var [materias, setMaterias] = useState([]);
+  var [espacios, setEspacios] = useState([]);
+  var [jornadas, setJornadas] = useState([]);
+  var [modulos, setModulos] = useState([]);
+  var [tipo, setTipo] = useState("mover_dia"); // mover_dia | reemplazar | liberar
+  var [docA, setDocA] = useState("");
+  var [docB, setDocB] = useState("");
+  var [diaDesde, setDiaDesde] = useState("");
+  var [diaHasta, setDiaHasta] = useState("");
+  var [plan, setPlan] = useState(null); // {movimientos:[], noResueltos:[], aplicar:fn}
+  var [aplicando, setAplicando] = useState(false);
+  var [okMsg, setOkMsg] = useState("");
+
+  function cargar() {
+    if (!uid) return;
+    setLoading(true);
+    Promise.all([
+      supabase.from("hor_horario").select("*").eq("owner_id", uid),
+      supabase.from("hor_docentes").select("*").eq("owner_id", uid),
+      supabase.from("hor_cursos").select("*").eq("owner_id", uid),
+      supabase.from("hor_materias").select("*").eq("owner_id", uid),
+      supabase.from("hor_espacios").select("*").eq("owner_id", uid),
+      supabase.from("hor_jornadas").select("*").eq("owner_id", uid),
+      supabase.from("hor_modulos").select("*").eq("owner_id", uid),
+    ]).then(function (rs) {
+      setHorario(rs[0].data || []);
+      setDocentes(rs[1].data || []);
+      setCursos(rs[2].data || []);
+      setMaterias(rs[3].data || []);
+      setEspacios(rs[4].data || []);
+      setJornadas(rs[5].data || []);
+      setModulos(rs[6].data || []);
+      setLoading(false);
+    });
+  }
+  useEffect(cargar, [uid]);
+
+  var nombreDoc = {}; docentes.forEach(function (d) { nombreDoc[d.id] = d.nombre; });
+  var nombreCurso = {}; cursos.forEach(function (c) { nombreCurso[c.id] = c.nombre; });
+  var nombreMat = {}; materias.forEach(function (m) { nombreMat[m.id] = m.nombre; });
+
+  function slotsTurno(turno) {
+    var j = jornadas.find(function (x) { return (x.turno || "manana") === turno; });
+    var dias = j && j.dias ? j.dias.split(",").map(function (d) { return d.trim(); }).filter(Boolean) : DIAS;
+    var mods = modulos.filter(function (m) { return j && m.jornada_id === j.id && m.tipo === "clase"; })
+      .sort(function (a, b) { return a.orden - b.orden; });
+    if (mods.length === 0) {
+      var os = {}; horario.filter(function (h) { return (h.turno||"manana") === turno; }).forEach(function (h) { os[h.modulo_orden] = true; });
+      mods = Object.keys(os).map(Number).sort(function (a, b) { return a - b; }).map(function (o) { return { orden: o }; });
+    }
+    return { dias: dias, mods: mods };
+  }
+  function idxClase(turno, orden) {
+    var m = slotsTurno(turno).mods;
+    for (var i = 0; i < m.length; i++) if (m[i].orden === orden) return i;
+    return 0;
+  }
+  function dispSet(docId) {
+    var d = docentes.find(function (x) { return x.id === docId; });
+    if (!d || !d.disponibilidad) return null;
+    var s = {}; d.disponibilidad.split(";").filter(Boolean).forEach(function (sl) { s[sl.trim()] = true; });
+    return s;
+  }
+
+  // Ocupación simulada: trabaja sobre una copia del horario
+  function construirOcup(items) {
+    var oc = { curso: {}, doc: {}, esp: {} };
+    items.forEach(function (h) {
+      var k = (h.turno||"manana")+"|"+h.dia+"|"+h.modulo_orden;
+      oc.curso[h.curso_id+"|"+k] = h.id;
+      if (h.docente_id) oc.doc[h.docente_id+"|"+k] = h.id;
+      if (h.espacio_id) oc.esp[h.espacio_id+"|"+k] = h.id;
+    });
+    return oc;
+  }
+  // ¿Puede ir la clase h al slot (dia,orden) sin chocar? (ignora su propia posición)
+  function libre(h, dia, orden, items, oc) {
+    var turno = h.turno||"manana";
+    var k = turno+"|"+dia+"|"+orden;
+    if (oc.curso[h.curso_id+"|"+k] && oc.curso[h.curso_id+"|"+k] !== h.id) return false;
+    if (h.docente_id && oc.doc[h.docente_id+"|"+k] && oc.doc[h.docente_id+"|"+k] !== h.id) return false;
+    if (h.espacio_id && oc.esp[h.espacio_id+"|"+k] && oc.esp[h.espacio_id+"|"+k] !== h.id) return false;
+    var ds = dispSet(h.docente_id);
+    if (ds) { if (!ds[dia+"-"+idxClase(turno,orden)]) return false; }
+    return true;
+  }
+
+  function calcularPlan() {
+    setOkMsg("");
+    var items = horario.map(function (h) { return Object.assign({}, h); }); // copia mutable
+    var oc = construirOcup(items);
+    var movimientos = []; // {id, de:{dia,orden}, a:{dia,orden}, texto}
+    var noResueltos = [];
+
+    function mover(h, dia, orden) {
+      var kOld = (h.turno||"manana")+"|"+h.dia+"|"+h.modulo_orden;
+      delete oc.curso[h.curso_id+"|"+kOld]; if (h.docente_id) delete oc.doc[h.docente_id+"|"+kOld]; if (h.espacio_id) delete oc.esp[h.espacio_id+"|"+kOld];
+      var de = { dia: h.dia, orden: h.modulo_orden };
+      h.dia = dia; h.modulo_orden = orden;
+      var kNew = (h.turno||"manana")+"|"+dia+"|"+orden;
+      oc.curso[h.curso_id+"|"+kNew] = h.id; if (h.docente_id) oc.doc[h.docente_id+"|"+kNew] = h.id; if (h.espacio_id) oc.esp[h.espacio_id+"|"+kNew] = h.id;
+      movimientos.push({ id: h.id, de: de, a: { dia: dia, orden: orden },
+        texto: nombreMat[h.materia_id]+" ("+nombreCurso[h.curso_id]+") — "+de.dia+" "+ (idxClase(h.turno,de.orden)+1)+"° → "+dia+" "+(idxClase(h.turno,orden)+1)+"°" });
+    }
+
+    // Busca el primer slot libre para h, en los días permitidos, probando todos los módulos
+    function buscarSlot(h, diasPermitidos) {
+      var turno = h.turno||"manana";
+      var st = slotsTurno(turno);
+      for (var di = 0; di < diasPermitidos.length; di++) {
+        var dia = diasPermitidos[di];
+        for (var mi = 0; mi < st.mods.length; mi++) {
+          var orden = st.mods[mi].orden;
+          if (libre(h, dia, orden, items, oc)) return { dia: dia, orden: orden };
+        }
+      }
+      return null;
+    }
+
+    if (tipo === "mover_dia") {
+      if (!docA || !diaDesde || !diaHasta) { setPlan({ error: "Completá docente, día de origen y día de destino." }); return; }
+      var clasesDoc = items.filter(function (h) { return h.docente_id === docA && h.dia === diaDesde; });
+      if (clasesDoc.length === 0) { setPlan({ error: "Ese docente no tiene clases el "+diaDesde+"." }); return; }
+      clasesDoc.forEach(function (h) {
+        var slot = buscarSlot(h, [diaHasta]);
+        if (slot) mover(h, slot.dia, slot.orden);
+        else noResueltos.push({ texto: nombreMat[h.materia_id]+" ("+nombreCurso[h.curso_id]+") — no entra el "+diaHasta+" (sin módulo libre o sin disponibilidad)." });
+      });
+    } else if (tipo === "liberar") {
+      if (!docA || !diaDesde) { setPlan({ error: "Completá docente y el día a liberar." }); return; }
+      var clasesLib = items.filter(function (h) { return h.docente_id === docA && h.dia === diaDesde; });
+      if (clasesLib.length === 0) { setPlan({ error: "Ese docente no tiene clases el "+diaDesde+"." }); return; }
+      var otrosDias = slotsTurno(clasesLib[0].turno||"manana").dias.filter(function (d) { return d !== diaDesde; });
+      clasesLib.forEach(function (h) {
+        var slot = buscarSlot(h, otrosDias);
+        if (slot) mover(h, slot.dia, slot.orden);
+        else noResueltos.push({ texto: nombreMat[h.materia_id]+" ("+nombreCurso[h.curso_id]+") — no se pudo reubicar fuera del "+diaDesde+"." });
+      });
+    } else if (tipo === "reemplazar") {
+      if (!docA || !docB) { setPlan({ error: "Elegí el docente que sale y el que entra." }); return; }
+      if (docA === docB) { setPlan({ error: "Son el mismo docente." }); return; }
+      var clasesR = items.filter(function (h) { return h.docente_id === docA; });
+      if (clasesR.length === 0) { setPlan({ error: "Ese docente no tiene clases asignadas." }); return; }
+      var dsB = dispSet(docB);
+      clasesR.forEach(function (h) {
+        // reasignar docente al que entra
+        var kOld = (h.turno||"manana")+"|"+h.dia+"|"+h.modulo_orden;
+        delete oc.doc[docA+"|"+kOld];
+        h.docente_id = docB;
+        // ¿el nuevo docente puede en el mismo slot? (disponibilidad + no estar ocupado en otro curso)
+        var okMismo = true;
+        if (oc.doc[docB+"|"+kOld]) okMismo = false;
+        if (dsB && !dsB[h.dia+"-"+idxClase(h.turno,h.modulo_orden)]) okMismo = false;
+        if (okMismo) {
+          oc.doc[docB+"|"+kOld] = h.id;
+          movimientos.push({ id: h.id, cambioDoc: true,
+            texto: nombreMat[h.materia_id]+" ("+nombreCurso[h.curso_id]+") "+h.dia+" "+(idxClase(h.turno,h.modulo_orden)+1)+"° — pasa a "+nombreDoc[docB] });
+        } else {
+          // buscar otro slot donde el nuevo docente sí pueda
+          var st = slotsTurno(h.turno||"manana");
+          var slot = buscarSlot(h, st.dias);
+          if (slot) {
+            var de = { dia: h.dia, orden: h.modulo_orden };
+            h.dia = slot.dia; h.modulo_orden = slot.orden;
+            var kNew = (h.turno||"manana")+"|"+slot.dia+"|"+slot.orden;
+            oc.curso[h.curso_id+"|"+kNew] = h.id; oc.doc[docB+"|"+kNew] = h.id; if (h.espacio_id) oc.esp[h.espacio_id+"|"+kNew] = h.id;
+            delete oc.curso[h.curso_id+"|"+kOld]; if (h.espacio_id) delete oc.esp[h.espacio_id+"|"+kOld];
+            movimientos.push({ id: h.id, cambioDoc: true, de: de, a: { dia: slot.dia, orden: slot.orden },
+              texto: nombreMat[h.materia_id]+" ("+nombreCurso[h.curso_id]+") — pasa a "+nombreDoc[docB]+" y se mueve a "+slot.dia+" "+(idxClase(h.turno,slot.orden)+1)+"°" });
+          } else {
+            noResueltos.push({ texto: nombreMat[h.materia_id]+" ("+nombreCurso[h.curso_id]+") — "+nombreDoc[docB]+" no tiene disponibilidad para tomarla." });
+          }
+        }
+      });
+    }
+
+    // construir función de aplicación (updates reales)
+    var updates = items.filter(function (h) {
+      var orig = horario.find(function (o) { return o.id === h.id; });
+      return orig && (orig.dia !== h.dia || orig.modulo_orden !== h.modulo_orden || orig.docente_id !== h.docente_id);
+    });
+    setPlan({ movimientos: movimientos, noResueltos: noResueltos, updates: updates });
+  }
+
+  function aplicar() {
+    if (!plan || !plan.updates || plan.updates.length === 0) return;
+    setAplicando(true);
+    Promise.all(plan.updates.map(function (h) {
+      return supabase.from("hor_horario").update({ dia: h.dia, modulo_orden: h.modulo_orden, docente_id: h.docente_id }).eq("id", h.id);
+    })).then(function () {
+      setAplicando(false); setPlan(null); setOkMsg("Cambios aplicados. Revisalos en \"Ver horario\".");
+      cargar();
+    });
+  }
+
+  if (loading) return <div style={{color:C.textMuted,fontSize:13}}>Cargando…</div>;
+  if (horario.length === 0) {
+    return (
+      <div>
+        <h3 style={{fontSize:17,fontWeight:700,color:C.text,marginBottom:4}}>Cambios</h3>
+        <div style={{background:C.accentBg,border:"1px solid "+C.accent,borderRadius:6,padding:16,fontSize:13,color:C.accent,marginTop:12}}>Primero generá un horario; después vas a poder pedir cambios acá.</div>
+      </div>
+    );
+  }
+
+  var diasSel = (function () { var s = {}; jornadas.forEach(function (j) { (j.dias||"").split(",").map(function (d){return d.trim();}).filter(Boolean).forEach(function (d){s[d]=true;}); }); var ks = Object.keys(s); return ks.length?ks:DIAS; })();
+  var tipos = [
+    { id:"mover_dia", label:"Mover las clases de un docente de un día a otro" },
+    { id:"reemplazar", label:"Reemplazar un docente por otro" },
+    { id:"liberar", label:"Liberar un día de un docente" },
+  ];
+
+  return (
+    <div>
+      <h3 style={{fontSize:17,fontWeight:700,color:C.text,marginBottom:4}}>Cambios automáticos</h3>
+      <p style={{fontSize:13,color:C.textMuted,marginBottom:16}}>Pedí un cambio y el sistema busca cómo acomodarlo respetando las restricciones. Te muestra el plan antes de aplicarlo.</p>
+
+      <div style={{marginBottom:14}}>
+        <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:6}}>Tipo de cambio</label>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+          {tipos.map(function (t) {
+            var a = t.id === tipo;
+            return <button key={t.id} onClick={function(){setTipo(t.id);setPlan(null);}} style={Object.assign({},a?btnPrimary:btnGhost,{fontSize:12})}>{t.label}</button>;
+          })}
+        </div>
+      </div>
+
+      <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:16,marginBottom:16,display:"flex",gap:12,flexWrap:"wrap",alignItems:"flex-end"}}>
+        <div style={{flex:"1 1 180px"}}>
+          <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>{tipo==="reemplazar"?"Docente que sale":"Docente"}</label>
+          <select style={inp} value={docA} onChange={function(e){setDocA(e.target.value);setPlan(null);}}>
+            <option value="">— elegir —</option>
+            {docentes.map(function (d) { return <option key={d.id} value={d.id}>{d.nombre}</option>; })}
+          </select>
+        </div>
+        {tipo==="reemplazar" && (
+          <div style={{flex:"1 1 180px"}}>
+            <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>Docente que entra</label>
+            <select style={inp} value={docB} onChange={function(e){setDocB(e.target.value);setPlan(null);}}>
+              <option value="">— elegir —</option>
+              {docentes.map(function (d) { return <option key={d.id} value={d.id}>{d.nombre}</option>; })}
+            </select>
+          </div>
+        )}
+        {(tipo==="mover_dia"||tipo==="liberar") && (
+          <div style={{flex:"1 1 140px"}}>
+            <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>{tipo==="liberar"?"Día a liberar":"Día de origen"}</label>
+            <select style={inp} value={diaDesde} onChange={function(e){setDiaDesde(e.target.value);setPlan(null);}}>
+              <option value="">—</option>
+              {diasSel.map(function (d) { return <option key={d} value={d}>{d}</option>; })}
+            </select>
+          </div>
+        )}
+        {tipo==="mover_dia" && (
+          <div style={{flex:"1 1 140px"}}>
+            <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>Día de destino</label>
+            <select style={inp} value={diaHasta} onChange={function(e){setDiaHasta(e.target.value);setPlan(null);}}>
+              <option value="">—</option>
+              {diasSel.map(function (d) { return <option key={d} value={d}>{d}</option>; })}
+            </select>
+          </div>
+        )}
+        <button style={btnPrimary} onClick={calcularPlan}>Calcular cambio</button>
+      </div>
+
+      {okMsg && <div style={{color:C.green,fontSize:13,marginBottom:12}}><i className="ti ti-check" style={{marginRight:4}}/>{okMsg}</div>}
+
+      {plan && plan.error && <div style={{color:C.red,fontSize:13,marginBottom:12}}>{plan.error}</div>}
+
+      {plan && !plan.error && (
+        <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:16}}>
+          <div style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:10}}>Plan propuesto</div>
+          {plan.movimientos.length === 0 ? (
+            <div style={{fontSize:13,color:C.textDim}}>No hay movimientos para aplicar.</div>
+          ) : (
+            <div style={{marginBottom:plan.noResueltos.length?14:0}}>
+              {plan.movimientos.map(function (m, i) {
+                return <div key={i} style={{fontSize:13,color:C.text,padding:"6px 10px",background:C.accentBg,borderRadius:4,marginBottom:5}}><i className="ti ti-arrow-right" style={{marginRight:6,color:C.accent}}/>{m.texto}</div>;
+              })}
+            </div>
+          )}
+          {plan.noResueltos.length > 0 && (
+            <div style={{background:"#fef2f2",border:"1px solid "+C.red,borderRadius:6,padding:"10px 12px",fontSize:12,color:C.red,marginBottom:14}}>
+              <div style={{fontWeight:700,marginBottom:4}}><i className="ti ti-alert-triangle" style={{marginRight:4}}/>No se pudieron resolver</div>
+              {plan.noResueltos.map(function (n, i) { return <div key={i} style={{marginTop:2}}>• {n.texto}</div>; })}
+            </div>
+          )}
+          {plan.movimientos.length > 0 && (
+            <div style={{display:"flex",gap:10,marginTop:4}}>
+              <button style={btnPrimary} onClick={aplicar} disabled={aplicando}>{aplicando?"Aplicando…":"Aplicar cambios"}</button>
+              <button style={btnGhost} onClick={function(){setPlan(null);}}>Descartar</button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 function PlaceholderTab({ titulo, texto }) {
   return (
     <div>
