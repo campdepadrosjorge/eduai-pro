@@ -721,6 +721,13 @@ function VerHorarioTab({ uid }) {
   var [sel, setSel] = useState("");
   var [exporting, setExporting] = useState(false);
   var [editar, setEditar] = useState(null); // {dia, orden, clase|null}
+  var [versiones, setVersiones] = useState([]);
+  var [verNombre, setVerNombre] = useState("");
+  var [verAnio, setVerAnio] = useState("");
+  var [guardandoVer, setGuardandoVer] = useState(false);
+  var [cargandoVer, setCargandoVer] = useState("");
+  var [verMsg, setVerMsg] = useState("");
+  var [mostrarVer, setMostrarVer] = useState(false);
 
   function cargar() {
     if (!uid) return;
@@ -734,6 +741,7 @@ function VerHorarioTab({ uid }) {
       supabase.from("hor_jornadas").select("*").eq("owner_id", uid),
       supabase.from("hor_modulos").select("*").eq("owner_id", uid),
       supabase.from("hor_asignaciones").select("*").eq("owner_id", uid),
+      supabase.from("hor_horario_versiones").select("*").eq("owner_id", uid).order("created_at",{ascending:false}),
     ]).then(function (rs) {
       setHorario(rs[0].data || []);
       setCursos(rs[1].data || []);
@@ -743,6 +751,7 @@ function VerHorarioTab({ uid }) {
       setJornadas(rs[5].data || []);
       setModulos(rs[6].data || []);
       setAsigs(rs[7].data || []);
+      setVersiones((rs[8] && rs[8].data) || []);
       setLoading(false);
     });
   }
@@ -878,6 +887,52 @@ function VerHorarioTab({ uid }) {
     setExporting(false);
   }
 
+  function guardarVersion() {
+    if (!verNombre.trim()) { setVerMsg("Poné un nombre para la versión."); return; }
+    if (horario.length === 0) { setVerMsg("No hay horario para guardar."); return; }
+    setGuardandoVer(true); setVerMsg("");
+    supabase.from("hor_horario_versiones").insert({
+      owner_id: uid, nombre: verNombre.trim(),
+      anio: verAnio ? parseInt(verAnio) : null, cantidad_clases: horario.length,
+    }).select().then(function (r) {
+      if (r.error || !r.data || !r.data[0]) { setGuardandoVer(false); setVerMsg("No se pudo guardar: " + (r.error ? r.error.message : "")); return; }
+      var vid = r.data[0].id;
+      var items = horario.map(function (h) {
+        return { owner_id: uid, version_id: vid, asignacion_id: h.asignacion_id, curso_id: h.curso_id,
+          docente_id: h.docente_id, materia_id: h.materia_id, espacio_id: h.espacio_id,
+          dia: h.dia, modulo_orden: h.modulo_orden, turno: h.turno };
+      });
+      supabase.from("hor_horario_version_items").insert(items).then(function () {
+        setGuardandoVer(false); setVerNombre(""); setVerAnio(""); setVerMsg("Versión guardada.");
+        cargar();
+      });
+    });
+  }
+
+  function cargarVersion(v) {
+    if (!window.confirm('Cargar "' + v.nombre + '" como base reemplaza el horario activo actual. ¿Continuar?')) return;
+    setCargandoVer(v.id); setVerMsg("");
+    supabase.from("hor_horario_version_items").select("*").eq("version_id", v.id).then(function (r) {
+      var items = (r.data || []).map(function (it) {
+        return { owner_id: uid, asignacion_id: it.asignacion_id, curso_id: it.curso_id,
+          docente_id: it.docente_id, materia_id: it.materia_id, espacio_id: it.espacio_id,
+          dia: it.dia, modulo_orden: it.modulo_orden, turno: it.turno };
+      });
+      supabase.from("hor_horario").delete().eq("owner_id", uid).then(function () {
+        var insertar = items.length ? supabase.from("hor_horario").insert(items) : Promise.resolve({});
+        Promise.resolve(insertar).then(function () {
+          setCargandoVer(""); setVerMsg('Cargado "' + v.nombre + '". Ya podés editar los cambios del año.');
+          cargar();
+        });
+      });
+    });
+  }
+
+  function eliminarVersion(v) {
+    if (!window.confirm('¿Eliminar la versión "' + v.nombre + '"? Esto no toca el horario activo.')) return;
+    supabase.from("hor_horario_versiones").delete().eq("id", v.id).then(function () { cargar(); });
+  }
+
   if (loading) return <div style={{color:C.textMuted,fontSize:13}}>Cargando horario…</div>;
 
   if (horario.length === 0) {
@@ -903,6 +958,50 @@ function VerHorarioTab({ uid }) {
         <button style={Object.assign({},btnPrimary,{display:"flex",alignItems:"center",gap:6})} onClick={exportar} disabled={exporting}>
           <i className="ti ti-download" style={{fontSize:15}}/>{exporting?"Generando…":"Exportar a Excel"}
         </button>
+      </div>
+
+      <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:16,marginBottom:18}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}} onClick={function(){setMostrarVer(!mostrarVer);}}>
+          <div style={{fontSize:13,fontWeight:700,color:C.text}}>
+            <i className={"ti "+(mostrarVer?"ti-chevron-down":"ti-chevron-right")} style={{marginRight:6}}/>
+            <i className="ti ti-versions" style={{marginRight:6,color:C.accent}}/>Versiones guardadas {versiones.length>0 && <span style={{color:C.textDim,fontWeight:500}}>({versiones.length})</span>}
+          </div>
+          <span style={{fontSize:12,color:C.textDim}}>Guardá este horario o usá uno anterior como base</span>
+        </div>
+        {mostrarVer && (
+          <div style={{marginTop:14}}>
+            <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end",marginBottom:12}}>
+              <div style={{flex:"2 1 200px"}}>
+                <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>Nombre de la versión</label>
+                <input style={inp} value={verNombre} onChange={function(e){setVerNombre(e.target.value);}} placeholder="ej: Ciclo 2025" />
+              </div>
+              <div style={{flex:"0 1 110px"}}>
+                <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>Año</label>
+                <input style={inp} type="number" value={verAnio} onChange={function(e){setVerAnio(e.target.value);}} placeholder="2025" />
+              </div>
+              <button style={btnPrimary} onClick={guardarVersion} disabled={guardandoVer}>{guardandoVer?"Guardando…":"Guardar versión"}</button>
+            </div>
+            {verMsg && <div style={{fontSize:12,color:C.green,marginBottom:10}}>{verMsg}</div>}
+            {versiones.length===0 ? (
+              <div style={{fontSize:13,color:C.textDim}}>Todavía no guardaste ninguna versión. Guardá la actual para poder reusarla el año que viene.</div>
+            ) : (
+              <div style={{border:"1px solid "+C.border,borderRadius:6,overflow:"hidden"}}>
+                {versiones.map(function(v,idx){
+                  return (
+                    <div key={v.id} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",borderTop:idx>0?"1px solid "+C.border:"none"}}>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:14,fontWeight:700,color:C.text}}>{v.nombre}{v.anio?" · "+v.anio:""}</div>
+                        <div style={{fontSize:11,color:C.textDim}}>{v.cantidad_clases||0} clases · guardada {(v.created_at||"").substring(0,10)}</div>
+                      </div>
+                      <button style={Object.assign({},btnGhost,{fontSize:12,padding:"6px 12px"})} onClick={function(){cargarVersion(v);}} disabled={cargandoVer===v.id}>{cargandoVer===v.id?"Cargando…":"Cargar como base"}</button>
+                      <button onClick={function(){eliminarVersion(v);}} style={{background:"transparent",border:"none",cursor:"pointer",color:C.red,fontSize:12,fontFamily:"Quicksand,sans-serif"}}>Eliminar</button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div style={{display:"flex",gap:16,flexWrap:"wrap",alignItems:"flex-end",marginBottom:18}}>
