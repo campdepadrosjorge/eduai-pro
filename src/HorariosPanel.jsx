@@ -81,7 +81,7 @@ function SimpleCrud({ uid, tabla, titulo, singular, campos }) {
   function guardar() {
     setErr("");
     var req = campos.filter(function(c){return c.req;});
-    for(var i=0;i<req.length;i++){ if(!form[req[i].k]){ setErr("Completá: "+req[i].label); return; } }
+    for(var i=0;i<req.length;i++){ if(!form[req[i].k]){ setErr("Completa: "+req[i].label); return; } }
     setSaving(true);
     var row = Object.assign({}, form, { owner_id: uid });
     supabase.from(tabla).insert(row).then(function(r){
@@ -97,7 +97,7 @@ function SimpleCrud({ uid, tabla, titulo, singular, campos }) {
   return (
     <div>
       <h3 style={{fontSize:17,fontWeight:700,color:C.text,marginBottom:4}}>{titulo}</h3>
-      <p style={{fontSize:13,color:C.textMuted,marginBottom:16}}>Cargá las {titulo.toLowerCase()} de tu institución.</p>
+      <p style={{fontSize:13,color:C.textMuted,marginBottom:16}}>Carga las {titulo.toLowerCase()} de tu institución.</p>
 
       <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:16,marginBottom:18,display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
         {campos.map(function(c){
@@ -336,7 +336,7 @@ function TurnoCard({ jornada, modulos, uid, onChange, onDelete, simple }) {
         {modsOrden.length>0 && <div style={{fontSize:12,color:C.textDim}}>{nClasesActual} clases · termina {horaFin()}</div>}
       </div>
       {modsOrden.length===0 ? (
-        <div style={{color:C.textDim,fontSize:13,marginBottom:10}}>Usá el generador de arriba, o agregá los bloques uno por uno.</div>
+        <div style={{color:C.textDim,fontSize:13,marginBottom:10}}>Usa el generador de arriba, o agrega los bloques uno por uno.</div>
       ) : (
         <div style={{marginBottom:10}}>
           {modsOrden.map(function(m,i){
@@ -398,7 +398,7 @@ function DocentesTab({ uid }) {
 
   function agregar(){
     setErr("");
-    if(!nombre.trim()){setErr("Poné el nombre del docente");return;}
+    if(!nombre.trim()){setErr("Escribe el nombre del docente");return;}
     setSaving(true);
     supabase.from("hor_docentes").insert({owner_id:uid,nombre:nombre.trim(),email:email.trim()||null}).then(function(r){
       if(r.error)setErr(r.error.message); else {setNombre("");setEmail("");cargar();}
@@ -418,7 +418,7 @@ function DocentesTab({ uid }) {
   return (
     <div>
       <h3 style={{fontSize:17,fontWeight:700,color:C.text,marginBottom:4}}>Docentes</h3>
-      <p style={{fontSize:13,color:C.textMuted,marginBottom:16}}>Cargá los docentes y marcá en qué bloques está disponible cada uno.</p>
+      <p style={{fontSize:13,color:C.textMuted,marginBottom:16}}>Carga los docentes y marca en qué bloques está disponible cada uno.</p>
 
       <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:16,marginBottom:18,display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
         <div style={{flex:"2 1 200px"}}>
@@ -492,7 +492,7 @@ function DisponibilidadModal({ docente, dias, nModulos, onClose, onSave }) {
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:20}}>
       <div style={{background:C.surf,border:"1px solid "+C.border,borderRadius:8,padding:24,maxWidth:"92vw",maxHeight:"88vh",overflow:"auto"}}>
         <h3 style={{fontSize:16,fontWeight:700,color:C.text,marginBottom:4}}>Disponibilidad — {docente.nombre}</h3>
-        <p style={{fontSize:12,color:C.textMuted,marginBottom:14}}>Marcá los bloques en los que el docente puede dar clase. Verde = disponible.</p>
+        <p style={{fontSize:12,color:C.textMuted,marginBottom:14}}>Marca los bloques en los que el docente puede dar clase. Verde = disponible.</p>
 
         {(dias.length===0||nModulos===0) ? (
           <div style={{color:C.amber,fontSize:13,marginBottom:16}}>Primero configurá la jornada (días y módulos de clase) en la pestaña Jornada.</div>
@@ -576,7 +576,7 @@ function AsignacionesTab({ uid }) {
 
   function agregar(){
     setErr("");
-    if(!form.materia_id||!form.curso_id||!form.docente_id){ setErr("Elegí materia, curso y docente"); return; }
+    if(!form.materia_id||!form.curso_id||!form.docente_id){ setErr("Elige materia, curso y docente"); return; }
     if(!form.horas_semanales||form.horas_semanales<1){ setErr("Las horas deben ser 1 o más"); return; }
     setSaving(true);
     supabase.from("hor_asignaciones").insert({
@@ -604,7 +604,7 @@ function AsignacionesTab({ uid }) {
 
       {faltan.length>0 ? (
         <div style={{background:"#fff7ed",border:"1px solid "+C.amber,borderRadius:6,padding:16,fontSize:13,color:C.amber}}>
-          Primero cargá {faltan.join(", ")} en sus pestañas para poder crear asignaciones.
+          Primero carga {faltan.join(", ")} en sus pestañas para poder crear asignaciones.
         </div>
       ) : (
         <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:16,marginBottom:18,display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
@@ -689,7 +689,7 @@ function GenerarTab({ uid }) {
         <div style={{marginTop:20}}>
           {res.completo ? (
             <div style={{background:"#d1fae5",border:"1px solid "+C.green,borderRadius:6,padding:"14px 18px",color:"#065f46",fontSize:14}}>
-              <strong>✓ Horario generado completo.</strong> Se ubicaron las {res.ubicadas} horas de clase sin ningún conflicto. Mirá el resultado en la pestaña "Ver horario".
+              <strong>✓ Horario generado completo.</strong> Se ubicaron las {res.ubicadas} horas de clase sin ningún conflicto. Mira el resultado en la pestaña "Ver horario".
             </div>
           ) : (
             <div style={{background:"#fff7ed",border:"1px solid "+C.amber,borderRadius:6,padding:"14px 18px",color:"#92400e",fontSize:14}}>
@@ -888,7 +888,7 @@ function VerHorarioTab({ uid }) {
   }
 
   function guardarVersion() {
-    if (!verNombre.trim()) { setVerMsg("Poné un nombre para la versión."); return; }
+    if (!verNombre.trim()) { setVerMsg("Escribe un nombre para la versión."); return; }
     if (horario.length === 0) { setVerMsg("No hay horario para guardar."); return; }
     setGuardandoVer(true); setVerMsg("");
     supabase.from("hor_horario_versiones").insert({
@@ -921,7 +921,7 @@ function VerHorarioTab({ uid }) {
       supabase.from("hor_horario").delete().eq("owner_id", uid).then(function () {
         var insertar = items.length ? supabase.from("hor_horario").insert(items) : Promise.resolve({});
         Promise.resolve(insertar).then(function () {
-          setCargandoVer(""); setVerMsg('Cargado "' + v.nombre + '". Ya podés editar los cambios del año.');
+          setCargandoVer(""); setVerMsg('Cargado "' + v.nombre + '". Ya puedes editar los cambios del año.');
           cargar();
         });
       });
@@ -940,7 +940,7 @@ function VerHorarioTab({ uid }) {
       <div>
         <h3 style={{fontSize:17,fontWeight:700,color:C.text,marginBottom:4}}>Ver horario</h3>
         <div style={{background:C.accentBg,border:"1px solid "+C.accent,borderRadius:6,padding:16,fontSize:13,color:C.accent,marginTop:12}}>
-          Todavía no generaste ningún horario. Andá a la pestaña <strong>Generar</strong> y corré el armado; después vas a verlo acá.
+          Todavía no generaste ningún horario. Ve a la pestaña <strong>Generar</strong> y corre el armado; después podrás verlo ahí.
         </div>
       </div>
     );
@@ -953,7 +953,7 @@ function VerHorarioTab({ uid }) {
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12,marginBottom:16}}>
         <div>
           <h3 style={{fontSize:17,fontWeight:700,color:C.text,marginBottom:4}}>Ver horario</h3>
-          <p style={{fontSize:13,color:C.textMuted}}>Tocá cualquier celda para editar, mover o quitar una clase. Exportá todo a Excel.</p>
+          <p style={{fontSize:13,color:C.textMuted}}>Toca cualquier celda para editar, mover o quitar una clase. Exporta todo a Excel.</p>
         </div>
         <button style={Object.assign({},btnPrimary,{display:"flex",alignItems:"center",gap:6})} onClick={exportar} disabled={exporting}>
           <i className="ti ti-download" style={{fontSize:15}}/>{exporting?"Generando…":"Exportar a Excel"}
@@ -966,7 +966,7 @@ function VerHorarioTab({ uid }) {
             <i className={"ti "+(mostrarVer?"ti-chevron-down":"ti-chevron-right")} style={{marginRight:6}}/>
             <i className="ti ti-versions" style={{marginRight:6,color:C.accent}}/>Versiones guardadas {versiones.length>0 && <span style={{color:C.textDim,fontWeight:500}}>({versiones.length})</span>}
           </div>
-          <span style={{fontSize:12,color:C.textDim}}>Guardá este horario o usá uno anterior como base</span>
+          <span style={{fontSize:12,color:C.textDim}}>Guarda este horario o usa uno anterior como base</span>
         </div>
         {mostrarVer && (
           <div style={{marginTop:14}}>
@@ -983,7 +983,7 @@ function VerHorarioTab({ uid }) {
             </div>
             {verMsg && <div style={{fontSize:12,color:C.green,marginBottom:10}}>{verMsg}</div>}
             {versiones.length===0 ? (
-              <div style={{fontSize:13,color:C.textDim}}>Todavía no guardaste ninguna versión. Guardá la actual para poder reusarla el año que viene.</div>
+              <div style={{fontSize:13,color:C.textDim}}>Todavía no guardaste ninguna versión. Guarda la actual para poder reusarla el año que viene.</div>
             ) : (
               <div style={{border:"1px solid "+C.border,borderRadius:6,overflow:"hidden"}}>
                 {versiones.map(function(v,idx){
@@ -1033,7 +1033,7 @@ function VerHorarioTab({ uid }) {
         </div>
       </div>
 
-      {modo==="curso" && <div style={{fontSize:12,color:C.textDim,marginBottom:10}}><i className="ti ti-click" style={{marginRight:4}}/>Tocá una celda para cambiar docente/espacio, mover o quitar la clase. En celdas vacías podés agregar una.</div>}
+      {modo==="curso" && <div style={{fontSize:12,color:C.textDim,marginBottom:10}}><i className="ti ti-click" style={{marginRight:4}}/>Toca una celda para cambiar docente/espacio, mover o quitar la clase. En celdas vacías puedes agregar una.</div>}
 
       {entidades.length === 0 ? (
         <div style={{color:C.textDim,fontSize:13}}>No hay clases de {modo} en este turno.</div>
@@ -1379,7 +1379,7 @@ function CambiosTab({ uid }) {
     }
 
     if (tipo === "mover_dia") {
-      if (!docA || !diaDesde || !diaHasta) { setPlan({ error: "Completá docente, día de origen y día de destino." }); return; }
+      if (!docA || !diaDesde || !diaHasta) { setPlan({ error: "Completa docente, día de origen y día de destino." }); return; }
       var clasesDoc = items.filter(function (h) { return h.docente_id === docA && h.dia === diaDesde; });
       if (clasesDoc.length === 0) { setPlan({ error: "Ese docente no tiene clases el "+diaDesde+"." }); return; }
       clasesDoc.forEach(function (h) {
@@ -1388,7 +1388,7 @@ function CambiosTab({ uid }) {
         else noResueltos.push({ texto: nombreMat[h.materia_id]+" ("+nombreCurso[h.curso_id]+") — no entra el "+diaHasta+" (sin módulo libre o sin disponibilidad)." });
       });
     } else if (tipo === "liberar") {
-      if (!docA || !diaDesde) { setPlan({ error: "Completá docente y el día a liberar." }); return; }
+      if (!docA || !diaDesde) { setPlan({ error: "Completa docente y el día a liberar." }); return; }
       var clasesLib = items.filter(function (h) { return h.docente_id === docA && h.dia === diaDesde; });
       if (clasesLib.length === 0) { setPlan({ error: "Ese docente no tiene clases el "+diaDesde+"." }); return; }
       var otrosDias = slotsTurno(clasesLib[0].turno||"manana").dias.filter(function (d) { return d !== diaDesde; });
@@ -1398,7 +1398,7 @@ function CambiosTab({ uid }) {
         else noResueltos.push({ texto: nombreMat[h.materia_id]+" ("+nombreCurso[h.curso_id]+") — no se pudo reubicar fuera del "+diaDesde+"." });
       });
     } else if (tipo === "reemplazar") {
-      if (!docA || !docB) { setPlan({ error: "Elegí el docente que sale y el que entra." }); return; }
+      if (!docA || !docB) { setPlan({ error: "Elige el docente que sale y el que entra." }); return; }
       if (docA === docB) { setPlan({ error: "Son el mismo docente." }); return; }
       var clasesR = items.filter(function (h) { return h.docente_id === docA; });
       if (clasesR.length === 0) { setPlan({ error: "Ese docente no tiene clases asignadas." }); return; }
@@ -1459,7 +1459,7 @@ function CambiosTab({ uid }) {
     return (
       <div>
         <h3 style={{fontSize:17,fontWeight:700,color:C.text,marginBottom:4}}>Cambios</h3>
-        <div style={{background:C.accentBg,border:"1px solid "+C.accent,borderRadius:6,padding:16,fontSize:13,color:C.accent,marginTop:12}}>Primero generá un horario; después vas a poder pedir cambios acá.</div>
+        <div style={{background:C.accentBg,border:"1px solid "+C.accent,borderRadius:6,padding:16,fontSize:13,color:C.accent,marginTop:12}}>Primero genera un horario; después podrás pedir cambios aquí.</div>
       </div>
     );
   }
@@ -1474,7 +1474,7 @@ function CambiosTab({ uid }) {
   return (
     <div>
       <h3 style={{fontSize:17,fontWeight:700,color:C.text,marginBottom:4}}>Cambios automáticos</h3>
-      <p style={{fontSize:13,color:C.textMuted,marginBottom:16}}>Pedí un cambio y el sistema busca cómo acomodarlo respetando las restricciones. Te muestra el plan antes de aplicarlo.</p>
+      <p style={{fontSize:13,color:C.textMuted,marginBottom:16}}>Pide un cambio y el sistema busca cómo acomodarlo respetando las restricciones. Te muestra el plan antes de aplicarlo.</p>
 
       <div style={{marginBottom:14}}>
         <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:6}}>Tipo de cambio</label>
