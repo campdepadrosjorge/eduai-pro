@@ -462,7 +462,119 @@ function DisponibilidadModal({ docente, dias, nModulos, onClose, onSave }) {
   );
 }
 function AsignacionesTab({ uid }) {
-  return <PlaceholderTab titulo="Asignaciones" texto="Acá vas a cruzar materia + curso + docente + horas semanales. Se habilita cuando tengas cargados materias, cursos y docentes." />;
+  var [materias,setMaterias]=useState([]);
+  var [cursos,setCursos]=useState([]);
+  var [docentes,setDocentes]=useState([]);
+  var [asigs,setAsigs]=useState([]);
+  var [loading,setLoading]=useState(true);
+  var [form,setForm]=useState({materia_id:"",curso_id:"",docente_id:"",horas_semanales:4});
+  var [saving,setSaving]=useState(false);
+  var [err,setErr]=useState("");
+
+  function cargar(){
+    if(!uid) return;
+    setLoading(true);
+    Promise.all([
+      supabase.from("hor_materias").select("id,nombre").eq("owner_id",uid).order("nombre"),
+      supabase.from("hor_cursos").select("id,nombre").eq("owner_id",uid).order("nombre"),
+      supabase.from("hor_docentes").select("id,nombre").eq("owner_id",uid).order("nombre"),
+      supabase.from("hor_asignaciones").select("*").eq("owner_id",uid).order("created_at",{ascending:true})
+    ]).then(function(res){
+      setMaterias(res[0].data||[]); setCursos(res[1].data||[]);
+      setDocentes(res[2].data||[]); setAsigs(res[3].data||[]);
+      setLoading(false);
+    });
+  }
+  useEffect(cargar,[uid]);
+
+  function nombreDe(arr,id){ var x=arr.find(function(e){return e.id===id;}); return x?x.nombre:"—"; }
+
+  function agregar(){
+    setErr("");
+    if(!form.materia_id||!form.curso_id||!form.docente_id){ setErr("Elegí materia, curso y docente"); return; }
+    if(!form.horas_semanales||form.horas_semanales<1){ setErr("Las horas deben ser 1 o más"); return; }
+    setSaving(true);
+    supabase.from("hor_asignaciones").insert({
+      owner_id:uid, materia_id:form.materia_id, curso_id:form.curso_id,
+      docente_id:form.docente_id, horas_semanales:parseInt(form.horas_semanales)
+    }).then(function(r){
+      if(r.error)setErr(r.error.message);
+      else { setForm({materia_id:"",curso_id:"",docente_id:"",horas_semanales:4}); cargar(); }
+      setSaving(false);
+    });
+  }
+  function borrar(id){ supabase.from("hor_asignaciones").delete().eq("id",id).then(function(){cargar();}); }
+
+  if(loading) return <div style={{color:C.textMuted,fontSize:13}}>Cargando…</div>;
+
+  var faltan = [];
+  if(materias.length===0) faltan.push("materias");
+  if(cursos.length===0) faltan.push("cursos");
+  if(docentes.length===0) faltan.push("docentes");
+
+  return (
+    <div>
+      <h3 style={{fontSize:17,fontWeight:700,color:C.text,marginBottom:4}}>Asignaciones</h3>
+      <p style={{fontSize:13,color:C.textMuted,marginBottom:16}}>Definí qué materia da cada docente en cada curso, y cuántas horas por semana.</p>
+
+      {faltan.length>0 ? (
+        <div style={{background:"#fff7ed",border:"1px solid "+C.amber,borderRadius:6,padding:16,fontSize:13,color:C.amber}}>
+          Primero cargá {faltan.join(", ")} en sus pestañas para poder crear asignaciones.
+        </div>
+      ) : (
+        <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:16,marginBottom:18,display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
+          <div style={{flex:"1 1 160px"}}>
+            <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>Materia</label>
+            <select style={inp} value={form.materia_id} onChange={function(e){setForm(Object.assign({},form,{materia_id:e.target.value}));}}>
+              <option value="">—</option>
+              {materias.map(function(m){return <option key={m.id} value={m.id}>{m.nombre}</option>;})}
+            </select>
+          </div>
+          <div style={{flex:"1 1 140px"}}>
+            <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>Curso</label>
+            <select style={inp} value={form.curso_id} onChange={function(e){setForm(Object.assign({},form,{curso_id:e.target.value}));}}>
+              <option value="">—</option>
+              {cursos.map(function(c){return <option key={c.id} value={c.id}>{c.nombre}</option>;})}
+            </select>
+          </div>
+          <div style={{flex:"1 1 160px"}}>
+            <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>Docente</label>
+            <select style={inp} value={form.docente_id} onChange={function(e){setForm(Object.assign({},form,{docente_id:e.target.value}));}}>
+              <option value="">—</option>
+              {docentes.map(function(d){return <option key={d.id} value={d.id}>{d.nombre}</option>;})}
+            </select>
+          </div>
+          <div style={{flex:"0 1 90px"}}>
+            <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>Horas/sem</label>
+            <input style={inp} type="number" min="1" value={form.horas_semanales} onChange={function(e){setForm(Object.assign({},form,{horas_semanales:e.target.value}));}}/>
+          </div>
+          <button style={btnPrimary} onClick={agregar} disabled={saving}>{saving?"Guardando…":"Agregar"}</button>
+        </div>
+      )}
+      {err && <div style={{color:C.red,fontSize:12,marginBottom:12}}>{err}</div>}
+
+      {asigs.length===0 ? <div style={{color:C.textDim,fontSize:13}}>Todavía no cargaste asignaciones.</div> : (
+        <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:6,overflow:"hidden"}}>
+          <div style={{display:"flex",padding:"8px 14px",background:C.bg,fontSize:11,fontWeight:700,color:C.textMuted,textTransform:"uppercase",letterSpacing:.3}}>
+            <div style={{flex:2}}>Materia</div><div style={{flex:1}}>Curso</div><div style={{flex:2}}>Docente</div><div style={{flex:"0 0 70px",textAlign:"center"}}>Horas</div><div style={{flex:"0 0 60px"}}></div>
+          </div>
+          {asigs.map(function(a,idx){
+            return (
+              <div key={a.id} style={{display:"flex",alignItems:"center",padding:"10px 14px",borderTop:"1px solid "+C.border,fontSize:13,color:C.text}}>
+                <div style={{flex:2}}>{nombreDe(materias,a.materia_id)}</div>
+                <div style={{flex:1}}>{nombreDe(cursos,a.curso_id)}</div>
+                <div style={{flex:2}}>{nombreDe(docentes,a.docente_id)}</div>
+                <div style={{flex:"0 0 70px",textAlign:"center",fontWeight:700,color:C.accent}}>{a.horas_semanales}</div>
+                <div style={{flex:"0 0 60px",textAlign:"right"}}>
+                  <button onClick={function(){borrar(a.id);}} style={{background:"transparent",border:"none",cursor:"pointer",color:C.red,fontSize:12,fontFamily:"Quicksand,sans-serif"}}>Quitar</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 function GenerarTab({ uid }) {
   return <PlaceholderTab titulo="Generar horario" texto="El algoritmo que arma el horario respetando las restricciones. Se desarrolla en la Fase 2." />;
