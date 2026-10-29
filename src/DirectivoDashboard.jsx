@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import supabase from "./supabase.js";
+import HorariosPanel from "./HorariosPanel.jsx";
 import { exportDocx, exportPdf, exportInformeCorregido, exportInformeMarcado, exportInformesZip } from "./exportUtils.js";
 import { sysComunicado, userComunicado, sysActa, userActa, sysCorreccionInforme, userCorreccionInforme, sysAcompanamiento, userAcompanamiento, instruccionTramite, sysRevisionDocumento, userRevisionDocumento } from "./directivoPrompts.js";
 
@@ -1086,13 +1087,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
             </div>
           )}
           {view==="horarios"&&(
-            <div style={{height:"calc(100vh - 120px)",minHeight:500}}>
-              <iframe
-                src="https://smart-school-stereotyped-sync.base44.app"
-                style={{width:"100%",height:"100%",border:"1px solid "+C.border,borderRadius:6}}
-                title="Armado de Horarios"
-              />
-            </div>
+            <HorariosPanel authUser={authUser} />
           )}
         </div>
       </div>
