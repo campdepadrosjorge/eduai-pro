@@ -577,7 +577,49 @@ function AsignacionesTab({ uid }) {
   );
 }
 function GenerarTab({ uid }) {
-  return <PlaceholderTab titulo="Generar horario" texto="El algoritmo que arma el horario respetando las restricciones. Se desarrolla en la Fase 2." />;
+  var [gen,setGen]=useState(false);
+  var [res,setRes]=useState(null);
+  var [err,setErr]=useState("");
+
+  function generar(){
+    setGen(true);setErr("");setRes(null);
+    fetch("/api/generar-horario",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:uid})})
+      .then(function(r){return r.json();})
+      .then(function(d){ if(d.error)setErr(d.error); else setRes(d); setGen(false); })
+      .catch(function(){ setErr("No se pudo generar. Intentá de nuevo."); setGen(false); });
+  }
+
+  return (
+    <div>
+      <h3 style={{fontSize:17,fontWeight:700,color:C.text,marginBottom:4}}>Generar horario</h3>
+      <p style={{fontSize:13,color:C.textMuted,marginBottom:18}}>El algoritmo ubica todas las materias respetando la disponibilidad de los docentes, los espacios compartidos y sin superposiciones.</p>
+
+      <button style={Object.assign({},btnPrimary,{padding:"12px 24px",fontSize:14})} onClick={generar} disabled={gen}>
+        {gen?"Generando… (puede tardar unos segundos)":"✦ Generar horario"}
+      </button>
+
+      {err && <div style={{background:"#fee2e2",border:"1px solid #fca5a5",borderRadius:6,padding:"12px 16px",marginTop:16,color:C.red,fontSize:13}}>{err}</div>}
+
+      {res && (
+        <div style={{marginTop:20}}>
+          {res.completo ? (
+            <div style={{background:"#d1fae5",border:"1px solid "+C.green,borderRadius:6,padding:"14px 18px",color:"#065f46",fontSize:14}}>
+              <strong>✓ Horario generado completo.</strong> Se ubicaron las {res.ubicadas} horas de clase sin ningún conflicto. Mirá el resultado en la pestaña "Ver horario".
+            </div>
+          ) : (
+            <div style={{background:"#fff7ed",border:"1px solid "+C.amber,borderRadius:6,padding:"14px 18px",color:"#92400e",fontSize:14}}>
+              <strong>Horario generado parcial.</strong> Se ubicaron {res.ubicadas} de {res.total_clases} horas.
+              {res.timeout && " (El cálculo alcanzó el límite de tiempo.)"}
+              <div style={{marginTop:10,fontSize:13}}>Lo que no se pudo ubicar:</div>
+              <ul style={{margin:"6px 0 0",paddingLeft:18}}>
+                {(res.reporte||[]).map(function(r,i){ return <li key={i} style={{marginBottom:4,fontSize:13}}>{r.texto}</li>; })}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 function VerHorarioTab({ uid }) {
   return <PlaceholderTab titulo="Ver horario" texto="Visualización del horario generado por curso, docente o espacio, y exportación a Excel. Fase 3." />;
