@@ -214,22 +214,70 @@ function TurnoCard({ jornada, modulos, uid, onChange, onDelete, simple }) {
   var [dias, setDias] = useState(jornada.dias||"");
   var [horaInicio, setHoraInicio] = useState(jornada.hora_inicio||"08:00");
   var [savedMsg, setSavedMsg] = useState("");
+  // edicion fluida de duraciones (estado local, se guarda al salir del campo)
+  var [dur, setDur] = useState({});
+  var [durMsg, setDurMsg] = useState("");
+  // generador rapido
+  var [nClases, setNClases] = useState(6);
+  var [minClase, setMinClase] = useState(40);
+  var [minRecreo, setMinRecreo] = useState(15);
+  var [recreoCada, setRecreoCada] = useState(2);
+  var [generando, setGenerando] = useState(false);
+
+  var modsOrden = modulos.slice().sort(function(a,b){return a.orden-b.orden;});
 
   function guardarJornada() {
     supabase.from("hor_jornadas").update({dias:dias,hora_inicio:horaInicio}).eq("id",jornada.id).then(function(){
       setSavedMsg("Guardado"); setTimeout(function(){setSavedMsg("");},1500);
     });
   }
+
+  function generarDia() {
+    var n = parseInt(nClases)||0;
+    if (n <= 0) return;
+    setGenerando(true);
+    var mc = parseInt(minClase)||40;
+    var mr = parseInt(minRecreo)||15;
+    var cada = parseInt(recreoCada)||0;
+    var filas = [];
+    var orden = 1;
+    for (var c = 1; c <= n; c++) {
+      filas.push({owner_id:uid,jornada_id:jornada.id,orden:orden++,tipo:"clase",duracion_minutos:mc});
+      if (cada > 0 && c % cada === 0 && c < n) {
+        filas.push({owner_id:uid,jornada_id:jornada.id,orden:orden++,tipo:"recreo",duracion_minutos:mr});
+      }
+    }
+    supabase.from("hor_modulos").delete().eq("jornada_id",jornada.id).then(function(){
+      supabase.from("hor_modulos").insert(filas).then(function(){
+        setGenerando(false); setDur({}); onChange();
+      });
+    });
+  }
+
   function agregarModulo(tipo) {
     var orden = (modulos.length? Math.max.apply(null,modulos.map(function(m){return m.orden;})) : 0) + 1;
-    supabase.from("hor_modulos").insert({owner_id:uid,jornada_id:jornada.id,orden:orden,tipo:tipo,duracion_minutos:tipo==="recreo"?15:60}).then(function(){onChange();});
+    supabase.from("hor_modulos").insert({owner_id:uid,jornada_id:jornada.id,orden:orden,tipo:tipo,duracion_minutos:tipo==="recreo"?parseInt(minRecreo)||15:parseInt(minClase)||40}).then(function(){onChange();});
   }
-  function cambiarDuracion(id,val) {
-    supabase.from("hor_modulos").update({duracion_minutos:parseInt(val)||0}).eq("id",id).then(function(){onChange();});
+  function onDurChange(id,val){ setDur(Object.assign({},dur,{[id]:val})); }
+  function guardarDuracion(id){
+    if (dur[id]===undefined) return;
+    var v = parseInt(dur[id])||0;
+    supabase.from("hor_modulos").update({duracion_minutos:v}).eq("id",id).then(function(){
+      setDurMsg("Cambios guardados"); setTimeout(function(){setDurMsg("");},1200);
+    });
   }
   function borrarModulo(id) {
     supabase.from("hor_modulos").delete().eq("id",id).then(function(){onChange();});
   }
+
+  // hora de fin estimada del dia
+  function horaFin(){
+    var total = modsOrden.reduce(function(s,m){ var d = dur[m.id]!==undefined?(parseInt(dur[m.id])||0):m.duracion_minutos; return s+d; },0);
+    var hi = (horaInicio||"08:00").split(":"); var mins = (parseInt(hi[0])||0)*60 + (parseInt(hi[1])||0) + total;
+    var hh = Math.floor(mins/60)%24; var mm = mins%60;
+    return (hh<10?"0":"")+hh+":"+(mm<10?"0":"")+mm;
+  }
+  var nClasesActual = modsOrden.filter(function(m){return m.tipo==="clase";}).length;
 
   return (
     <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:18,marginBottom:16}}>
@@ -254,21 +302,57 @@ function TurnoCard({ jornada, modulos, uid, onChange, onDelete, simple }) {
         {savedMsg && <span style={{color:C.green,fontSize:12}}>{savedMsg}</span>}
       </div>
 
-      <div style={{fontSize:12,fontWeight:700,color:C.textMuted,marginBottom:8,textTransform:"uppercase",letterSpacing:.5}}>Módulos del día</div>
-      {modulos.length===0 ? (
-        <div style={{color:C.textDim,fontSize:13,marginBottom:10}}>Agregá los bloques del día en orden (clases y recreos).</div>
+      {/* Generador rapido de la jornada */}
+      <div style={{background:C.accentBg,border:"1px dashed "+C.accent,borderRadius:6,padding:14,marginBottom:16}}>
+        <div style={{fontSize:12,fontWeight:700,color:C.accent,marginBottom:10,textTransform:"uppercase",letterSpacing:.5}}>
+          <i className="ti ti-wand" style={{marginRight:6}}/>Armar la jornada de una
+        </div>
+        <div style={{display:"flex",gap:12,flexWrap:"wrap",alignItems:"flex-end"}}>
+          <div style={{flex:"0 1 120px"}}>
+            <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>Clases por día</label>
+            <input style={inp} type="number" min="1" value={nClases} onChange={function(e){setNClases(e.target.value);}} />
+          </div>
+          <div style={{flex:"0 1 120px"}}>
+            <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>Min. por clase</label>
+            <input style={inp} type="number" min="1" value={minClase} onChange={function(e){setMinClase(e.target.value);}} />
+          </div>
+          <div style={{flex:"0 1 120px"}}>
+            <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>Min. de recreo</label>
+            <input style={inp} type="number" min="0" value={minRecreo} onChange={function(e){setMinRecreo(e.target.value);}} />
+          </div>
+          <div style={{flex:"0 1 150px"}}>
+            <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>Recreo cada N clases</label>
+            <input style={inp} type="number" min="0" value={recreoCada} onChange={function(e){setRecreoCada(e.target.value);}} placeholder="0 = sin recreos" />
+          </div>
+          <button style={Object.assign({},btnPrimary,{whiteSpace:"nowrap"})} onClick={generarDia} disabled={generando}>{generando?"Generando…":"Generar día"}</button>
+        </div>
+        {modulos.length>0 && <div style={{fontSize:11,color:C.amber,marginTop:8}}><i className="ti ti-alert-triangle" style={{marginRight:4}}/>Generar reemplaza los módulos actuales de este turno.</div>}
+      </div>
+
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+        <div style={{fontSize:12,fontWeight:700,color:C.textMuted,textTransform:"uppercase",letterSpacing:.5}}>Módulos del día</div>
+        {modsOrden.length>0 && <div style={{fontSize:12,color:C.textDim}}>{nClasesActual} clases · termina {horaFin()}</div>}
+      </div>
+      {modsOrden.length===0 ? (
+        <div style={{color:C.textDim,fontSize:13,marginBottom:10}}>Usá el generador de arriba, o agregá los bloques uno por uno.</div>
       ) : (
         <div style={{marginBottom:10}}>
-          {modulos.sort(function(a,b){return a.orden-b.orden;}).map(function(m,i){
+          {modsOrden.map(function(m,i){
+            var clasesHasta = modsOrden.slice(0,i+1).filter(function(x){return x.tipo==="clase";}).length;
+            var val = dur[m.id]!==undefined?dur[m.id]:m.duracion_minutos;
             return (
               <div key={m.id} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 10px",background:m.tipo==="recreo"?"#fff7ed":C.accentBg,borderRadius:4,marginBottom:5}}>
-                <span style={{fontSize:12,fontWeight:700,color:m.tipo==="recreo"?C.amber:C.accent,minWidth:70}}>{m.tipo==="recreo"?"Recreo":"Clase "+(i+1)}</span>
-                <input style={Object.assign({},inp,{width:70,padding:"5px 8px",fontSize:13})} type="number" value={m.duracion_minutos} onChange={function(e){cambiarDuracion(m.id,e.target.value);}} />
+                <span style={{fontSize:12,fontWeight:700,color:m.tipo==="recreo"?C.amber:C.accent,minWidth:70}}>{m.tipo==="recreo"?"Recreo":"Clase "+clasesHasta}</span>
+                <input style={Object.assign({},inp,{width:70,padding:"5px 8px",fontSize:13})} type="number" value={val}
+                  onChange={function(e){onDurChange(m.id,e.target.value);}}
+                  onBlur={function(){guardarDuracion(m.id);}}
+                  onKeyDown={function(e){if(e.key==="Enter"){e.target.blur();}}} />
                 <span style={{fontSize:12,color:C.textMuted}}>min</span>
                 <button onClick={function(){borrarModulo(m.id);}} style={{marginLeft:"auto",background:"transparent",border:"none",cursor:"pointer",color:C.red,fontSize:12,fontFamily:"Quicksand,sans-serif"}}>Quitar</button>
               </div>
             );
           })}
+          {durMsg && <div style={{fontSize:11,color:C.green,marginTop:2}}>{durMsg}</div>}
         </div>
       )}
       <div style={{display:"flex",gap:8}}>
@@ -278,7 +362,6 @@ function TurnoCard({ jornada, modulos, uid, onChange, onDelete, simple }) {
     </div>
   );
 }
-
 // ---------- Placeholders de las otras pestañas (se completan en próximos pasos) ----------
 function CursosTab({ uid }) {
   return <SimpleCrud uid={uid} tabla="hor_cursos" titulo="Cursos" singular="curso"
