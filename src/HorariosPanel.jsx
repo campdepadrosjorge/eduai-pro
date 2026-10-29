@@ -622,7 +622,260 @@ function GenerarTab({ uid }) {
   );
 }
 function VerHorarioTab({ uid }) {
-  return <PlaceholderTab titulo="Ver horario" texto="Visualización del horario generado por curso, docente o espacio, y exportación a Excel. Fase 3." />;
+  var [loading, setLoading] = useState(true);
+  var [horario, setHorario] = useState([]);
+  var [cursos, setCursos] = useState([]);
+  var [docentes, setDocentes] = useState([]);
+  var [espacios, setEspacios] = useState([]);
+  var [materias, setMaterias] = useState([]);
+  var [jornadas, setJornadas] = useState([]);
+  var [modulos, setModulos] = useState([]);
+  var [modo, setModo] = useState("curso");
+  var [turno, setTurno] = useState("");
+  var [sel, setSel] = useState("");
+  var [exporting, setExporting] = useState(false);
+
+  function cargar() {
+    if (!uid) return;
+    setLoading(true);
+    Promise.all([
+      supabase.from("hor_horario").select("*").eq("owner_id", uid),
+      supabase.from("hor_cursos").select("*").eq("owner_id", uid),
+      supabase.from("hor_docentes").select("*").eq("owner_id", uid),
+      supabase.from("hor_espacios").select("*").eq("owner_id", uid),
+      supabase.from("hor_materias").select("*").eq("owner_id", uid),
+      supabase.from("hor_jornadas").select("*").eq("owner_id", uid),
+      supabase.from("hor_modulos").select("*").eq("owner_id", uid),
+    ]).then(function (rs) {
+      setHorario(rs[0].data || []);
+      setCursos(rs[1].data || []);
+      setDocentes(rs[2].data || []);
+      setEspacios(rs[3].data || []);
+      setMaterias(rs[4].data || []);
+      setJornadas(rs[5].data || []);
+      setModulos(rs[6].data || []);
+      setLoading(false);
+    });
+  }
+  useEffect(cargar, [uid]);
+
+  var nombreCurso = {}; cursos.forEach(function (c) { nombreCurso[c.id] = c.nombre; });
+  var nombreDoc = {}; docentes.forEach(function (d) { nombreDoc[d.id] = d.nombre; });
+  var nombreEsp = {}; espacios.forEach(function (e) { nombreEsp[e.id] = e.nombre; });
+  var nombreMat = {}; var colorMat = {};
+  var paleta = ["#0d9488","#1d4ed8","#7c3aed","#d97706","#dc2626","#059669","#db2777","#2563eb","#ca8a04","#0891b2","#9333ea","#e11d48","#15803d","#c2410c","#4f46e5"];
+  materias.forEach(function (m, i) { nombreMat[m.id] = m.nombre; colorMat[m.id] = m.color || paleta[i % paleta.length]; });
+
+  var turnosSet = {};
+  horario.forEach(function (h) { turnosSet[h.turno || "manana"] = true; });
+  jornadas.forEach(function (j) { turnosSet[j.turno || "manana"] = true; });
+  var turnos = Object.keys(turnosSet);
+  if (turnos.length === 0) turnos = ["manana"];
+  var turnoActivo = turno || turnos[0];
+  var nombreTurno = { manana: "Mañana", tarde: "Tarde" };
+
+  var jornadaTurno = jornadas.find(function (j) { return (j.turno || "manana") === turnoActivo; });
+  var diasTurno = jornadaTurno && jornadaTurno.dias
+    ? jornadaTurno.dias.split(",").map(function (d) { return d.trim(); }).filter(Boolean)
+    : DIAS;
+  var modsClase = modulos
+    .filter(function (m) { return jornadaTurno && m.jornada_id === jornadaTurno.id && m.tipo === "clase"; })
+    .sort(function (a, b) { return a.orden - b.orden; });
+  if (modsClase.length === 0) {
+    var ordSet = {};
+    horario.filter(function (h) { return (h.turno || "manana") === turnoActivo; })
+      .forEach(function (h) { ordSet[h.modulo_orden] = true; });
+    modsClase = Object.keys(ordSet).map(Number).sort(function (a, b) { return a - b; })
+      .map(function (o) { return { orden: o }; });
+  }
+
+  var hdeTurno = horario.filter(function (h) { return (h.turno || "manana") === turnoActivo; });
+  var entIds = {};
+  hdeTurno.forEach(function (h) {
+    var k = modo === "curso" ? h.curso_id : modo === "docente" ? h.docente_id : h.espacio_id;
+    if (k) entIds[k] = true;
+  });
+  var mapaNombre = modo === "curso" ? nombreCurso : modo === "docente" ? nombreDoc : nombreEsp;
+  var entidades = Object.keys(entIds)
+    .map(function (id) { return { id: id, nombre: mapaNombre[id] || "—" }; })
+    .sort(function (a, b) { return a.nombre.localeCompare(b.nombre); });
+
+  var selActivo = sel && entIds[sel] ? sel : (entidades[0] ? entidades[0].id : "");
+
+  function claseEn(dia, orden) {
+    return hdeTurno.find(function (h) {
+      if (h.dia !== dia || h.modulo_orden !== orden) return false;
+      if (modo === "curso") return h.curso_id === selActivo;
+      if (modo === "docente") return h.docente_id === selActivo;
+      return h.espacio_id === selActivo;
+    });
+  }
+
+  function detalle(h) {
+    if (modo === "curso") return nombreDoc[h.docente_id] || "";
+    if (modo === "docente") return nombreCurso[h.curso_id] || "";
+    return nombreCurso[h.curso_id] || "";
+  }
+
+  async function exportar() {
+    setExporting(true);
+    try {
+      var XLSX = await import("xlsx");
+      var wb = XLSX.utils.book_new();
+      var mapas = [["curso", nombreCurso], ["docente", nombreDoc], ["espacio", nombreEsp]];
+      turnos.forEach(function (tn) {
+        var hT = horario.filter(function (h) { return (h.turno || "manana") === tn; });
+        var jT = jornadas.find(function (j) { return (j.turno || "manana") === tn; });
+        var diasT = jT && jT.dias ? jT.dias.split(",").map(function (d) { return d.trim(); }).filter(Boolean) : DIAS;
+        var modsT = modulos.filter(function (m) { return jT && m.jornada_id === jT.id && m.tipo === "clase"; })
+          .sort(function (a, b) { return a.orden - b.orden; });
+        if (modsT.length === 0) {
+          var os = {}; hT.forEach(function (h) { os[h.modulo_orden] = true; });
+          modsT = Object.keys(os).map(Number).sort(function (a, b) { return a - b; }).map(function (o) { return { orden: o }; });
+        }
+        mapas.forEach(function (par) {
+          var md = par[0]; var mapN = par[1];
+          var ids = {};
+          hT.forEach(function (h) {
+            var k = md === "curso" ? h.curso_id : md === "docente" ? h.docente_id : h.espacio_id;
+            if (k) ids[k] = true;
+          });
+          var ents = Object.keys(ids).map(function (id) { return { id: id, nombre: mapN[id] || "—" }; })
+            .sort(function (a, b) { return a.nombre.localeCompare(b.nombre); });
+          if (ents.length === 0) return;
+          var aoa = [];
+          aoa.push([(md === "curso" ? "Curso" : md === "docente" ? "Docente" : "Espacio") + " / Día"].concat(diasT));
+          ents.forEach(function (ent) {
+            modsT.forEach(function (m, i) {
+              var fila = [i === 0 ? ent.nombre + "  (M" + m.orden + ")" : "M" + m.orden];
+              diasT.forEach(function (dia) {
+                var h = hT.find(function (x) {
+                  if (x.dia !== dia || x.modulo_orden !== m.orden) return false;
+                  return md === "curso" ? x.curso_id === ent.id : md === "docente" ? x.docente_id === ent.id : x.espacio_id === ent.id;
+                });
+                if (!h) { fila.push(""); return; }
+                var txt = nombreMat[h.materia_id] || "";
+                if (md === "curso") txt += (nombreDoc[h.docente_id] ? " · " + nombreDoc[h.docente_id] : "") + (h.espacio_id && nombreEsp[h.espacio_id] ? " · " + nombreEsp[h.espacio_id] : "");
+                else if (md === "docente") txt += (nombreCurso[h.curso_id] ? " · " + nombreCurso[h.curso_id] : "") + (h.espacio_id && nombreEsp[h.espacio_id] ? " · " + nombreEsp[h.espacio_id] : "");
+                else txt += (nombreCurso[h.curso_id] ? " · " + nombreCurso[h.curso_id] : "");
+                fila.push(txt);
+              });
+              aoa.push(fila);
+            });
+            aoa.push([]);
+          });
+          var ws = XLSX.utils.aoa_to_sheet(aoa);
+          ws["!cols"] = [{ wch: 22 }].concat(diasT.map(function () { return { wch: 26 }; }));
+          var hoja = (nombreTurno[tn] || tn) + " · " + (md === "curso" ? "Cursos" : md === "docente" ? "Docentes" : "Espacios");
+          XLSX.utils.book_append_sheet(wb, ws, hoja.substring(0, 31));
+        });
+      });
+      XLSX.writeFile(wb, "horario-aulaxpro.xlsx");
+    } catch (e) {
+      alert("No se pudo exportar: " + e.message);
+    }
+    setExporting(false);
+  }
+
+  if (loading) return <div style={{color:C.textMuted,fontSize:13}}>Cargando horario…</div>;
+
+  if (horario.length === 0) {
+    return (
+      <div>
+        <h3 style={{fontSize:17,fontWeight:700,color:C.text,marginBottom:4}}>Ver horario</h3>
+        <div style={{background:C.accentBg,border:"1px solid "+C.accent,borderRadius:6,padding:16,fontSize:13,color:C.accent,marginTop:12}}>
+          Todavía no generaste ningún horario. Andá a la pestaña <strong>Generar</strong> y corré el armado; después vas a verlo acá.
+        </div>
+      </div>
+    );
+  }
+
+  var tipoLabel = { curso: "Curso", docente: "Docente", espacio: "Espacio" };
+
+  return (
+    <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12,marginBottom:16}}>
+        <div>
+          <h3 style={{fontSize:17,fontWeight:700,color:C.text,marginBottom:4}}>Ver horario</h3>
+          <p style={{fontSize:13,color:C.textMuted}}>Mirá la grilla por curso, docente o espacio. Exportá todo a Excel con un clic.</p>
+        </div>
+        <button style={Object.assign({},btnPrimary,{display:"flex",alignItems:"center",gap:6})} onClick={exportar} disabled={exporting}>
+          <i className="ti ti-download" style={{fontSize:15}}/>{exporting?"Generando…":"Exportar a Excel"}
+        </button>
+      </div>
+
+      <div style={{display:"flex",gap:16,flexWrap:"wrap",alignItems:"flex-end",marginBottom:18}}>
+        {turnos.length > 1 && (
+          <div>
+            <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>Turno</label>
+            <div style={{display:"flex",gap:6}}>
+              {turnos.map(function (tn) {
+                var a = tn === turnoActivo;
+                return <button key={tn} onClick={function(){setTurno(tn);setSel("");}} style={a?btnPrimary:btnGhost}>{nombreTurno[tn]||tn}</button>;
+              })}
+            </div>
+          </div>
+        )}
+        <div>
+          <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>Ver por</label>
+          <div style={{display:"flex",gap:6}}>
+            {["curso","docente","espacio"].map(function (m) {
+              var a = m === modo;
+              return <button key={m} onClick={function(){setModo(m);setSel("");}} style={a?btnPrimary:btnGhost}>{tipoLabel[m]}</button>;
+            })}
+          </div>
+        </div>
+        <div style={{flex:"1 1 200px",maxWidth:280}}>
+          <label style={{fontSize:11,color:C.textMuted,display:"block",marginBottom:4}}>{tipoLabel[modo]}</label>
+          <select style={inp} value={selActivo} onChange={function(e){setSel(e.target.value);}}>
+            {entidades.map(function (ent) { return <option key={ent.id} value={ent.id}>{ent.nombre}</option>; })}
+          </select>
+        </div>
+      </div>
+
+      {entidades.length === 0 ? (
+        <div style={{color:C.textDim,fontSize:13}}>No hay clases de {modo} en este turno.</div>
+      ) : (
+        <div style={{overflowX:"auto",border:"1px solid "+C.border,borderRadius:6}}>
+          <table style={{borderCollapse:"collapse",width:"100%",minWidth:560,fontSize:13}}>
+            <thead>
+              <tr>
+                <th style={{background:C.bg,border:"1px solid "+C.border,padding:"8px 10px",fontWeight:700,color:C.textMuted,width:70,textAlign:"left"}}>Módulo</th>
+                {diasTurno.map(function (dia) {
+                  return <th key={dia} style={{background:C.bg,border:"1px solid "+C.border,padding:"8px 10px",fontWeight:700,color:C.text,textAlign:"center"}}>{dia}</th>;
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {modsClase.map(function (m, i) {
+                return (
+                  <tr key={m.orden}>
+                    <td style={{background:C.bg,border:"1px solid "+C.border,padding:"8px 10px",fontWeight:700,color:C.textMuted,textAlign:"center"}}>{i+1}°</td>
+                    {diasTurno.map(function (dia) {
+                      var h = claseEn(dia, m.orden);
+                      if (!h) return <td key={dia} style={{border:"1px solid "+C.border,padding:4,background:"#fafaf8"}}/>;
+                      var col = colorMat[h.materia_id] || C.accent;
+                      return (
+                        <td key={dia} style={{border:"1px solid "+C.border,padding:4,verticalAlign:"top"}}>
+                          <div style={{background:col+"18",borderLeft:"3px solid "+col,borderRadius:4,padding:"6px 8px",minHeight:34}}>
+                            <div style={{fontWeight:700,color:C.text,fontSize:13}}>{nombreMat[h.materia_id]||"—"}</div>
+                            {detalle(h) && <div style={{fontSize:11,color:C.textMuted,marginTop:2}}>{detalle(h)}</div>}
+                            {modo!=="espacio" && h.espacio_id && nombreEsp[h.espacio_id] && (
+                              <div style={{fontSize:11,color:C.textDim,marginTop:1}}><i className="ti ti-map-pin" style={{fontSize:11}}/> {nombreEsp[h.espacio_id]}</div>
+                            )}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
 }
 function PlaceholderTab({ titulo, texto }) {
   return (
