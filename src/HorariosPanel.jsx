@@ -713,10 +713,12 @@ function VerHorarioTab({ uid }) {
   var [materias, setMaterias] = useState([]);
   var [jornadas, setJornadas] = useState([]);
   var [modulos, setModulos] = useState([]);
+  var [asigs, setAsigs] = useState([]);
   var [modo, setModo] = useState("curso");
   var [turno, setTurno] = useState("");
   var [sel, setSel] = useState("");
   var [exporting, setExporting] = useState(false);
+  var [editar, setEditar] = useState(null); // {dia, orden, clase|null}
 
   function cargar() {
     if (!uid) return;
@@ -729,6 +731,7 @@ function VerHorarioTab({ uid }) {
       supabase.from("hor_materias").select("*").eq("owner_id", uid),
       supabase.from("hor_jornadas").select("*").eq("owner_id", uid),
       supabase.from("hor_modulos").select("*").eq("owner_id", uid),
+      supabase.from("hor_asignaciones").select("*").eq("owner_id", uid),
     ]).then(function (rs) {
       setHorario(rs[0].data || []);
       setCursos(rs[1].data || []);
@@ -737,6 +740,7 @@ function VerHorarioTab({ uid }) {
       setMaterias(rs[4].data || []);
       setJornadas(rs[5].data || []);
       setModulos(rs[6].data || []);
+      setAsigs(rs[7].data || []);
       setLoading(false);
     });
   }
@@ -798,6 +802,18 @@ function VerHorarioTab({ uid }) {
     if (modo === "curso") return nombreDoc[h.docente_id] || "";
     if (modo === "docente") return nombreCurso[h.curso_id] || "";
     return nombreCurso[h.curso_id] || "";
+  }
+
+  // Disponibilidad docente -> set "Dia-idxClase" (null = todos)
+  function dispSet(docId) {
+    var d = docentes.find(function (x) { return x.id === docId; });
+    if (!d || !d.disponibilidad) return null;
+    var s = {}; d.disponibilidad.split(";").filter(Boolean).forEach(function (sl) { s[sl.trim()] = true; });
+    return s;
+  }
+  function idxClaseDeOrden(orden) {
+    for (var i = 0; i < modsClase.length; i++) if (modsClase[i].orden === orden) return i;
+    return 0;
   }
 
   async function exportar() {
@@ -880,7 +896,7 @@ function VerHorarioTab({ uid }) {
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12,marginBottom:16}}>
         <div>
           <h3 style={{fontSize:17,fontWeight:700,color:C.text,marginBottom:4}}>Ver horario</h3>
-          <p style={{fontSize:13,color:C.textMuted}}>Mirá la grilla por curso, docente o espacio. Exportá todo a Excel con un clic.</p>
+          <p style={{fontSize:13,color:C.textMuted}}>Tocá cualquier celda para editar, mover o quitar una clase. Exportá todo a Excel.</p>
         </div>
         <button style={Object.assign({},btnPrimary,{display:"flex",alignItems:"center",gap:6})} onClick={exportar} disabled={exporting}>
           <i className="ti ti-download" style={{fontSize:15}}/>{exporting?"Generando…":"Exportar a Excel"}
@@ -916,6 +932,8 @@ function VerHorarioTab({ uid }) {
         </div>
       </div>
 
+      {modo==="curso" && <div style={{fontSize:12,color:C.textDim,marginBottom:10}}><i className="ti ti-click" style={{marginRight:4}}/>Tocá una celda para cambiar docente/espacio, mover o quitar la clase. En celdas vacías podés agregar una.</div>}
+
       {entidades.length === 0 ? (
         <div style={{color:C.textDim,fontSize:13}}>No hay clases de {modo} en este turno.</div>
       ) : (
@@ -936,10 +954,15 @@ function VerHorarioTab({ uid }) {
                     <td style={{background:C.bg,border:"1px solid "+C.border,padding:"8px 10px",fontWeight:700,color:C.textMuted,textAlign:"center"}}>{i+1}°</td>
                     {diasTurno.map(function (dia) {
                       var h = claseEn(dia, m.orden);
-                      if (!h) return <td key={dia} style={{border:"1px solid "+C.border,padding:4,background:"#fafaf8"}}/>;
+                      var editable = modo === "curso";
+                      if (!h) return (
+                        <td key={dia} onClick={editable?function(){setEditar({dia:dia,orden:m.orden,clase:null});}:undefined}
+                          style={{border:"1px solid "+C.border,padding:4,background:"#fafaf8",cursor:editable?"pointer":"default"}}/>
+                      );
                       var col = colorMat[h.materia_id] || C.accent;
                       return (
-                        <td key={dia} style={{border:"1px solid "+C.border,padding:4,verticalAlign:"top"}}>
+                        <td key={dia} onClick={editable?function(){setEditar({dia:dia,orden:m.orden,clase:h});}:undefined}
+                          style={{border:"1px solid "+C.border,padding:4,verticalAlign:"top",cursor:editable?"pointer":"default"}}>
                           <div style={{background:col+"18",borderLeft:"3px solid "+col,borderRadius:4,padding:"6px 8px",minHeight:34}}>
                             <div style={{fontWeight:700,color:C.text,fontSize:13}}>{nombreMat[h.materia_id]||"—"}</div>
                             {detalle(h) && <div style={{fontSize:11,color:C.textMuted,marginTop:2}}>{detalle(h)}</div>}
@@ -957,9 +980,163 @@ function VerHorarioTab({ uid }) {
           </table>
         </div>
       )}
+
+      {editar && (
+        <EditarClaseModal
+          ctx={editar} uid={uid} cursoId={selActivo} turno={turnoActivo}
+          horario={horario} asigs={asigs} docentes={docentes} espacios={espacios}
+          nombreMat={nombreMat} nombreDoc={nombreDoc} nombreEsp={nombreEsp} nombreCurso={nombreCurso}
+          modsClase={modsClase} diasTurno={diasTurno} dispSet={dispSet} idxClaseDeOrden={idxClaseDeOrden}
+          onClose={function(){setEditar(null);}}
+          onSaved={function(){setEditar(null);cargar();}}
+        />
+      )}
     </div>
   );
 }
+
+// ---------- Modal de edición manual de una clase ----------
+function EditarClaseModal(p) {
+  var ctx = p.ctx; var clase = ctx.clase;
+  var asignsCurso = p.asigs.filter(function (a) { return a.curso_id === p.cursoId; });
+
+  var [asigId, setAsigId] = useState(clase ? clase.asignacion_id : (asignsCurso[0] ? asignsCurso[0].id : ""));
+  var [docenteId, setDocenteId] = useState(clase ? clase.docente_id : "");
+  var [espacioId, setEspacioId] = useState(clase ? (clase.espacio_id || "") : "");
+  var [dia, setDia] = useState(ctx.dia);
+  var [orden, setOrden] = useState(ctx.orden);
+  var [saving, setSaving] = useState(false);
+
+  // Al elegir asignación (en alta o cambio de materia), precargar docente/espacio de la asignación
+  var asigSel = p.asigs.find(function (a) { return a.id === asigId; });
+  useEffect(function () {
+    if (!clase && asigSel) {
+      setDocenteId(asigSel.docente_id || "");
+      setEspacioId(asigSel.espacio_id || "");
+    }
+  }, [asigId]);
+
+  var materiaId = asigSel ? asigSel.materia_id : (clase ? clase.materia_id : null);
+
+  // Detección de conflictos para el slot elegido
+  function conflictos() {
+    var out = [];
+    var otras = p.horario.filter(function (h) {
+      return (h.turno||"manana") === p.turno && h.dia === dia && h.modulo_orden === orden && (!clase || h.id !== clase.id);
+    });
+    if (otras.some(function (h) { return h.curso_id === p.cursoId; }))
+      out.push("Este curso ya tiene otra clase en ese módulo.");
+    if (docenteId && otras.some(function (h) { return h.docente_id === docenteId; }))
+      out.push((p.nombreDoc[docenteId]||"El docente") + " ya está dando clase en otro curso en ese módulo.");
+    if (espacioId && otras.some(function (h) { return h.espacio_id === espacioId; }))
+      out.push((p.nombreEsp[espacioId]||"El espacio") + " ya está ocupado en ese módulo.");
+    if (docenteId) {
+      var ds = p.dispSet(docenteId);
+      if (ds) {
+        var key = dia + "-" + p.idxClaseDeOrden(orden);
+        if (!ds[key]) out.push((p.nombreDoc[docenteId]||"El docente") + " no tiene disponibilidad en ese día/módulo.");
+      }
+    }
+    return out;
+  }
+  var confs = asigId || clase ? conflictos() : [];
+
+  function guardar() {
+    setSaving(true);
+    var fila = {
+      owner_id: p.uid,
+      asignacion_id: asigId || (clase ? clase.asignacion_id : null),
+      curso_id: p.cursoId,
+      docente_id: docenteId || null,
+      materia_id: materiaId,
+      espacio_id: espacioId || null,
+      dia: dia,
+      modulo_orden: orden,
+      turno: p.turno,
+    };
+    var q = clase
+      ? supabase.from("hor_horario").update(fila).eq("id", clase.id)
+      : supabase.from("hor_horario").insert(fila);
+    q.then(function () { setSaving(false); p.onSaved(); });
+  }
+  function quitar() {
+    setSaving(true);
+    supabase.from("hor_horario").delete().eq("id", clase.id).then(function () { setSaving(false); p.onSaved(); });
+  }
+
+  var overlay = {position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,.4)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:16};
+  var box = {background:"#fff",borderRadius:10,padding:22,maxWidth:460,width:"100%",maxHeight:"90vh",overflowY:"auto",boxShadow:"0 10px 40px rgba(0,0,0,.2)"};
+  var lbl = {fontSize:11,color:C.textMuted,display:"block",marginBottom:4,marginTop:12};
+
+  return (
+    <div style={overlay} onClick={p.onClose}>
+      <div style={box} onClick={function(e){e.stopPropagation();}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+          <h3 style={{fontSize:16,fontWeight:700,color:C.text}}>{clase?"Editar clase":"Agregar clase"}</h3>
+          <button onClick={p.onClose} style={{background:"transparent",border:"none",cursor:"pointer",color:C.textMuted,fontSize:18}}>×</button>
+        </div>
+        <div style={{fontSize:12,color:C.textDim,marginBottom:4}}>{p.nombreCurso[p.cursoId]||""}</div>
+
+        <label style={lbl}>Materia / Asignación</label>
+        {clase ? (
+          <select style={inp} value={asigId} onChange={function(e){setAsigId(e.target.value);}}>
+            {asignsCurso.map(function (a) { return <option key={a.id} value={a.id}>{p.nombreMat[a.materia_id]||"Materia"} ({p.nombreDoc[a.docente_id]||"s/doc"})</option>; })}
+          </select>
+        ) : (
+          asignsCurso.length === 0
+            ? <div style={{fontSize:13,color:C.red}}>Este curso no tiene asignaciones cargadas.</div>
+            : <select style={inp} value={asigId} onChange={function(e){setAsigId(e.target.value);}}>
+                {asignsCurso.map(function (a) { return <option key={a.id} value={a.id}>{p.nombreMat[a.materia_id]||"Materia"} ({p.nombreDoc[a.docente_id]||"s/doc"})</option>; })}
+              </select>
+        )}
+
+        <label style={lbl}>Docente</label>
+        <select style={inp} value={docenteId} onChange={function(e){setDocenteId(e.target.value);}}>
+          <option value="">— sin docente —</option>
+          {p.docentes.map(function (d) { return <option key={d.id} value={d.id}>{d.nombre}</option>; })}
+        </select>
+
+        <label style={lbl}>Espacio</label>
+        <select style={inp} value={espacioId} onChange={function(e){setEspacioId(e.target.value);}}>
+          <option value="">— sin espacio —</option>
+          {p.espacios.map(function (e) { return <option key={e.id} value={e.id}>{e.nombre}</option>; })}
+        </select>
+
+        <div style={{display:"flex",gap:10}}>
+          <div style={{flex:1}}>
+            <label style={lbl}>Día</label>
+            <select style={inp} value={dia} onChange={function(e){setDia(e.target.value);}}>
+              {p.diasTurno.map(function (d) { return <option key={d} value={d}>{d}</option>; })}
+            </select>
+          </div>
+          <div style={{flex:1}}>
+            <label style={lbl}>Módulo</label>
+            <select style={inp} value={orden} onChange={function(e){setOrden(parseInt(e.target.value));}}>
+              {p.modsClase.map(function (m, i) { return <option key={m.orden} value={m.orden}>{(i+1)+"° clase"}</option>; })}
+            </select>
+          </div>
+        </div>
+
+        {confs.length > 0 && (
+          <div style={{background:"#fef2f2",border:"1px solid "+C.red,borderRadius:6,padding:"10px 12px",marginTop:14,fontSize:12,color:C.red}}>
+            <div style={{fontWeight:700,marginBottom:4}}><i className="ti ti-alert-triangle" style={{marginRight:4}}/>Conflictos detectados</div>
+            {confs.map(function (c, i) { return <div key={i} style={{marginTop:2}}>• {c}</div>; })}
+            <div style={{marginTop:6,color:C.textMuted}}>Podés guardar igual si estás seguro.</div>
+          </div>
+        )}
+
+        <div style={{display:"flex",gap:10,marginTop:18,alignItems:"center"}}>
+          <button style={Object.assign({},btnPrimary,confs.length?{background:C.amber}:{})} onClick={guardar} disabled={saving||(!clase&&asignsCurso.length===0)}>
+            {saving?"Guardando…":(confs.length?"Guardar igual":"Guardar")}
+          </button>
+          <button style={btnGhost} onClick={p.onClose}>Cancelar</button>
+          {clase && <button onClick={quitar} disabled={saving} style={{marginLeft:"auto",background:"transparent",border:"none",cursor:"pointer",color:C.red,fontSize:13,fontWeight:700,fontFamily:"Quicksand,sans-serif"}}>Quitar clase</button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PlaceholderTab({ titulo, texto }) {
   return (
     <div>
