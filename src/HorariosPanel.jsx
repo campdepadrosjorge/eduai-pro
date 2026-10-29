@@ -1054,10 +1054,25 @@ function EditarClaseModal(p) {
       modulo_orden: orden,
       turno: p.turno,
     };
-    var q = clase
-      ? supabase.from("hor_horario").update(fila).eq("id", clase.id)
-      : supabase.from("hor_horario").insert(fila);
-    q.then(function () { setSaving(false); p.onSaved(); });
+    if (!clase) {
+      supabase.from("hor_horario").insert(fila).then(function () { setSaving(false); p.onSaved(); });
+      return;
+    }
+    // Edición: si el destino cambió y ya hay otra clase del mismo curso en ese slot, intercambiarlas.
+    var movio = (dia !== clase.dia || orden !== clase.modulo_orden);
+    var ocupante = movio ? p.horario.find(function (h) {
+      return (h.turno||"manana") === p.turno && h.dia === dia && h.modulo_orden === orden
+        && h.curso_id === p.cursoId && h.id !== clase.id;
+    }) : null;
+    if (ocupante) {
+      // la clase que estaba en el destino se va al slot de origen de la que movemos
+      Promise.all([
+        supabase.from("hor_horario").update(fila).eq("id", clase.id),
+        supabase.from("hor_horario").update({ dia: clase.dia, modulo_orden: clase.modulo_orden }).eq("id", ocupante.id),
+      ]).then(function () { setSaving(false); p.onSaved(); });
+    } else {
+      supabase.from("hor_horario").update(fila).eq("id", clase.id).then(function () { setSaving(false); p.onSaved(); });
+    }
   }
   function quitar() {
     setSaving(true);
