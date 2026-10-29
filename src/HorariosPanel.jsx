@@ -176,7 +176,7 @@ function JornadaTab({ uid }) {
   return (
     <div>
       <h3 style={{fontSize:17,fontWeight:700,color:C.text,marginBottom:4}}>Jornada escolar</h3>
-      <p style={{fontSize:13,color:C.textMuted,marginBottom:16}}>Configurá cada turno: días, hora de inicio y los módulos del día (bloques de clase y recreos, en orden).</p>
+      <p style={{fontSize:13,color:C.textMuted,marginBottom:16}}>Configura cada turno: días, hora de inicio y los módulos del día (bloques de clase y recreos, en orden).</p>
 
       {jornadas.length===0 && (
         <div style={{display:"flex",gap:14,flexWrap:"wrap",marginBottom:18}}>
@@ -495,7 +495,7 @@ function DisponibilidadModal({ docente, dias, nModulos, onClose, onSave }) {
         <p style={{fontSize:12,color:C.textMuted,marginBottom:14}}>Marca los bloques en los que el docente puede dar clase. Verde = disponible.</p>
 
         {(dias.length===0||nModulos===0) ? (
-          <div style={{color:C.amber,fontSize:13,marginBottom:16}}>Primero configurá la jornada (días y módulos de clase) en la pestaña Jornada.</div>
+          <div style={{color:C.amber,fontSize:13,marginBottom:16}}>Primero configura la jornada (días y módulos de clase) en la pestaña Jornada.</div>
         ) : (
           <div style={{overflowX:"auto",marginBottom:16}}>
             <table style={{borderCollapse:"collapse"}}>
@@ -600,7 +600,7 @@ function AsignacionesTab({ uid }) {
   return (
     <div>
       <h3 style={{fontSize:17,fontWeight:700,color:C.text,marginBottom:4}}>Asignaciones</h3>
-      <p style={{fontSize:13,color:C.textMuted,marginBottom:16}}>Definí qué materia da cada docente en cada curso, y cuántas horas por semana.</p>
+      <p style={{fontSize:13,color:C.textMuted,marginBottom:16}}>Define qué materia da cada docente en cada curso, y cuántas horas por semana.</p>
 
       {faltan.length>0 ? (
         <div style={{background:"#fff7ed",border:"1px solid "+C.amber,borderRadius:6,padding:16,fontSize:13,color:C.amber}}>
@@ -671,7 +671,7 @@ function GenerarTab({ uid }) {
     fetch("/api/generar-horario",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:uid})})
       .then(function(r){return r.json();})
       .then(function(d){ if(d.error)setErr(d.error); else setRes(d); setGen(false); })
-      .catch(function(){ setErr("No se pudo generar. Intentá de nuevo."); setGen(false); });
+      .catch(function(){ setErr("No se pudo generar. Intenta de nuevo."); setGen(false); });
   }
 
   return (
