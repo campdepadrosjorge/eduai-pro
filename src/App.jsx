@@ -32,7 +32,7 @@ const GEN_TYPES = [
   { id:"material",    label:"Material Didactico",        icon:"ti-book",       color:"#0891b2" },
   { id:"presentacion",label:"Esquema de Presentacion",   icon:"ti-slideshow",  color:"#d97706" },
   { id:"guia",        label:"Guia de Estudio",           icon:"ti-map",        color:"#65a30d" },
-  { id:"adaptado",    label:"Contenido Adaptado (NEE)",  icon:"ti-heart",      color:"#db2777" },
+  { id:"adaptado",    label:"Contenido Adaptado",        icon:"ti-heart",      color:"#db2777" },
 ];
 
 const MM_TYPES = [
@@ -2759,8 +2759,7 @@ async function loadChatDoc(file){
                           <label style={lbl}>TIPO DE NEE *</label>
                           <select style={Object.assign({},sel,{width:"100%",marginBottom:12})} onChange={function(e){
                             var nee=e.target.value;
-                            var mat=genExtra.includes("MATERIAL:")?"\nMATERIAL:"+genExtra.split("MATERIAL:")[1]:"";
-                            setGenExtra(nee?"NEE:"+nee+mat:"");
+                            setGenExtra(nee?"NEE:"+nee:"");
                           }}>
                             <option value="">Seleccionar necesidad educativa...</option>
                             {["Dislexia","TDAH","TEA","Discapacidad Visual","Discapacidad Auditiva","Baja Vision","Altas Capacidades","Dificultades en Lectoescritura","Barreras Idiomaticas"].map(function(n){
@@ -2803,11 +2802,6 @@ async function loadChatDoc(file){
                             {genEoeText&&<span style={{fontSize:11,color:C.green,display:"flex",alignItems:"center",gap:3}}><i className="ti ti-check" style={{fontSize:12}}/>{Math.round(genEoeText.length/1000)+"k caracteres"}</span>}
                           </div>
                           <p style={{fontSize:11,color:C.textDim,marginBottom:14,lineHeight:1.4}}>Las recomendaciones del informe guían la adaptación para ese alumno. Es información confidencial: se usa solo para generar el material y no se transcribe en el documento final. Evita incluir datos personales que no hagan falta.</p>
-                          <label style={lbl}>MATERIAL BASE (opcional)</label>
-                          <textarea style={Object.assign({},inp,{height:100,resize:"vertical"})} onChange={function(e){
-                            var nee=genExtra.includes("NEE:")?genExtra.split("\n")[0]:"";
-                            setGenExtra(nee+(e.target.value?"\nMATERIAL:"+e.target.value:""));
-                          }} placeholder="Opcional: pega aquí un texto corto a adaptar. Para un documento completo, usa la opción Documento original a adaptar de arriba."/>
                         </div>
                       )}
                       {genType!=="adaptado"&&<div style={{marginBottom:18}}/>}
