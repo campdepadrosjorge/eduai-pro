@@ -136,8 +136,8 @@ function sysGen(type, subject, level, materials, bibliography, pais) {
   return (p[type] || base) + "\n\nResponde siempre en " + pp.dialecto + ". Usa Markdown con estructura visual clara (tablas, listas, encabezados). El material debe ser de calidad profesional, listo para usar sin modificaciones.";
 }
 
-function userGen(type, topic, diff, extra, subject, docText, pais) {
-  var docCtx = docText ? "\n\nDOCUMENTO DE CONTEXTO (usa este material como base para generar el contenido, respetando su enfoque, vocabulario y nivel):\n" + docText.slice(0, 8000) : "";
+function userGen(type, topic, diff, extra, subject, docText, pais, eoeText) {
+  var docCtx = (docText && type !== "adaptado") ? "\n\nDOCUMENTO DE CONTEXTO (usa este material como base para generar el contenido, respetando su enfoque, vocabulario y nivel):\n" + docText.slice(0, 8000) : "";
   var e = (extra ? "\n\nInstrucciones adicionales del docente: " + extra : "") + docCtx;
   var makecodeText = (topic + " " + (extra || "")).toLowerCase();
   var isMakeCode = makecodeText.includes("makecode") || makecodeText.includes("micro:bit") || makecodeText.includes("microbit");
@@ -205,6 +205,28 @@ function userGen(type, topic, diff, extra, subject, docText, pais) {
       "Piensala para que el alumno pueda estudiar solo: con objetivos claros de lo que va a lograr, el tema bien organizado y explicado, preguntas orientadoras que activen la lectura, autoevaluacion con respuestas para verificar, y estrategias de repaso. Suma cuadros de sintesis, actividades de comprension o recursos para profundizar solo si aportan valor real; no fuerces secciones de relleno.\n\n" +
       "SE CONCISA. Esto es clave: la guia tiene que ser acotada y util, no extensa. Enfocate en orientar el estudio de lo esencial, sin desarrollar cada punto hasta el agotamiento ni acumular actividades o preguntas de mas. Una guia de pocas paginas bien hecha es mucho mejor que una larguisima. PreferÃ­ siempre la claridad y la brevedad por sobre la exhaustividad.\n\n" +
       "FORMATO: usa exclusivamente tablas en formato Markdown (con | y guiones), nunca dibujadas con caracteres o ASCII. No uses emojis en los titulos; como mucho alguno muy puntual dentro del texto si de verdad aporta. Estructura clara con encabezados." + e,
+
+    adaptado: (function(){
+      var original = docText ? "\n\nDOCUMENTO ORIGINAL A ADAPTAR (es el material tal como se usa con el resto del curso; adaptalo respetando su tema, sus consignas y lo que evalua):\n" + docText.slice(0, 8000) : "";
+      var informe = eoeText ? "\n\nINFORME DEL EQUIPO DE ORIENTACION ESCOLAR (EOE) / PSICOPEDAGOGIA para este alumno. Son las recomendaciones profesionales a seguir. Aplicalas con criterio al adaptar el material. Trata esta informacion como confidencial: usala solo para la adaptacion y NO la reproduzcas ni la cites textualmente en el documento final:\n" + eoeText.slice(0, 8000) : "";
+      var base =
+        "Sos especialista en educacion inclusiva. Tu tarea es ADAPTAR un material educativo para un alumno concreto con necesidades educativas especificas, segun las recomendaciones del equipo de orientacion.\n\n" +
+        "Que se quiere adaptar: \"" + topic + "\"" + (subject ? " en el contexto de " + subject.name : "") + ".\n\n";
+      if (!original) {
+        base += "No se adjunto un documento original, asi que GENERA el material adaptado desde cero sobre ese tema.\n\n";
+      } else {
+        base += "Toma el documento original de abajo y REESCRIBELO adaptado para este alumno. Conserva el tema, los objetivos y lo que se evalua; cambia lo que haga falta para que el alumno pueda acceder al contenido y resolverlo (lenguaje, cantidad y complejidad de las consignas, apoyos visuales o ejemplos, formato de respuesta, tiempos sugeridos, pistas, segmentacion en pasos).\n\n";
+      }
+      base +=
+        "Como adaptar bien:\n" +
+        "- Oriéntate por el informe del EOE cuando este presente: cada alumno dentro de una misma condicion tiene niveles y habilidades distintos, asi que sigue las recomendaciones concretas de ese informe por sobre cualquier supuesto general.\n" +
+        "- Manten el mismo contenido curricular y el nivel de exigencia academica razonable: adaptar es dar acceso, no vaciar de contenido.\n" +
+        "- Se concreto y practico: el material tiene que quedar listo para entregar al alumno.\n" +
+        "- Al final, agrega una seccion breve '## Notas para el docente' que explique QUE se adapto y POR QUE (en terminos pedagogicos generales, sin transcribir datos sensibles del informe).\n\n" +
+        "FORMATO: usa tablas en formato Markdown (con | y guiones) si hacen falta, nunca ASCII. No uses emojis. Estructura clara, lista para imprimir." +
+        e + original + informe;
+      return base;
+    })(),
   };
   return m[type] || "Crea contenido educativo de alta calidad sobre \"" + topic + "\"" + nivel + materia + ". Dificultad: " + diff + "." + e;
 }
@@ -1691,6 +1713,9 @@ export default function AulaXpro() {
   var [genDocText,setGenDocText]=useState("");
   var [genDocName,setGenDocName]=useState("");
   var [genDocLoading,setGenDocLoading]=useState(false);
+  var [genEoeText,setGenEoeText]=useState("");
+  var [genEoeName,setGenEoeName]=useState("");
+  var [genEoeLoading,setGenEoeLoading]=useState(false);
   var [makeCodeUrl,setMakeCodeUrl]=useState(null);
   var [actImgUrl,setActImgUrl]=useState(null);
   var [actImgLoad,setActImgLoad]=useState(false);
@@ -1938,6 +1963,14 @@ useEffect(function(){
 
     return { text: fullText, filename: file.name, chars: fullText.length };
   }
+  async function processDocx(file) {
+    var mammoth = await import("mammoth");
+    var buffer = await file.arrayBuffer();
+    var result = await (mammoth.extractRawText ? mammoth : mammoth.default).extractRawText({ arrayBuffer: buffer });
+    var text = (result && result.value ? result.value : "").trim();
+    if (!text) throw new Error("No se pudo extraer texto del documento (puede estar vacío o ser una imagen escaneada).");
+    return { text: text, filename: file.name, chars: text.length };
+  }
   async function addSubject(){
     if(!sf.name.trim()||!authUser) return;
     var subData = Object.assign({},sf);
@@ -2032,7 +2065,7 @@ useEffect(function(){
     try{
       var pais=(authUser.user_metadata&&authUser.user_metadata.pais)||"AR";
       var sys=sysGen(genType,curSubj.name,genLevel,curSubj.materials,curSubj.bibliography,pais);
-      var usr=userGen(genType,genTopic,genDiff,genExtra,curSubj,genDocText,pais);
+      var usr=userGen(genType,genTopic,genDiff,genExtra,curSubj,genDocText,pais,genEoeText);
       var maxTokPorTipo={ material:16000, guia:16000, planclase:12000, secuencia:14000, presentacion:12000, actividad:10000, evaluacion:16000, rubrica:6000, adaptado:12000 };
       var maxTok=maxTokPorTipo[genType]||10000;
       var r=await callClaude(sys,[{role:"user",content:usr}],maxTok,false,function(partial){
@@ -2645,7 +2678,7 @@ async function loadChatDoc(file){
                   {GEN_TYPES.map(function(g){
                     return (
                       <button key={g.id} style={{display:"flex",alignItems:"center",gap:9,width:"100%",padding:"8px 10px",borderRadius:4,border:"none",cursor:"pointer",marginBottom:3,background:genType===g.id?C.accentBg:"transparent",color:genType===g.id?C.accent:C.textMuted,textAlign:"left",fontFamily:"Quicksand,sans-serif",fontSize:13,borderLeft:genType===g.id?"2px solid "+C.accent:"2px solid transparent"}}
-                        onClick={function(){setGenType(g.id);setGenResult("");setGenSaved(false);setGenErr("");setMakeCodeUrl(null);setActImgUrl(null);setGenDocText("");setGenDocName("");}}>
+                        onClick={function(){setGenType(g.id);setGenResult("");setGenSaved(false);setGenErr("");setMakeCodeUrl(null);setActImgUrl(null);setGenDocText("");setGenDocName("");setGenEoeText("");setGenEoeName("");}}>
                         <i className={"ti "+g.icon} style={{fontSize:16}}/>
                         <span style={{fontWeight:genType===g.id?700:400}}>{g.label}</span>
                       </button>
@@ -2686,19 +2719,23 @@ async function loadChatDoc(file){
                       <input style={Object.assign({},inp,{marginBottom:12})} value={genTopic} onChange={function(e){setGenTopic(e.target.value);}} placeholder="Ej: La Primera Guerra Mundial"/>
                       <label style={lbl}>INSTRUCCIONES ADICIONALES (opcional)</label>
                      <textarea style={Object.assign({},inp,{height:70,resize:"vertical",marginBottom:12})} value={genExtra} onChange={function(e){setGenExtra(e.target.value);}} placeholder="Ej: grupos de 4, enfoque por proyectos..."/>
-                      <label style={lbl}>DOCUMENTO DE CONTEXTO (opcional)</label>
+                      <label style={lbl}>{genType==="adaptado"?"DOCUMENTO ORIGINAL A ADAPTAR (opcional)":"DOCUMENTO DE CONTEXTO (opcional)"}</label>
                       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
                         <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+(genDocText?C.accent:C.border),borderRadius:4,padding:"7px 14px",cursor:genDocLoading?"not-allowed":"pointer",fontSize:12,fontWeight:600,color:genDocText?C.accent:C.text,opacity:genDocLoading?.6:1}}>
                           <i className={genDocLoading?"ti ti-loader":"ti ti-file-upload"} style={{fontSize:14}}/>
-                          {genDocLoading?"Procesando...":genDocText?genDocName:"Adjuntar PDF o texto"}
-                          <input type="file" accept=".pdf,.txt" style={{display:"none"}} disabled={genDocLoading} onChange={async function(e){
+                          {genDocLoading?"Procesando...":genDocText?genDocName:"Adjuntar PDF, Word o texto"}
+                          <input type="file" accept=".pdf,.txt,.docx" style={{display:"none"}} disabled={genDocLoading} onChange={async function(e){
                             var file=e.target.files[0]; if(!file) return;
-                            if(file.type==="application/pdf" && file.size > 3*1024*1024){alert("El PDF es demasiado grande. El lÃ­mite es 3MB. IntentÃ¡ con un PDF mÃ¡s pequeÃ±o o pegÃ¡ el texto directamente en las instrucciones adicionales.");return;}
+                            if(file.type==="application/pdf" && file.size > 3*1024*1024){alert("El PDF es demasiado grande. El límite es 3MB. Intenta con un PDF más pequeño o pega el texto directamente en las instrucciones adicionales.");return;}
                             setGenDocLoading(true);
                             try{
                               if(file.type==="application/pdf"){
                                 var result=await processPdf(file);
                                 setGenDocText(result.text);
+                                setGenDocName(file.name);
+                              } else if(/\.docx$/i.test(file.name)){
+                                var rdoc=await processDocx(file);
+                                setGenDocText(rdoc.text.slice(0,8000));
                                 setGenDocName(file.name);
                               } else {
                                 var text=await file.text();
@@ -2730,11 +2767,47 @@ async function loadChatDoc(file){
                               return <option key={n} value={n}>{n}</option>;
                             })}
                           </select>
+                          <label style={lbl}>INFORME DEL EOE / PSICOPEDAGOGÍA (opcional)</label>
+                          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+                            <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+(genEoeText?C.accent:C.border),borderRadius:4,padding:"7px 14px",cursor:genEoeLoading?"not-allowed":"pointer",fontSize:12,fontWeight:600,color:genEoeText?C.accent:C.text,opacity:genEoeLoading?.6:1}}>
+                              <i className={genEoeLoading?"ti ti-loader":"ti ti-file-upload"} style={{fontSize:14}}/>
+                              {genEoeLoading?"Procesando...":genEoeText?genEoeName:"Adjuntar informe (PDF, Word o texto)"}
+                              <input type="file" accept=".pdf,.txt,.docx" style={{display:"none"}} disabled={genEoeLoading} onChange={async function(e){
+                                var file=e.target.files[0]; if(!file) return;
+                                if(file.type==="application/pdf" && file.size > 3*1024*1024){alert("El PDF es demasiado grande. El límite es 3MB. Intenta con un PDF más pequeño o pega el texto directamente.");return;}
+                                setGenEoeLoading(true);
+                                try{
+                                  if(file.type==="application/pdf"){
+                                    var result=await processPdf(file);
+                                    setGenEoeText(result.text);
+                                    setGenEoeName(file.name);
+                                  } else if(/\.docx$/i.test(file.name)){
+                                    var rdoc=await processDocx(file);
+                                    setGenEoeText(rdoc.text.slice(0,8000));
+                                    setGenEoeName(file.name);
+                                  } else {
+                                    var text=await file.text();
+                                    setGenEoeText(text.slice(0,8000));
+                                    setGenEoeName(file.name);
+                                  }
+                                }catch(err){alert("Error al procesar el archivo: "+err.message);}
+                                setGenEoeLoading(false);
+                                e.target.value="";
+                              }}/>
+                            </label>
+                            {genEoeText&&(
+                              <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.textDim,display:"flex",alignItems:"center",gap:4,fontSize:12,fontFamily:"Quicksand,sans-serif"}} onClick={function(){setGenEoeText("");setGenEoeName("");}}>
+                                <i className="ti ti-x" style={{fontSize:13}}/>Quitar
+                              </button>
+                            )}
+                            {genEoeText&&<span style={{fontSize:11,color:C.green,display:"flex",alignItems:"center",gap:3}}><i className="ti ti-check" style={{fontSize:12}}/>{Math.round(genEoeText.length/1000)+"k caracteres"}</span>}
+                          </div>
+                          <p style={{fontSize:11,color:C.textDim,marginBottom:14,lineHeight:1.4}}>Las recomendaciones del informe guían la adaptación para ese alumno. Es información confidencial: se usa solo para generar el material y no se transcribe en el documento final. Evita incluir datos personales que no hagan falta.</p>
                           <label style={lbl}>MATERIAL BASE (opcional)</label>
                           <textarea style={Object.assign({},inp,{height:100,resize:"vertical"})} onChange={function(e){
                             var nee=genExtra.includes("NEE:")?genExtra.split("\n")[0]:"";
                             setGenExtra(nee+(e.target.value?"\nMATERIAL:"+e.target.value:""));
-                          }} placeholder="Pega aqui el material que queres adaptar. Si lo dejas vacio la IA genera desde cero."/>
+                          }} placeholder="Opcional: pega aquí un texto corto a adaptar. Para un documento completo, usa la opción Documento original a adaptar de arriba."/>
                         </div>
                       )}
                       {genType!=="adaptado"&&<div style={{marginBottom:18}}/>}
