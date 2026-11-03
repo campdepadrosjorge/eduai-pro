@@ -56,22 +56,12 @@ export async function requireUser(req, res) {
 // Exige que el usuario sea admin. Si no, responde 401/403 y devuelve null.
 export async function requireAdmin(req, res) {
   var user = await getAuthUser(req);
-  var hasHeader = !!(req.headers.authorization || req.headers.Authorization);
-  var adminEnv = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
-  console.log("[AUTH-DEBUG] requireAdmin:",
-    "hasAuthHeader=" + hasHeader,
-    "| tokenValido=" + (!!user),
-    "| userEmail=" + (user ? user.email : "null"),
-    "| ADMIN_EMAIL_set=" + (!!adminEnv),
-    "| ADMIN_EMAIL=" + (adminEnv || "(vacio)"),
-    "| match=" + (user ? isAdminUser(user) : false)
-  );
   if (!user) {
-    res.status(401).json({ error: "No autenticado (token ausente o invalido)" });
+    res.status(401).json({ error: "No autenticado" });
     return null;
   }
   if (!isAdminUser(user)) {
-    res.status(403).json({ error: "No autorizado (no es admin)" });
+    res.status(403).json({ error: "No autorizado" });
     return null;
   }
   return user;
