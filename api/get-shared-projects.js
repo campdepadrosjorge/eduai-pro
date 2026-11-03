@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { requireUser } from "./_auth.js";
  
 var supabase = createClient(
   process.env.SUPABASE_URL,
@@ -7,9 +8,10 @@ var supabase = createClient(
  
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
- 
-  var userId = req.body.user_id;
-  if (!userId) return res.status(400).json({ error: "user_id requerido" });
+
+  var caller = await requireUser(req, res);
+  if (!caller) return;
+  var userId = caller.id;
  
   try {
     // Buscar memberships activos del usuario

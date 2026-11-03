@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { requireUser } from "./_auth.js";
  
 var supabase = createClient(
   process.env.SUPABASE_URL,
@@ -7,7 +8,10 @@ var supabase = createClient(
  
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
- 
+
+  var caller = await requireUser(req, res);
+  if (!caller) return;
+
   var projectId = req.body.project_id;
   var email = req.body.email;
   var subjectName = req.body.subject_name;

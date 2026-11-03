@@ -1,6 +1,10 @@
+import { requireUser } from "./_auth.js";
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
- 
+
+  var caller = await requireUser(req, res);
+  if (!caller) return;
+
   var description = req.body.description;
   var subject = req.body.subject;
   var level = req.body.level;

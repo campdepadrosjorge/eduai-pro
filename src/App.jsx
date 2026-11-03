@@ -1,22 +1,12 @@
 ﻿import { useState, useEffect, useRef } from "react";
 import supabase from "./supabase.js";
+import { authHeaders } from "./apiAuth.js";
 import { exportDocx, exportPdf, exportZip, exportFicha } from "./exportUtils.js";
 import { useTour, TourTooltip, TourLaunchButton, WelcomeModal } from "./TourSystem.jsx";
 import { parseSlides, generarPptx, SLIDE_TEMPLATES } from "./slidesTemplates.js";
 
 import DirectivoDashboard from "./DirectivoDashboard.jsx";
 var _currentUser = { id: null, isAdmin: false };
-
-// Devuelve headers con el token del usuario para llamar a los endpoints protegidos.
-async function authHeaders(extra) {
-  var h = Object.assign({ "Content-Type": "application/json" }, extra || {});
-  try {
-    var s = await supabase.auth.getSession();
-    var token = s && s.data && s.data.session ? s.data.session.access_token : null;
-    if (token) h["Authorization"] = "Bearer " + token;
-  } catch (e) {}
-  return h;
-}
 
 const NAV = [
   { id:"dashboard",  label:"Inicio",              icon:"ti-layout-dashboard" },
@@ -407,7 +397,7 @@ async function dbDelQuestionItem(id) {
 }
 async function dbLoadProjects(userId) {
   var owned = await supabase.from("projects").select("*, project_members(*)").eq("owner_id",userId).order("created_at",{ascending:false});
-  var sharedRes = await fetch("/api/get-shared-projects",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:userId})});
+  var sharedRes = await fetch("/api/get-shared-projects",{method:"POST",headers:await authHeaders(),body:JSON.stringify({user_id:userId})});
   var sharedData = sharedRes.ok ? await sharedRes.json() : {projects:[]};
   return {owned:owned.data||[], shared:sharedData.projects||[]};
 }
@@ -1064,7 +1054,7 @@ function AdminPanel({authUser,supabaseClient}) {
     if(!singleEmail.trim()) return;
     setSingleLoading(true);setSingleResult(null);
     try {
-      var res=await fetch("/api/invite-users",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+      var res=await fetch("/api/invite-users",{method:"POST",headers:await authHeaders(),body:JSON.stringify({
         users:[{email:singleEmail.trim(),name:singleName.trim()}],
         institution_name:"Piloto individual",
         plan_id:"bcdbe285413b4acbbd187fc2fe6d52dc",
@@ -1156,7 +1146,7 @@ function AdminPanel({authUser,supabaseClient}) {
         var row=rows[i];
         if(row[0]) users.push({email:String(row[0]).trim(),name:row[1]?String(row[1]).trim():""});
       }
-      var res=await fetch("/api/invite-users",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({users,institution_name:instName,plan_id:"bcdbe285413b4acbbd187fc2fe6d52dc",max_users:instMaxUsers,days:instDays})});
+      var res=await fetch("/api/invite-users",{method:"POST",headers:await authHeaders(),body:JSON.stringify({users,institution_name:instName,plan_id:"bcdbe285413b4acbbd187fc2fe6d52dc",max_users:instMaxUsers,days:instDays})});
       var data=await res.json();
       setInstResult(data);
     } catch(e){setInstResult({error:e.message});}
@@ -1847,7 +1837,7 @@ useEffect(function(){
                 });
               });
             } else if(sub.is_trial){
-              fetch("/api/verificar-suscripcion",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:authUser.id})})
+              authHeaders().then(function(_h){ return fetch("/api/verificar-suscripcion",{method:"POST",headers:_h,body:JSON.stringify({user_id:authUser.id})}); })
                 .then(function(r){return r.json();})
                 .then(function(vr){
                   if(vr && vr.activated){
@@ -1939,7 +1929,7 @@ useEffect(function(){
     // 3. Llamar al endpoint con la URL, leyendo la respuesta por streaming
     var res = await fetch("/api/process-pdf", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: await authHeaders(),
       body: JSON.stringify({ url: publicUrl, filename: file.name }),
     });
     if (!res.ok) {
@@ -2136,7 +2126,7 @@ useEffect(function(){
   }
 
   async function callImgApi(description,subject,level){
-  var res=await fetch("/api/generate-image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({description,subject,level})});
+  var res=await fetch("/api/generate-image",{method:"POST",headers:await authHeaders(),body:JSON.stringify({description,subject,level})});
   if(!res.ok){var ej;try{ej=await res.json();}catch{throw new Error("Error del servidor.");}throw new Error(ej.error||"Error al generar imagen.");}
   var ct=res.headers.get("content-type")||"";
   var blob;
@@ -3209,7 +3199,7 @@ async function loadChatDoc(file){
                         reader.onload=async function(ev){
                           var base64=ev.target.result.split(",")[1];
                           var mediaType=file.type||"image/jpeg";
-                          var res=await fetch("/api/extract-text",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({base64,mediaType})});
+                          var res=await fetch("/api/extract-text",{method:"POST",headers:await authHeaders(),body:JSON.stringify({base64,mediaType})});
                           var data=await res.json();
                           if(!res.ok) throw new Error(data.error);
                           setCorrHojas(function(h){
@@ -3965,7 +3955,7 @@ async function loadChatDoc(file){
                             <Btn st={{width:"100%",justifyContent:"center"}} onClick={async function(){
                               if(!inviteEmail||!inviteSubject) return;
                               try{
-                                var invRes=await fetch("/api/invite-project",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({project_id:currentProject.id,email:inviteEmail,subject_name:inviteSubject})});
+                                var invRes=await fetch("/api/invite-project",{method:"POST",headers:await authHeaders(),body:JSON.stringify({project_id:currentProject.id,email:inviteEmail,subject_name:inviteSubject})});
                               var invData=await invRes.json();
                               if(!invRes.ok) throw new Error(invData.error);
                                 var updated=await dbLoadProjects(authUser.id);

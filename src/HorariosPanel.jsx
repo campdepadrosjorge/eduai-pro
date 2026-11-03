@@ -5,6 +5,7 @@
 // ============================================================
 import { useState, useEffect } from "react";
 import supabase from "./supabase.js";
+import { authHeaders } from "./apiAuth.js";
 
 var C = {
   bg:"#f0efea", surf:"#ffffff", card:"#ffffff", border:"#d4cfc6",
@@ -668,7 +669,7 @@ function GenerarTab({ uid }) {
 
   function generar(){
     setGen(true);setErr("");setRes(null);
-    fetch("/api/generar-horario",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:uid})})
+    authHeaders().then(function(_h){ return fetch("/api/generar-horario",{method:"POST",headers:_h,body:JSON.stringify({})}); })
       .then(function(r){return r.json();})
       .then(function(d){ if(d.error)setErr(d.error); else setRes(d); setGen(false); })
       .catch(function(){ setErr("No se pudo generar. Intenta de nuevo."); setGen(false); });

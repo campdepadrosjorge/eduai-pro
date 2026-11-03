@@ -1,8 +1,12 @@
 // api/process-pdf.js
 // Extrae y resume el contenido de un PDF que ya está subido en Storage (recibe su URL)
 
+import { requireUser } from "./_auth.js";
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
+
+  var caller = await requireUser(req, res);
+  if (!caller) return;
 
   var fileUrl = req.body.url;
   var filename = req.body.filename || "documento.pdf";

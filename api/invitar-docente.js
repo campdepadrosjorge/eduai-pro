@@ -4,13 +4,18 @@
 // Valida que el directivo no se pase de max_users.
 
 import { createClient } from "@supabase/supabase-js";
+import { requireUser, isDirectivo, isAdminUser } from "./_auth.js";
 
 var supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
-  var directivoId = req.body.directivo_id;   // auth.uid del directivo
+  var caller = await requireUser(req, res);
+  if (!caller) return;
+  if (!isDirectivo(caller) && !isAdminUser(caller)) return res.status(403).json({ error: "Solo un directivo puede invitar docentes" });
+
+  var directivoId = caller.id;   // auth.uid del directivo (del token)
   var email = (req.body.email || "").trim().toLowerCase();
   var name = (req.body.name || "").trim();
   var role = req.body.role === "directivo" ? "directivo" : "docente";

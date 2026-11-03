@@ -1,5 +1,9 @@
+import { requireUser } from "./_auth.js";
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
+
+  var caller = await requireUser(req, res);
+  if (!caller) return;
 
   var base64 = req.body.base64;
   if (!base64) return res.status(400).json({ error: "PDF requerido" });

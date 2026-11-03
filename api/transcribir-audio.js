@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { requireUser } from "./_auth.js";
 
 var supabase = createClient(
   process.env.SUPABASE_URL,
@@ -16,10 +17,13 @@ export const config = {
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
+  var caller = await requireUser(req, res);
+  if (!caller) return;
+
   var base64 = req.body.base64;
   var mimeType = req.body.mimeType || "audio/webm";
-  var userId = req.body.userId;
-  var userEmail = req.body.userEmail || "";
+  var userId = caller.id;
+  var userEmail = caller.email || "";
   if (!base64) return res.status(400).json({ error: "Audio requerido" });
 
   try {

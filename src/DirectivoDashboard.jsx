@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import supabase from "./supabase.js";
+import { authHeaders } from "./apiAuth.js";
 import HorariosPanel from "./HorariosPanel.jsx";
 import { exportDocx, exportPdf, exportInformeCorregido, exportInformeMarcado, exportInformesZip } from "./exportUtils.js";
 import { sysComunicado, userComunicado, sysActa, userActa, sysCorreccionInforme, userCorreccionInforme, sysAcompanamiento, userAcompanamiento, instruccionTramite, sysRevisionDocumento, userRevisionDocumento } from "./directivoPrompts.js";
@@ -35,8 +36,8 @@ async function callClaude(system, messages, maxTokens, onStream) {
   if (!maxTokens) maxTokens = 4000;
   var useStreaming = typeof onStream === "function";
   var res = await fetch("/api/generate", {
-    method:"POST", headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({ system, messages, maxTokens, stream:useStreaming, userId:_dirUser.id, isAdmin:_dirUser.isAdmin }),
+    method:"POST", headers: await authHeaders(),
+    body:JSON.stringify({ system, messages, maxTokens, stream:useStreaming }),
   });
   if (!res.ok) {
     var err = {};
@@ -143,10 +144,10 @@ function MisDocentesPanel({ authUser }) {
     var mail = email.trim().toLowerCase();
     if (!mail || mail.indexOf("@") < 0) { setErr("Ingresá un email válido."); return; }
     setEnviando(true);
-    fetch("/api/invitar-docente", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ directivo_id: authUser.id, email: mail, name: nombre.trim(), role: rol }),
-    })
+    authHeaders().then(function(_h){ return fetch("/api/invitar-docente", {
+      method: "POST", headers: _h,
+      body: JSON.stringify({ email: mail, name: nombre.trim(), role: rol }),
+    }); })
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (d.error) { setErr(d.error); }
@@ -345,7 +346,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
         reader.readAsDataURL(file);
       });
       var mediaType = file.type || "image/jpeg";
-      var res = await fetch("/api/extract-text",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({base64:base64,mediaType:mediaType})});
+      var res = await fetch("/api/extract-text",{method:"POST",headers:await authHeaders(),body:JSON.stringify({base64:base64,mediaType:mediaType})});
       var data = await res.json();
       if(!res.ok) throw new Error(data.error || "Error al leer la imagen");
       setActHojas(function(h){
@@ -408,7 +409,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
         reader.onerror = function(){ reject(new Error("No se pudo procesar el audio")); };
         reader.readAsDataURL(blob);
       });
-      var res = await fetch("/api/transcribir-audio",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({base64:base64,mimeType:"audio/webm",userId:authUser?authUser.id:null,userEmail:authUser?authUser.email:""})});
+      var res = await fetch("/api/transcribir-audio",{method:"POST",headers:await authHeaders(),body:JSON.stringify({base64:base64,mimeType:"audio/webm"})});
       var data = await res.json();
       if(!res.ok) throw new Error(data.error || "Error al transcribir");
       setActTemas(function(prev){return prev?(prev+"\n\n--- TRANSCRIPCION DE LA REUNION ---\n"+data.text):("--- TRANSCRIPCION DE LA REUNION ---\n"+data.text);});
@@ -439,7 +440,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
         reader.readAsDataURL(file);
       });
       var res = await fetch("/api/extraer-texto-pdf",{
-        method:"POST", headers:{"Content-Type":"application/json"},
+        method:"POST", headers: await authHeaders(),
         body:JSON.stringify({ base64:base64 }),
       });
       if(!res.ok){ var err={}; try{err=await res.json();}catch(e){} throw new Error(err.error||"Error al leer el PDF"); }
@@ -500,7 +501,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
           var texto;
           if(/\.pdf$/i.test(nombreArch)){
             var pdfBuffer = await docxFiles[i].async("base64");
-            var resPdf = await fetch("/api/extraer-texto-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({base64:pdfBuffer})});
+            var resPdf = await fetch("/api/extraer-texto-pdf",{method:"POST",headers:await authHeaders(),body:JSON.stringify({base64:pdfBuffer})});
             if(!resPdf.ok) continue;
             var dataPdf = await resPdf.json();
             texto = dataPdf.text;
@@ -643,7 +644,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
           var texto;
           if(/\.pdf$/i.test(nombreArch)){
             var pdfBuffer = await files[i].async("base64");
-            var resPdf = await fetch("/api/extraer-texto-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({base64:pdfBuffer})});
+            var resPdf = await fetch("/api/extraer-texto-pdf",{method:"POST",headers:await authHeaders(),body:JSON.stringify({base64:pdfBuffer})});
             if(!resPdf.ok) continue;
             var dataPdf = await resPdf.json();
             texto = dataPdf.text;
