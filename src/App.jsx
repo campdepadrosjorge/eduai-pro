@@ -137,13 +137,13 @@ function sysGen(type, subject, level, materials, bibliography, pais) {
   return (p[type] || base) + "\n\nResponde siempre en " + pp.dialecto + ". Usa Markdown con estructura visual clara (tablas, listas, encabezados). El material debe ser de calidad profesional, listo para usar sin modificaciones.";
 }
 
-function userGen(type, topic, diff, extra, subject, docText, pais, eoeText) {
+function userGen(type, topic, diff, extra, subject, docText, pais, eoeText, nivelSel) {
   var docCtx = (docText && type !== "adaptado") ? "\n\nDOCUMENTO DE CONTEXTO (usa este material como base para generar el contenido, respetando su enfoque, vocabulario y nivel):\n" + docText.slice(0, 8000) : "";
   var e = (extra ? "\n\nInstrucciones adicionales del docente: " + extra : "") + docCtx;
   var makecodeText = (topic + " " + (extra || "")).toLowerCase();
   var isMakeCode = makecodeText.includes("makecode") || makecodeText.includes("micro:bit") || makecodeText.includes("microbit");
   var mk = isMakeCode ? "\n\nIMPORTANTE: Incluye una seccion '## Codigo MakeCode' con el codigo JavaScript completo para micro:bit dentro de un bloque ```javascript. ExplicÃ¡ cada linea con comentarios." : "";
-  var nivel = subject ? " para alumnos de " + (subject.level||"nivel medio") : "";
+  var nivel = " para alumnos de " + (nivelSel || (subject && subject.level) || "nivel medio");
   var materia = subject ? " en el contexto de " + subject.name : "";
   var m = {
    planclase:
@@ -2066,7 +2066,7 @@ useEffect(function(){
     try{
       var pais=(authUser.user_metadata&&authUser.user_metadata.pais)||"AR";
       var sys=sysGen(genType,curSubj.name,genLevel,curSubj.materials,curSubj.bibliography,pais);
-      var usr=userGen(genType,genTopic,genDiff,genExtra,curSubj,genDocText,pais,genEoeText);
+      var usr=userGen(genType,genTopic,genDiff,genExtra,curSubj,genDocText,pais,genEoeText,genLevel);
       var maxTokPorTipo={ material:16000, guia:16000, planclase:12000, secuencia:14000, presentacion:12000, actividad:10000, evaluacion:16000, rubrica:6000, adaptado:12000 };
       var maxTok=maxTokPorTipo[genType]||10000;
       var r=await callClaude(sys,[{role:"user",content:usr}],maxTok,false,function(partial){
