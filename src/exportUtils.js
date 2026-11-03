@@ -3,6 +3,7 @@ import {
   Document, Paragraph, TextRun, Packer, AlignmentType, BorderStyle,
   Table, TableRow, TableCell, WidthType, ShadingType, LevelFormat, ImageRun
 } from "docx";
+import { latexToPlain } from "./mathPlain.js";
  
 const F="Arial", SZ_H1=40, SZ_H2=32, SZ_H3=26, SZ_H4=24, SZ_TXT=22, SZ_SUB=18, SZ_CODE=18;
 const TABLE_WIDTH = 9026;
@@ -21,7 +22,7 @@ function downloadBlob(blob, filename){
  
 function parseInline(text, size, color){
   if (!size) size = SZ_TXT;
-  text = text.replace(/&nbsp;/gi, " ").replace(/\[ \]/g, "☐").replace(/\[x\]/gi, "☑");
+  text = latexToPlain(text).replace(/&nbsp;/gi, " ").replace(/\[ \]/g, "☐").replace(/\[x\]/gi, "☑");
   const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|\*[^\n*]+\*)/g).filter(Boolean);
   return parts.map(part => {
     if (part.startsWith("**") && part.endsWith("**")) {
@@ -286,7 +287,7 @@ function buildDoc(topic, typeName, subject, content, imageBase64) {
  
 function buildPdfHtml(topic, typeName, subject, content) {
   const segments = [];
-  let remaining = (content || "").replace(/&nbsp;/gi, " ");
+  let remaining = latexToPlain(content || "").replace(/&nbsp;/gi, " ");
  
   remaining = remaining.replace(/```[\w]*\n([\s\S]*?)```/g, (match, code) => {
     const id = `PLACEHOLDER_CODE_${segments.length}_END`;
