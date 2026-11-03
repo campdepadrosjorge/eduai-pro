@@ -21,7 +21,7 @@ function downloadBlob(blob, filename){
  
 function parseInline(text, size, color){
   if (!size) size = SZ_TXT;
-  text = text.replace(/\[ \]/g, "☐").replace(/\[x\]/gi, "☑");
+  text = text.replace(/&nbsp;/gi, " ").replace(/\[ \]/g, "☐").replace(/\[x\]/gi, "☑");
   const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|\*[^\n*]+\*)/g).filter(Boolean);
   return parts.map(part => {
     if (part.startsWith("**") && part.endsWith("**")) {
@@ -286,7 +286,7 @@ function buildDoc(topic, typeName, subject, content, imageBase64) {
  
 function buildPdfHtml(topic, typeName, subject, content) {
   const segments = [];
-  let remaining = content;
+  let remaining = (content || "").replace(/&nbsp;/gi, " ");
  
   remaining = remaining.replace(/```[\w]*\n([\s\S]*?)```/g, (match, code) => {
     const id = `PLACEHOLDER_CODE_${segments.length}_END`;

@@ -134,7 +134,7 @@ function sysGen(type, subject, level, materials, bibliography, pais) {
     adaptado:     base + "\n\nSos especialista en educacion inclusiva y NEE con experiencia en adaptaciones curriculares. Tu tarea es crear materiales adaptados especificos, practicos y listos para usar con un alumno concreto.",
   };
   var pp = PAISES[pais] || PAISES.AR;
-  return (p[type] || base) + "\n\nResponde siempre en " + pp.dialecto + ". Usa Markdown con estructura visual clara (tablas, listas, encabezados). El material debe ser de calidad profesional, listo para usar sin modificaciones.";
+  return (p[type] || base) + "\n\nResponde siempre en " + pp.dialecto + ". Usa Markdown con estructura visual clara (tablas, listas, encabezados). Para dejar renglones en blanco donde el alumno escribe, usa lineas vacias comunes, NUNCA entidades HTML como &nbsp;. El material debe ser de calidad profesional, listo para usar sin modificaciones.";
 }
 
 function userGen(type, topic, diff, extra, subject, docText, pais, eoeText, nivelSel) {
@@ -634,6 +634,7 @@ function MDView({text,maxH}) {
     ".md blockquote{border-left:3px solid #0d9488;margin:.5em 0;padding:.35em .75em;background:#e6f7f5;color:#6b7280;border-radius:0 4px 4px 0}"+
     ".md pre{background:#f5f5f0;padding:11px;border-radius:4px;overflow-x:auto;font-family:monospace;font-size:.82em;color:#0f766e;margin:.5em 0}";
   var h=text
+    .replace(/&nbsp;/gi," ")
     .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
     .replace(/```[\w]*\n([\s\S]*?)```/g,function(_,c){return "<pre>"+c+"</pre>";})
     .replace(/\*\*\*(.+?)\*\*\*/g,"<strong><em>$1</em></strong>")
