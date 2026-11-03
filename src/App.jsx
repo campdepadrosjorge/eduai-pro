@@ -7,6 +7,17 @@ import { parseSlides, generarPptx, SLIDE_TEMPLATES } from "./slidesTemplates.js"
 import DirectivoDashboard from "./DirectivoDashboard.jsx";
 var _currentUser = { id: null, isAdmin: false };
 
+// Devuelve headers con el token del usuario para llamar a los endpoints protegidos.
+async function authHeaders(extra) {
+  var h = Object.assign({ "Content-Type": "application/json" }, extra || {});
+  try {
+    var s = await supabase.auth.getSession();
+    var token = s && s.data && s.data.session ? s.data.session.access_token : null;
+    if (token) h["Authorization"] = "Bearer " + token;
+  } catch (e) {}
+  return h;
+}
+
 const NAV = [
   { id:"dashboard",  label:"Inicio",              icon:"ti-layout-dashboard" },
   { id:"generator",  label:"Generador IA",         icon:"ti-bolt" },
@@ -256,8 +267,8 @@ async function callClaude(system, messages, maxTokens, useSearch, onStream, user
   if (!maxTokens) maxTokens = 4000;
   var useStreaming = typeof onStream === "function";
   var res = await fetch("/api/generate", {
-    method:"POST", headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({ system, messages, maxTokens, useSearch:!!useSearch, stream:useStreaming, userId:_currentUser.id, isAdmin:_currentUser.isAdmin }),
+    method:"POST", headers: await authHeaders(),
+    body:JSON.stringify({ system, messages, maxTokens, useSearch:!!useSearch, stream:useStreaming }),
   });
   if (!res.ok) {
     var err = {};
@@ -1071,7 +1082,7 @@ function AdminPanel({authUser,supabaseClient}) {
     if(!roleEmail.trim()) return;
     setRoleLoading(true);setRoleResult(null);
     try {
-      var res=await fetch("/api/cambiar-rol",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:roleEmail.trim(),role:roleValue})});
+      var res=await fetch("/api/cambiar-rol",{method:"POST",headers:await authHeaders(),body:JSON.stringify({email:roleEmail.trim(),role:roleValue})});
       var data=await res.json();
       setRoleResult(data);
       if(!data.error) setRoleEmail("");
@@ -1083,7 +1094,7 @@ function AdminPanel({authUser,supabaseClient}) {
     try {
       var res = await fetch("/api/get-pilot-users", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: await authHeaders(),
       });
       var data = await res.json();
       if (!res.ok) throw new Error(data.error);

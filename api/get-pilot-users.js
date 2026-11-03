@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { requireAdmin } from "./_auth.js";
 
 var supabase = createClient(
   process.env.SUPABASE_URL,
@@ -7,6 +8,10 @@ var supabase = createClient(
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
+
+  // Solo un admin autenticado puede listar los usuarios.
+  var caller = await requireAdmin(req, res);
+  if (!caller) return;
 
   try {
     var subsResult = await supabase

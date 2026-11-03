@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { getAuthUser, isAdminUser } from "./_auth.js";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -7,19 +8,20 @@ const supabase = createClient(
 
 async function checkBudget(userId, isAdmin) {
   if (isAdmin) return true;
-  if (!userId) return true;
+  if (!userId) return false; // sin usuario identificado, no se permite
   try {
     const r = await supabase.from("subscriptions")
       .select("tokens_used,tokens_limit,extra_credits,tokens_reset_date")
       .eq("user_id", userId).eq("status", "active").limit(1);
-    if (r.error || !r.data || r.data.length === 0) return true;
+    if (r.error) return false;              // ante error, denegar (fallar cerrado)
+    if (!r.data || r.data.length === 0) return false; // sin suscripción activa, denegar
     const usage = r.data[0];
     const resetDate = new Date(usage.tokens_reset_date);
-    if (new Date() > resetDate) return true;
+    if (new Date() > resetDate) return true; // período vencido: se renueva, se permite
     const totalLimit = (usage.tokens_limit || 3) + (usage.extra_credits || 0);
     return (usage.tokens_used || 0) < totalLimit;
   } catch (e) {
-    return true;
+    return false;
   }
 }
 const rateLimitMap = new Map();
@@ -40,7 +42,13 @@ function checkRateLimit(identifier) {
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const { system, messages, maxTokens = 4000, useSearch = false, stream = false, userId = null, isAdmin = false } = req.body;
+  const { system, messages, maxTokens = 4000, useSearch = false, stream = false } = req.body;
+
+  // Identidad REAL desde el token, nunca desde el body.
+  const authUser = await getAuthUser(req);
+  if (!authUser) return res.status(401).json({ error: "No autenticado" });
+  const userId = authUser.id;
+  const isAdmin = isAdminUser(authUser);
 
   const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || req.socket?.remoteAddress || "unknown";
   if (!checkRateLimit(ip)) {
