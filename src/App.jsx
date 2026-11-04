@@ -672,7 +672,8 @@ const card = {background:"#fff",border:"1px solid #d4cfc6",borderRadius:4,paddin
 // (usa los mismos helpers globales: C, Btn, useState, useEffect)
 // ============================================================
 function InstitucionalPanel({authUser,onBack}) {
-  var _esAR=((authUser&&authUser.user_metadata&&authUser.user_metadata.pais)||"AR")==="AR";
+  var _paisUser=(authUser&&authUser.user_metadata&&authUser.user_metadata.pais)||"AR";
+  var _esAR=_paisUser==="AR";
   var [docentes,setDocentes]=useState(1);
   var [directivos,setDirectivos]=useState(1);
   var [colegio,setColegio]=useState((authUser&&authUser.user_metadata&&authUser.user_metadata.school)||"");
@@ -686,13 +687,17 @@ function InstitucionalPanel({authUser,onBack}) {
     var total=docentes+directivos;
     if(total<1){setPrecio(null);return;}
     setCalcLoading(true);
-    fetch("/api/subscribe-institucional?docentes="+docentes+"&directivos="+directivos)
+    fetch("/api/subscribe-institucional?docentes="+docentes+"&directivos="+directivos+"&pais="+_paisUser)
       .then(function(r){return r.json();})
       .then(function(d){ if(!d.error) setPrecio(d); setCalcLoading(false); })
       .catch(function(){setCalcLoading(false);});
   },[docentes,directivos]);
 
-  function fmt(n){ return "$"+Number(n).toLocaleString("es-AR"); }
+  function fmt(n){
+    var sym = (precio && precio.sym) ? precio.sym : "$";
+    var suf = (precio && precio.suf) ? precio.suf : "";
+    return sym + Number(n).toLocaleString("es-AR") + suf;
+  }
 
   async function contratar(){
     if(!authUser){setError("Tenes que iniciar sesion.");return;}

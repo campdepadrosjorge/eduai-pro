@@ -7,8 +7,18 @@
 // ------------------------------------------------------------
 // TARIFAS (editar acá si cambian los precios o los tramos)
 // ------------------------------------------------------------
-var PRECIO_DOCENTE = 12000;   // ARS por cuenta docente / mes
-var PRECIO_DIRECTIVO = 16000; // ARS por cuenta directivo / mes
+// Tarifas por pais (deben coincidir con la tabla visual del frontend).
+// doc/dir = precio mensual por cuenta; sym/suf = como se muestra la moneda.
+var TARIFAS = {
+  AR: { doc: 12000, dir: 16000, sym: "$",   suf: " ARS", currency: "ARS" },
+  MX: { doc: 249,   dir: 329,   sym: "$",   suf: " MXN", currency: "MXN" },
+  CL: { doc: 9900,  dir: 12900, sym: "$",   suf: " CLP", currency: "CLP" },
+  CO: { doc: 39900, dir: 52900, sym: "$",   suf: " COP", currency: "COP" },
+  PE: { doc: 39,    dir: 52,    sym: "S/ ", suf: " PEN", currency: "PEN" },
+  UY: { doc: 11,    dir: 15,    sym: "$",   suf: " USD", currency: "USD" },
+  OT: { doc: 11,    dir: 15,    sym: "US$ ",suf: "",     currency: "USD" },
+};
+function tarifaPais(pais) { return TARIFAS[pais] || TARIFAS.AR; }
 
 // Descuento por volumen según el TOTAL de cuentas (docente + directivo)
 function descuentoPorVolumen(totalCuentas) {
@@ -18,10 +28,11 @@ function descuentoPorVolumen(totalCuentas) {
   return 0;
 }
 
-// Calcula el precio mensual final. Devuelve el detalle para mostrar y guardar.
-function calcularPrecio(qDocentes, qDirectivos) {
+// Calcula el precio mensual final en la moneda del pais. Devuelve el detalle.
+function calcularPrecio(qDocentes, qDirectivos, pais) {
+  var t = tarifaPais(pais);
   var totalCuentas = qDocentes + qDirectivos;
-  var subtotal = (qDocentes * PRECIO_DOCENTE) + (qDirectivos * PRECIO_DIRECTIVO);
+  var subtotal = (qDocentes * t.doc) + (qDirectivos * t.dir);
   var desc = descuentoPorVolumen(totalCuentas);
   var total = Math.round(subtotal * (1 - desc));
   return {
@@ -29,6 +40,10 @@ function calcularPrecio(qDocentes, qDirectivos) {
     subtotal: subtotal,
     descuento: desc,
     total: total,
+    moneda: t.currency,
+    sym: t.sym,
+    suf: t.suf,
+    pais: (TARIFAS[pais] ? pais : "AR"),
   };
 }
 
@@ -37,9 +52,10 @@ export default async function handler(req, res) {
   if (req.method === "GET") {
     var qd = parseInt(req.query.docentes) || 0;
     var qdir = parseInt(req.query.directivos) || 0;
+    var paisCalc = req.query.pais || "AR";
     if (qd + qdir < 1) return res.status(400).json({ error: "Indicá al menos una cuenta" });
     if (qd + qdir > 200) return res.status(400).json({ error: "Máximo 200 cuentas por institución" });
-    return res.status(200).json(calcularPrecio(qd, qdir));
+    return res.status(200).json(calcularPrecio(qd, qdir, paisCalc));
   }
 
   if (req.method !== "POST") return res.status(405).end();
@@ -57,8 +73,9 @@ export default async function handler(req, res) {
   if (totalCuentas < 1) return res.status(400).json({ error: "Indicá al menos una cuenta" });
   if (totalCuentas > 200) return res.status(400).json({ error: "Máximo 200 cuentas por institución" });
 
-  // Precio calculado SIEMPRE en el server (fuente de verdad)
-  var precio = calcularPrecio(qDocentes, qDirectivos);
+  // Precio calculado SIEMPRE en el server (fuente de verdad).
+  // El pago online por MercadoPago es solo Argentina (ARS).
+  var precio = calcularPrecio(qDocentes, qDirectivos, "AR");
 
   // external_reference institucional: el webhook lo reconoce por el prefijo INST|
   // Formato: INST|{userId}|{qDocentes}|{qDirectivos}|{maxUsers}
