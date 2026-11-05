@@ -742,7 +742,7 @@ function InstitucionalPanel({authUser,onBack}) {
       var data=await res.json();
       if(!res.ok) throw new Error(data.error||"No se pudo crear la suscripción");
       window.open(data.init_point,"_blank");
-    }catch(e){setError("Error: "+e.message);}
+    }catch(e){setError(msgPago(e));}
     setLoading(false);
   }
 
@@ -841,6 +841,22 @@ var PRECIOS = {
 };
 function preciosPais(pais){ return PRECIOS[pais] || PRECIOS.AR; }
 
+// Traduce errores tecnicos de pago (MercadoPago, rate limits) a mensajes claros.
+function msgPago(e){
+  var m=(e&&e.message?e.message:String(e||"")).toLowerCase();
+  if(m.indexOf("rate_limit")>=0||m.indexOf("rate limit")>=0||m.indexOf("too many")>=0||m.indexOf("429")>=0){
+    return "MercadoPago está recibiendo muchas solicitudes en este momento. Esperá un minuto y volvé a intentar.";
+  }
+  if(m.indexOf("no se encontro")>=0||m.indexOf("no se encontró")>=0){
+    return "No encontramos una suscripción activa para cancelar.";
+  }
+  if(m.indexOf("no autenticado")>=0||m.indexOf("401")>=0){
+    return "Tu sesión expiró. Cerrá sesión y volvé a entrar.";
+  }
+  if(!m){ return "No se pudo completar la operación. Probá de nuevo en unos minutos."; }
+  return "No se pudo completar la operación: "+(e&&e.message?e.message:m);
+}
+
 function PricingPanel({authUser}) {
   var [loading,setLoading]=useState(null);
   var [showInst,setShowInst]=useState(false);
@@ -881,7 +897,7 @@ function PricingPanel({authUser}) {
       var data=await res.json();
       if(!res.ok) throw new Error(data.error);
       window.open(data.init_point,"_blank");
-    } catch(e){setError("Error: "+e.message);}
+    } catch(e){setError(msgPago(e));}
     setLoading(null);
   }
   async function cancelSubscription(){
@@ -891,7 +907,7 @@ function PricingPanel({authUser}) {
       var data=await res.json();
       if(!res.ok) throw new Error(data.error);
       setCancelDone(true);
-    } catch(e){setError("Error: "+e.message);}
+    } catch(e){setError(msgPago(e));}
     setCancelLoading(false);
   }
   if(showInst) return <InstitucionalPanel authUser={authUser} onBack={function(){setShowInst(false);}}/>;
