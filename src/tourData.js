@@ -17,7 +17,7 @@ export const TOURS = {
     {
       selector: "[data-tour='gen-types']",
       title: "Tipos de Contenido",
-      text: "Elegí que queres generar: Actividad Completa, Rubrica, Evaluacion, Material Didactico, Presentacion, Guia de Estudio o Contenido NEE.",
+      text: "Elige qué quieres generar: Actividad Completa, Rúbrica, Evaluación, Material Didáctico, Presentación, Guía de Estudio o Contenido Adaptado.",
       position: "right",
     },
     {
@@ -43,7 +43,7 @@ export const TOURS = {
     {
       selector: "[data-tour='mm-types']",
       title: "Tipos de Multimedia",
-      text: "Genera Guiones de Podcast, Infografias para Canva, Guiones de Video, Presentaciones slide por slide, o Imagenes con IA.",
+      text: "Genera Guiones de Podcast, Infografias para Canva, Guiones de Video, Presentaciones slide por slide, o Imágenes con IA.",
       position: "right",
     },
     {
@@ -55,7 +55,7 @@ export const TOURS = {
     {
       selector: "[data-tour='gen-form']",
       title: "Probalo ahora!",
-      text: "Escribi un tema (por ejemplo 'La celula' o 'Segunda Guerra Mundial'), elegi Evaluacion y presiona Generar. En segundos vas a tener tu primera evaluacion lista. Despues podes exportarla a Word o PDF.",
+      text: "Escribi un tema (por ejemplo 'La celula' o 'Segunda Guerra Mundial'), elige Evaluación y presiona Generar. En segundos vas a tener tu primera evaluacion lista. Despues podes exportarla a Word o PDF.",
       position: "left",
     },
   ],
@@ -82,7 +82,7 @@ export const TOURS = {
   corrector: [
     {
       selector: "[data-tour='corr-rubric']",
-      title: "La Rubrica",
+      title: "La Rúbrica",
       text: "Pega o carga la rubrica desde tu Biblioteca. La IA evalua cada criterio por separado y genera una devolucion completa para el alumno.",
       position: "right",
     },
@@ -94,7 +94,7 @@ export const TOURS = {
     },
     {
       selector: "[data-tour='corr-batch']",
-      title: "Correccion en Batch",
+      title: "Corrección en Lote",
       text: "Subi un Excel con Nombre en col A y texto del trabajo en col B. La IA corrige todos y guarda las notas en Mis Alumnos automaticamente.",
       position: "top",
     },
@@ -139,7 +139,7 @@ export const TOURS = {
     {
       selector: "[data-tour='seq-form']",
       title: "Generar Secuencia Didactica",
-      text: "Ingresa el tema y elegi entre 4, 6 u 8 clases. La IA genera una progresion con objetivos, inicio, desarrollo, cierre y evaluacion para cada clase.",
+      text: "Ingresa el tema y elige entre 4, 6 u 8 clases. La IA genera una progresion con objetivos, inicio, desarrollo, cierre y evaluacion para cada clase.",
       position: "right",
     },
     {
@@ -160,7 +160,7 @@ export const TOURS = {
   publiclib: [
     {
       selector: null,
-      title: "Biblioteca Publica",
+      title: "Biblioteca Pública",
       text: "Contenido compartido por docentes de toda la plataforma. Podes guardar cualquier material en tu Biblioteca personal o exportarlo a Word.",
       position: "center",
     },

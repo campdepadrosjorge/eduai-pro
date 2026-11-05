@@ -108,7 +108,7 @@ function SimpleCrud({ uid, tabla, titulo, singular, campos }) {
               {c.tipo==="select" ? (
                 <select style={inp} value={form[c.k]||""} onChange={function(e){setForm(Object.assign({},form,{[c.k]:e.target.value}));}}>
                   <option value="">—</option>
-                  {c.opciones.map(function(o){return <option key={o} value={o}>{o}</option>;})}
+                  {c.opciones.map(function(o){var ov=(o&&o.v!==undefined)?o.v:o;var ot=(o&&o.t!==undefined)?o.t:o;return <option key={ov} value={ov}>{ot}</option>;})}
                 </select>
               ) : (
                 <input style={inp} type={c.tipo==="number"?"number":"text"} value={form[c.k]||""} onChange={function(e){setForm(Object.assign({},form,{[c.k]:c.tipo==="number"?(e.target.value?parseInt(e.target.value):""):e.target.value}));}} />
@@ -368,7 +368,7 @@ function TurnoCard({ jornada, modulos, uid, onChange, onDelete, simple }) {
 // ---------- Placeholders de las otras pestañas (se completan en próximos pasos) ----------
 function CursosTab({ uid }) {
   return <SimpleCrud uid={uid} tabla="hor_cursos" titulo="Cursos" singular="curso"
-    campos={[{k:"nombre",label:"Nombre (ej: 1°A)",req:true},{k:"anio",label:"Año",tipo:"number"},{k:"division",label:"División"},{k:"cantidad_alumnos",label:"Alumnos",tipo:"number"},{k:"turno",label:"Turno",tipo:"select",opciones:["manana","tarde"]}]} />;
+    campos={[{k:"nombre",label:"Nombre (ej: 1°A)",req:true},{k:"anio",label:"Año",tipo:"number"},{k:"division",label:"División"},{k:"cantidad_alumnos",label:"Alumnos",tipo:"number"},{k:"turno",label:"Turno",tipo:"select",opciones:[{v:"manana",t:"Mañana"},{v:"tarde",t:"Tarde"}]}]} />;
 }
 function DocentesTab({ uid }) {
   var [docentes,setDocentes]=useState([]);

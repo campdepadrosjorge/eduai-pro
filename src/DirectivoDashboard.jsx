@@ -142,7 +142,7 @@ function MisDocentesPanel({ authUser }) {
   function invitar() {
     setErr(""); setMsg("");
     var mail = email.trim().toLowerCase();
-    if (!mail || mail.indexOf("@") < 0) { setErr("Ingresá un email válido."); return; }
+    if (!mail || mail.indexOf("@") < 0) { setErr("Ingresa un email válido."); return; }
     setEnviando(true);
     authHeaders().then(function(_h){ return fetch("/api/invitar-docente", {
       method: "POST", headers: _h,
@@ -722,7 +722,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
             <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"360px 1fr",gap:18}}>
               <div style={card}>
                 <h3 style={{margin:"0 0 4px",fontSize:17,fontWeight:700,color:C.text}}>Generar comunicado</h3>
-                <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Completá los datos y la IA redacta el comunicado listo para enviar.</p>
+                <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Completa los datos y la IA redacta el comunicado listo para enviar.</p>
                 <label style={lbl}>DESTINATARIO</label>
                 <select style={Object.assign({},sel,{width:"100%",marginBottom:12})} value={comDest} onChange={function(e){setComDest(e.target.value);}}>
                   {["Las familias","El cuerpo docente","Los alumnos","Toda la comunidad educativa"].map(function(d){return <option key={d}>{d}</option>;})}
@@ -757,7 +757,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                 ):(
                   <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
                     <i className="ti ti-speakerphone" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
-                    <h3 style={{color:C.textMuted,marginBottom:8}}>El comunicado aparecerá acá</h3>
+                    <h3 style={{color:C.textMuted,marginBottom:8}}>El comunicado aparecerá aquí</h3>
                     <p style={{fontSize:13}}>Completa el formulario y genera tu primer comunicado.</p>
                   </div>
                 )}
@@ -777,7 +777,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                 <label style={lbl}>FECHA Y PARTICIPANTES</label>
                 <input style={Object.assign({},inp,{marginBottom:12})} value={actDatos} onChange={function(e){setActDatos(e.target.value);}} placeholder="Ej: 24/06/2026, equipo docente de primaria"/>
                 <label style={lbl}>TEMAS TRATADOS *</label>
-                <textarea style={Object.assign({},inp,{height:130,resize:"vertical",marginBottom:12})} value={actTemas} onChange={function(e){setActTemas(e.target.value);}} placeholder="Escribí tus notas en bruto de lo que se trató..."/>
+                <textarea style={Object.assign({},inp,{height:130,resize:"vertical",marginBottom:12})} value={actTemas} onChange={function(e){setActTemas(e.target.value);}} placeholder="Escribe tus notas en bruto de lo que se trató..."/>
                 <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,flexWrap:"wrap"}}>
                   <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+C.border,borderRadius:4,padding:"7px 14px",cursor:actFotoLoading?"not-allowed":"pointer",fontSize:12,fontWeight:600,color:C.text,opacity:actFotoLoading?.6:1}}>
                     <i className="ti ti-camera" style={{fontSize:14}}/>
@@ -837,7 +837,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                 ):(
                   <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
                     <i className="ti ti-file-description" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
-                    <h3 style={{color:C.textMuted,marginBottom:8}}>El acta aparecerá acá</h3>
+                    <h3 style={{color:C.textMuted,marginBottom:8}}>El acta aparecerá aquí</h3>
                     <p style={{fontSize:13}}>Completa el formulario y genera el acta.</p>
                   </div>
                 )}
@@ -867,7 +867,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
 
                 <div style={{marginTop:20,paddingTop:18,borderTop:"1px solid "+C.border}}>
                   <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:4}}>Corrección por lote</div>
-                  <p style={{fontSize:12,color:C.textDim,marginBottom:12}}>Subí un ZIP con varios informes .docx o .pdf (un archivo por alumno). La IA corrige todos y devolvés un ZIP con cada informe corregido. Nombrá cada archivo con el nombre del alumno.</p>
+                  <p style={{fontSize:12,color:C.textDim,marginBottom:12}}>Sube un ZIP con varios informes .docx o .pdf (un archivo por alumno). La IA corrige todos y obtienes un ZIP con cada informe corregido. Nombrá cada archivo con el nombre del alumno.</p>
                   <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+(infZip?C.accent:C.border),borderRadius:4,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:infZip?C.accent:C.text,marginBottom:12}}>
                     <i className="ti ti-file-zip" style={{fontSize:14}}/>
                     {infZip?infZip.name:"Subir ZIP de informes"}
@@ -906,8 +906,8 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                 ):(
                   <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
                     <i className="ti ti-report" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
-                    <h3 style={{color:C.textMuted,marginBottom:8}}>Las sugerencias aparecerán acá</h3>
-                    <p style={{fontSize:13}}>Subí un informe y la IA lo revisa.</p>
+                    <h3 style={{color:C.textMuted,marginBottom:8}}>Las sugerencias aparecerán aquí</h3>
+                    <p style={{fontSize:13}}>Sube un informe y la IA lo revisa.</p>
                   </div>
                 )}
               </div>
@@ -918,7 +918,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
             <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"360px 1fr",gap:18}}>
               <div style={card}>
                 <h3 style={{margin:"0 0 4px",fontSize:17,fontWeight:700,color:C.text}}>Revisión de documentos</h3>
-                <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Subí una planificación, proyecto u otro documento docente (.docx o .pdf) y la IA marca observaciones para que la docente lo ajuste.</p>
+                <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Sube una planificación, proyecto u otro documento docente (.docx o .pdf) y la IA marca observaciones para que la docente lo ajuste.</p>
                 <label style={lbl}>TIPO DE DOCUMENTO</label>
                 <select style={Object.assign({},sel,{width:"100%",marginBottom:12})} value={revTipo} onChange={function(e){setRevTipo(e.target.value);}}>
                   {["Planificación anual","Proyecto áulico","Secuencia didáctica","Salida educativa","Visita a museo","Otro"].map(function(t){return <option key={t}>{t}</option>;})}
@@ -938,7 +938,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
 
                 <div style={{marginTop:20,paddingTop:18,borderTop:"1px solid "+C.border}}>
                   <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:4}}>Revisión por lote</div>
-                  <p style={{fontSize:12,color:C.textDim,marginBottom:12}}>Subí un ZIP con varios documentos .docx o .pdf. La IA revisa todos y devolvés un ZIP con cada documento marcado con observaciones.</p>
+                  <p style={{fontSize:12,color:C.textDim,marginBottom:12}}>Sube un ZIP con varios documentos .docx o .pdf. La IA revisa todos y obtienes un ZIP con cada documento marcado con observaciones.</p>
                   <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+(revZip?C.accent:C.border),borderRadius:4,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:revZip?C.accent:C.text,marginBottom:12}}>
                     <i className="ti ti-file-zip" style={{fontSize:14}}/>
                     {revZip?revZip.name:"Subir ZIP de documentos"}
@@ -986,8 +986,8 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                 ):(
                   <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
                     <i className="ti ti-file-search" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
-                    <h3 style={{color:C.textMuted,marginBottom:8}}>Las observaciones aparecerán acá</h3>
-                    <p style={{fontSize:13}}>Subí un documento y la IA lo revisa.</p>
+                    <h3 style={{color:C.textMuted,marginBottom:8}}>Las observaciones aparecerán aquí</h3>
+                    <p style={{fontSize:13}}>Sube un documento y la IA lo revisa.</p>
                   </div>
                 )}
               </div>
@@ -1034,7 +1034,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                 ):(
                   <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
                     <i className="ti ti-users-group" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
-                    <h3 style={{color:C.textMuted,marginBottom:8}}>El plan aparecerá acá</h3>
+                    <h3 style={{color:C.textMuted,marginBottom:8}}>El plan aparecerá aquí</h3>
                     <p style={{fontSize:13}}>Describe la situación y genera el plan de acompañamiento.</p>
                   </div>
                 )}
@@ -1046,7 +1046,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
             <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"360px 1fr",gap:18}}>
               <div style={card}>
                 <h3 style={{margin:"0 0 4px",fontSize:17,fontWeight:700,color:C.text}}>Asistente de trámites</h3>
-                <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Subí la resolución o normativa oficial (PDF) y la IA te ayuda a gestionar el trámite según ese documento.</p>
+                <p style={{fontSize:13,color:C.textDim,marginBottom:18}}>Sube la resolución o normativa oficial (PDF) y la IA te ayuda a gestionar el trámite según ese documento.</p>
                 <label style={lbl}>RESOLUCIÓN / NORMATIVA (PDF) *</label>
                 <label style={{display:"inline-flex",alignItems:"center",gap:6,background:C.surf,border:"1px solid "+(traFile?C.accent:C.border),borderRadius:4,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:traFile?C.accent:C.text,marginBottom:14}}>
                   <i className="ti ti-file-upload" style={{fontSize:14}}/>
@@ -1080,7 +1080,7 @@ export default function DirectivoDashboard({ authUser, onVerComoDocente, onSignO
                 ):(
                   <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
                     <i className="ti ti-clipboard-text" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
-                    <h3 style={{color:C.textMuted,marginBottom:8}}>El resultado aparecerá acá</h3>
+                    <h3 style={{color:C.textMuted,marginBottom:8}}>El resultado aparecerá aquí</h3>
                     <p style={{fontSize:13}}>Sube la normativa, elige qué necesitas y procesa.</p>
                   </div>
                 )}

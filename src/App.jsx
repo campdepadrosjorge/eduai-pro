@@ -20,7 +20,7 @@ const NAV = [
   { id:"smartbank",  label:"Banco Inteligente",     icon:"ti-brain" },
   { id:"sequences",  label:"Secuencias",           icon:"ti-list-numbers" },
   { id:"students",   label:"Mis Alumnos",          icon:"ti-users" },
-  { id:"publiclib",  label:"Biblioteca Publica",   icon:"ti-world" },
+  { id:"publiclib",  label:"Biblioteca Pública",   icon:"ti-world" },
   { id:"projects",   label:"Proyectos Colaborativos", icon:"ti-topology-star" },
   { id:"pricing",    label:"Planes y Precios",     icon:"ti-credit-card" },
   { id:"admin",      label:"Panel Admin",          icon:"ti-chart-bar" },
@@ -29,11 +29,11 @@ const NAV = [
 const GEN_TYPES = [
   { id:"planclase",    label:"Plan de Clase",       icon:"ti-calendar",   color:"#1d4ed8" },
   { id:"actividad",   label:"Actividad para el Alumno",       icon:"ti-target",     color:"#059669" },
-  { id:"rubrica",     label:"Rubrica de Evaluacion",     icon:"ti-list-check", color:"#0d9488" },
-  { id:"evaluacion",  label:"Evaluacion / Examen",       icon:"ti-writing",    color:"#7c3aed" },
-  { id:"material",    label:"Material Didactico",        icon:"ti-book",       color:"#0891b2" },
-  { id:"presentacion",label:"Esquema de Presentacion",   icon:"ti-slideshow",  color:"#d97706" },
-  { id:"guia",        label:"Guia de Estudio",           icon:"ti-map",        color:"#65a30d" },
+  { id:"rubrica",     label:"Rúbrica de Evaluación",     icon:"ti-list-check", color:"#0d9488" },
+  { id:"evaluacion",  label:"Evaluación / Examen",       icon:"ti-writing",    color:"#7c3aed" },
+  { id:"material",    label:"Material Didáctico",        icon:"ti-book",       color:"#0891b2" },
+  { id:"presentacion",label:"Esquema de Presentación",   icon:"ti-slideshow",  color:"#d97706" },
+  { id:"guia",        label:"Guía de Estudio",           icon:"ti-map",        color:"#65a30d" },
   { id:"adaptado",    label:"Contenido Adaptado",        icon:"ti-heart",      color:"#db2777" },
 ];
 
@@ -54,7 +54,7 @@ const LEVELS = [
 // Contexto educativo por pais (alimenta los prompts para localizar el material)
 var PAISES = {
   AR: {
-    nombre: "Argentina", dialecto: "espanol rioplatense (voseo)",
+    nombre: "Argentina", dialecto: "espanol neutro (tuteo, sin voseo)",
     niveles: "Nivel inicial, Primaria (1 a 6/7), Secundaria (ciclo basico y ciclo orientado)",
     vocab: "trabajo practico (TP), prueba/evaluacion, carpeta, planificacion, acto escolar, efemerides",
     ciclo: "ciclo lectivo de marzo a diciembre, con receso invernal en julio",
@@ -62,7 +62,7 @@ var PAISES = {
     calif: "escala 1 a 10, aprobacion habitual en 6 o 7 segun jurisdiccion"
   },
   MX: {
-    nombre: "Mexico", dialecto: "espanol de Mexico (tuteo, voseo nunca)",
+    nombre: "Mexico", dialecto: "espanol neutro (tuteo, sin voseo)",
     niveles: "Preescolar, Primaria (1 a 6), Secundaria (1 a 3), Media superior (preparatoria/bachillerato)",
     vocab: "actividad/tarea/proyecto, examen, cuaderno/libreta, planeacion, honores a la bandera, fechas civicas",
     ciclo: "ciclo escolar de septiembre a julio, con registro de calificaciones en noviembre, marzo y julio",
@@ -70,7 +70,7 @@ var PAISES = {
     calif: "escala 5 a 10, con 6 como minimo aprobatorio"
   },
   CL: {
-    nombre: "Chile", dialecto: "espanol de Chile (tuteo)",
+    nombre: "Chile", dialecto: "espanol neutro (tuteo, sin voseo)",
     niveles: "Educacion parvularia, Ensenanza basica (1 a 8), Ensenanza media (1 a 4)",
     vocab: "guia/trabajo, prueba, cuaderno, planificacion, efemerides",
     ciclo: "ano escolar de marzo a diciembre",
@@ -78,7 +78,7 @@ var PAISES = {
     calif: "escala 1,0 a 7,0, aprobacion en 4,0"
   },
   CO: {
-    nombre: "Colombia", dialecto: "espanol de Colombia (tuteo)",
+    nombre: "Colombia", dialecto: "espanol neutro (tuteo, sin voseo)",
     niveles: "Preescolar, Basica primaria (1 a 5), Basica secundaria (6 a 9), Media (10 a 11)",
     vocab: "taller/trabajo, evaluacion, cuaderno, planeacion, izada de bandera",
     ciclo: "calendario A (febrero a noviembre) o B (septiembre a junio) segun region",
@@ -86,7 +86,7 @@ var PAISES = {
     calif: "escala 1,0 a 5,0, aprobacion en 3,0 (desempeno basico/alto/superior)"
   },
   PE: {
-    nombre: "Peru", dialecto: "espanol del Peru (tuteo)",
+    nombre: "Peru", dialecto: "espanol neutro (tuteo, sin voseo)",
     niveles: "Inicial, Primaria (1 a 6), Secundaria (1 a 5)",
     vocab: "actividad/ficha, evaluacion, cuaderno, planificacion/sesion de aprendizaje, formacion",
     ciclo: "ano escolar de marzo a diciembre",
@@ -94,7 +94,7 @@ var PAISES = {
     calif: "escala literal AD, A, B, C (logro destacado a inicio)"
   },
   UY: {
-    nombre: "Uruguay", dialecto: "espanol rioplatense (tuteo/voseo)",
+    nombre: "Uruguay", dialecto: "espanol neutro (tuteo, sin voseo)",
     niveles: "Educacion inicial, Primaria (1 a 6), Educacion media (ciclo basico y bachillerato)",
     vocab: "trabajo, prueba/escrito, cuaderno, planificacion, acto",
     ciclo: "ano lectivo de marzo a diciembre",
@@ -155,7 +155,7 @@ function userGen(type, topic, diff, extra, subject, docText, pais, eoeText, nive
 
     actividad:
       "Crea una actividad didactica de excelencia, lista para entregar al alumno, sobre: \"" + topic + "\"" + nivel + materia + "\nNivel de dificultad: " + diff + "\n\n" +
-      "Piensala como la pensaria un gran docente: con un objetivo claro, un desarrollo bien secuenciado en pasos con consignas precisas, y una forma de evaluar lo aprendido. Agregale lo que el tema pida para ser una gran actividad (por ejemplo motivacion inicial, un desafio para quienes terminan antes, reflexion final o una nota para el docente), pero solo si aporta valor real.\n\n" +
+      "Piensala como la pensaria un gran docente: con un objetivo claro, un desarrollo bien secuenciado en pasos con consignas precisas, y una forma de evaluar lo aprendido. Agrégale lo que el tema pida para ser una gran actividad (por ejemplo motivacion inicial, un desafio para quienes terminan antes, reflexion final o una nota para el docente), pero solo si aporta valor real.\n\n" +
       "SE CONCISO Y PRACTICO. El documento tiene que ser agil y directamente usable, no exhaustivo. Prioriza lo esencial: desarrollÃ¡ bien lo importante y evitÃ¡ el relleno. Cuando uses tablas para completar, mantenelas breves (pocas filas de ejemplo, no listas larguisimas). No agregues espacios de escritura excesivos ni desmenuces cada paso al extremo. Un docente tiene que poder leer y usar esta actividad rapido. Apunta a una extension moderada, no a un documento de muchas paginas.\n\n" +
       "FORMATO: usa exclusivamente tablas en formato Markdown (con | y guiones), nunca dibujadas con caracteres o ASCII. No uses emojis en los titulos; como mucho, alguno muy puntual dentro del texto si de verdad aporta. Estructura clara con encabezados. El documento debe poder imprimirse y entregarse directamente." + mk + e,
 
@@ -634,10 +634,29 @@ function MDView({text,maxH}) {
     ".md tr:nth-child(even) td{background:#f9f9f7}"+
     ".md blockquote{border-left:3px solid #0d9488;margin:.5em 0;padding:.35em .75em;background:#e6f7f5;color:#6b7280;border-radius:0 4px 4px 0}"+
     ".md pre{background:#f5f5f0;padding:11px;border-radius:4px;overflow-x:auto;font-family:monospace;font-size:.82em;color:#0f766e;margin:.5em 0}";
+  // Convierte una tabla Markdown (| a | b |) a HTML
+  function mdTabla(bloque){
+    var filas = bloque.trim().split("\n").map(function(l){return l.trim();}).filter(Boolean);
+    if (filas.length < 2) return bloque;
+    function celdas(l){ return l.replace(/^\|/,"").replace(/\|$/,"").split("|").map(function(c){return c.trim();}); }
+    var head = celdas(filas[0]);
+    var cuerpo = filas.slice(2).map(celdas);
+    var html = "<table><thead><tr>";
+    head.forEach(function(c){ html += "<th>"+c+"</th>"; });
+    html += "</tr></thead><tbody>";
+    cuerpo.forEach(function(r){
+      html += "<tr>";
+      for (var i=0;i<head.length;i++){ html += "<td>"+(r[i]!==undefined?r[i]:"")+"</td>"; }
+      html += "</tr>";
+    });
+    html += "</tbody></table>";
+    return html;
+  }
   var h=latexToPlain(text)
     .replace(/&nbsp;/gi," ")
     .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
     .replace(/```[\w]*\n([\s\S]*?)```/g,function(_,c){return "<pre>"+c+"</pre>";})
+    .replace(/(^\|.*\|[ \t]*\n\|[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)*\|[ \t]*\n(?:\|.*\|[ \t]*\n?)*)/gm, mdTabla)
     .replace(/\*\*\*(.+?)\*\*\*/g,"<strong><em>$1</em></strong>")
     .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
     .replace(/\*([^\n*]+?)\*/g,"<em>$1</em>")
@@ -844,7 +863,7 @@ function PricingPanel({authUser}) {
   var _pr=preciosPais(_pais);
   var plans=[
     {id:"e62d30a047a8442581b2a5b94b470577",name:"Docente",price:_pr.sym+_pr.docente+_pr.suf,period:_pr.period,users:1,color:C.blue,features:["Generador IA (8 tipos)","Multimedia + Imagenes","Chat Docente","Corrector de TPs","Exportacion Word y PDF","Biblioteca personal"]},
-    {id:"d1ee77dd48f44b0f98d8b3ca1baa774e",name:"Directivo",price:_pr.sym+_pr.directivo+_pr.suf,period:_pr.period,users:1,color:C.accent,features:["Todo lo del plan Docente","Panel de Directivos","Comunicados y Actas","Correccion de informes","Grabacion y transcripcion de reuniones"]},
+    {id:"d1ee77dd48f44b0f98d8b3ca1baa774e",name:"Directivo",price:_pr.sym+_pr.directivo+_pr.suf,period:_pr.period,users:1,color:C.accent,features:["Todo lo del plan Docente","Panel de Directivos","Comunicados y Actas","Corrección de informes","Grabación y transcripción de reuniones"]},
     {id:"institucional",name:"Institucional",price:"Desde "+_pr.sym+_pr.desdeDoc+_pr.suf,period:_pr.periodInst,users:999,color:C.green,institutional:true,features:["Cuentas para todo tu equipo","Precio por cantidad de cuentas","Descuentos por volumen","Panel admin institucional","Soporte dedicado"]},
   ];
   async function subscribe(plan) {
@@ -1574,22 +1593,27 @@ function AuthScreen({onAuth}) {
         <i className="ti ti-mail" style={{fontSize:52,color:C.accent,display:"block",marginBottom:16}}/>
         <h2 style={{color:C.accent,fontSize:24,fontWeight:700,margin:"0 0 12px"}}>Revisa tu email</h2>
         <p style={{color:C.textMuted,fontSize:15,marginBottom:8}}>Te enviamos un link a {email}</p>
-        <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.accent,fontSize:14,fontFamily:"Quicksand,sans-serif",fontWeight:600,marginTop:24}} onClick={function(){setConfirmed(false);setMode("login");}}>Ir a iniciar sesion</button>
+        <button style={{background:"transparent",border:"none",cursor:"pointer",color:C.accent,fontSize:14,fontFamily:"Quicksand,sans-serif",fontWeight:600,marginTop:24}} onClick={function(){setConfirmed(false);setMode("login");}}>Ir a iniciar sesión</button>
       </div>
     </div>
   );
 
   return (
-    <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:C.bg}}>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:C.bg,fontFamily:"Quicksand,sans-serif"}}>
       <div style={{width:420}}>
         <div style={{textAlign:"center",marginBottom:32}}>
-          <i className="ti ti-school" style={{fontSize:52,color:C.accent,display:"block",marginBottom:12}}/>
-          <h1 style={{color:C.accent,fontSize:30,fontWeight:700,margin:"0 0 6px"}}>AulaXpro</h1>
+          <div style={{width:68,height:68,background:"#0D3559",borderRadius:16,position:"relative",overflow:"hidden",display:"inline-block",marginBottom:14}}>
+            <div style={{position:"absolute",height:6,width:36,background:"#26C3D4",borderRadius:3,top:19,left:15}}/>
+            <div style={{position:"absolute",height:6,width:36,background:"#79BD9A",borderRadius:3,top:31,left:15}}/>
+            <div style={{position:"absolute",height:6,width:25,background:"#8FD9E8",borderRadius:3,top:43,left:15}}/>
+            <div style={{position:"absolute",width:16,height:16,background:"#26C3D4",borderRadius:"50%",top:14,right:10}}/>
+          </div>
+          <h1 style={{color:"#0D3559",fontSize:32,fontWeight:700,margin:"0 0 6px",fontFamily:"Quicksand,sans-serif"}}>Aula<span style={{color:"#0d9488"}}>X</span>pro</h1>
           <p style={{color:C.textMuted,fontSize:15}}>Tu asistente docente con IA</p>
         </div>
         <div style={card}>
           <div style={{display:"flex",gap:4,marginBottom:22,background:C.bg,borderRadius:4,padding:4}}>
-            {[{id:"login",label:"Iniciar sesion"},{id:"register",label:"Registrarse"}].map(function(t){
+            {[{id:"login",label:"Iniciar sesión"},{id:"register",label:"Registrarse"}].map(function(t){
               return <button key={t.id} style={{flex:1,padding:"7px 0",borderRadius:4,border:"none",cursor:"pointer",fontFamily:"Quicksand,sans-serif",fontWeight:600,fontSize:13,background:mode===t.id?C.card:"transparent",color:mode===t.id?C.text:C.textDim}} onClick={function(){setMode(t.id);setError("");}}>{t.label}</button>;
             })}
           </div>
@@ -1646,7 +1670,7 @@ function AuthScreen({onAuth}) {
           <label style={lbl}>EMAIL</label>
           <input style={Object.assign({},inp,{marginBottom:12})} type="email" value={email} onChange={function(e){setEmail(e.target.value);}} placeholder="docente@escuela.edu.ar"/>
           <label style={lbl}>CONTRASENA</label>
-          <input style={Object.assign({},inp,{marginBottom:20})} type="password" value={password} onChange={function(e){setPass(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter") mode==="login"?handleLogin():handleRegister();}} placeholder="Minimo 6 caracteres"/>
+          <input style={Object.assign({},inp,{marginBottom:20})} type="password" value={password} onChange={function(e){setPass(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter") mode==="login"?handleLogin():handleRegister();}} placeholder="Mínimo 6 caracteres"/>
           {error&&<div style={{color:C.red,fontSize:13,background:"#fee2e2",padding:"9px 13px",borderRadius:4,marginBottom:14}}>{error}</div>}
           {mode==="login"&&(
             <div style={{textAlign:"right",marginBottom:14}}>
@@ -1712,6 +1736,7 @@ export default function AulaXpro() {
   },[curSid]);
   var [genDiff,setGenDiff]=useState("Intermedio");
   var [genExtra,setGenExtra]=useState("");
+  var [genNee,setGenNee]=useState("");
   var [genResult,setGenResult]=useState("");
   var [genLoading,setGenLoading]=useState(false);
   var [genSaved,setGenSaved]=useState(false);
@@ -1826,7 +1851,11 @@ useEffect(function(){
       .then(function(results){
         setSubjects(results[0]);setLibrary(results[1]);setBank(results[2]);setPublicLib(results[3]);setSequences(results[4]);setQuestionItems(results[5]);setProjects(results[6]);
         if(results[0] && results[0].length) {
-          setCurSid(results[0][0].id);
+          // Mantener la materia activa si sigue existiendo; solo caer a la primera si no hay una valida.
+          setCurSid(function(prev){
+            var sigueExistiendo = prev && results[0].some(function(s){return s.id===prev;});
+            return sigueExistiendo ? prev : results[0][0].id;
+          });
         } else {
           dbAddSubject(authUser.id,{name:"Materia de ejemplo",level:"Secundaria (ciclo superior)",materials:"",bibliography:""}).then(function(nuevaMateria){
             setSubjects([nuevaMateria]);setCurSid(nuevaMateria.id);
@@ -2041,7 +2070,7 @@ useEffect(function(){
     setQiExamLoading(true);setQiExamResult("");
     try{
       var selected=questionItems.filter(function(q){return qiSelected.includes(q.id);});
-      var sys="Sos experto en evaluacion educativa. Responde en espanol rioplatense con Markdown.";
+      var sys="Sos experto en evaluacion educativa. Responde en espanol neutro (tuteo, sin voseo) con Markdown.";
       var questionsText=selected.sort(function(a,b){return a.type.localeCompare(b.type);}).map(function(q,i){
         var opts=[];
         try{opts=JSON.parse(q.options||"[]");}catch{}
@@ -2057,7 +2086,7 @@ useEffect(function(){
     if(!genResult||!curSubj) return;
     setDiffLoading(true);setDiffResult("");
     try{
-      var sys="Sos especialista en diferenciacion pedagogica y educacion inclusiva. Responde en espanol rioplatense con Markdown.";
+      var sys="Sos especialista en diferenciacion pedagogica y educacion inclusiva. Responde en espanol neutro (tuteo, sin voseo) con Markdown.";
       var usr="A partir del siguiente contenido educativo, genera 3 versiones diferenciadas para distintos niveles de aprendizaje:\n\n## CONTENIDO ORIGINAL:\n"+genResult.slice(0,3000)+"\n\n## VERSIONES A GENERAR:\n\n### VERSION 1 â€” BASICA (alumnos con dificultades o que necesitan apoyo)\n- Lenguaje simple y directo\n- Pasos muy detallados y secuenciados\n- Menos cantidad de consignas\n- Vocabulario accesible con definiciones de terminos clave\n- Ejemplos concretos y cercanos a la vida cotidiana\n\n### VERSION 2 â€” ESTANDAR (nivel esperado para el curso)\n- Fiel al contenido original con leves adaptaciones\n- Consignas claras con nivel de desafio apropiado\n\n### VERSION 3 â€” AVANZADA (alumnos con altas capacidades)\n- Mayor nivel de complejidad y abstraccion\n- Consignas que exigen analisis, sintesis y evaluacion (verbos Bloom superiores)\n- Contenido ampliado con conexiones interdisciplinarias\n- Desafios adicionales y preguntas de extension\n\nGenera las 3 versiones completas y utilizables en el aula.";
       var r=await callClaude(sys,[{role:"user",content:usr}],6000);
       setDiffResult(r);
@@ -2073,7 +2102,8 @@ useEffect(function(){
     try{
       var pais=(authUser.user_metadata&&authUser.user_metadata.pais)||"AR";
       var sys=sysGen(genType,curSubj.name,genLevel,curSubj.materials,curSubj.bibliography,pais);
-      var usr=userGen(genType,genTopic,genDiff,genExtra,curSubj,genDocText,pais,genEoeText,genLevel);
+      var _extraGen=(genType==="adaptado"&&genNee)?((genExtra?genExtra+"\n":"")+"Necesidad educativa a atender: "+genNee):genExtra;
+      var usr=userGen(genType,genTopic,genDiff,_extraGen,curSubj,genDocText,pais,genEoeText,genLevel);
       var maxTokPorTipo={ material:16000, guia:16000, planclase:12000, secuencia:14000, presentacion:12000, actividad:10000, evaluacion:16000, rubrica:6000, adaptado:12000 };
       var maxTok=maxTokPorTipo[genType]||10000;
       var r=await callClaude(sys,[{role:"user",content:usr}],maxTok,false,function(partial){
@@ -2125,7 +2155,7 @@ useEffect(function(){
     if(!mmTopic.trim()||!curSubj) return;
     setMmLoading(true);setMmResult("");
     try{
-      var sys="Sos experto en contenido educativo digital para "+curSubj.name+" ("+curSubj.level+"). Responde en espanol rioplatense con Markdown.";
+      var sys="Sos experto en contenido educativo digital para "+curSubj.name+" ("+curSubj.level+"). Responde en espanol neutro (tuteo, sin voseo) con Markdown.";
       var r=await callClaude(sys,[{role:"user",content:userMM(mmType,mmTopic,mmExtra)}],6000,false,function(partial){setMmResult(partial);});
       setMmResult(r);
     }catch(e){setMmResult(msgError(e));}
@@ -2220,7 +2250,7 @@ useEffect(function(){
     var sys="Sos un asistente experto y versatil. Responde de forma natural y conversacional, sin usar emojis, sin markdown, sin asteriscos ni simbolos de formato. Texto plano solamente, como si fuera una conversacion normal. Podes responder cualquier tipo de pregunta."
       +(subj?" Contexto: el usuario es docente de \""+subj.name+"\" ("+subj.level+")."+(subj.materials?"\nPrograma: "+subj.materials:""):"")
       +(chatDocText?"\n\nEl usuario adjunto un documento para esta conversacion. Basa tus respuestas principalmente en el contenido de este documento cuando la pregunta se relacione con el. Si te preguntan algo que no esta en el documento, aclaralo. DOCUMENTO ADJUNTO (\""+chatDocName+"\"):\n"+chatDocText.slice(0,50000):"")
-      +"\nResponde en espanol rioplatense. Cuando necesites informacion actualizada usa la busqueda web.";
+      +"\nResponde en espanol neutro (tuteo, sin voseo). Cuando necesites informacion actualizada usa la busqueda web.";
     try{
       setChatMsgs(hist.concat([{role:"assistant",content:""}]));
       var r=await callClaude(sys,hist.map(function(m){return{role:m.role,content:m.content};}),4000,true,function(partial){
@@ -2291,7 +2321,7 @@ async function loadChatDoc(file){
       }
       setBatchTotal(trabajos.length);
       var results = [];
-      var sys = "Sos un docente evaluador experto y justo. Materia: \""+(curSubj?curSubj.name:"General")+"\". Corregis con criterio pedagogico: riguroso pero constructivo, evaluas segun la rubrica de forma coherente y justificada, y tu devolucion ayuda al alumno a mejorar. Responde en espanol rioplatense con Markdown, sin emojis.";
+      var sys = "Sos un docente evaluador experto y justo. Materia: \""+(curSubj?curSubj.name:"General")+"\". Corregis con criterio pedagogico: riguroso pero constructivo, evaluas segun la rubrica de forma coherente y justificada, y tu devolucion ayuda al alumno a mejorar. Responde en espanol neutro (tuteo, sin voseo) con Markdown, sin emojis.";
       for(var j=0;j<trabajos.length;j++){
         var t = trabajos[j];
         setBatchProgress(j+1);
@@ -2325,7 +2355,7 @@ async function loadChatDoc(file){
   async function correctTP(){
     if(!corrR.trim()||!corrW.trim()) return;
     setCorrLoading(true);setCorrResult("");
-    var sys="Sos docente evaluador experto. Materia: \""+(curSubj?curSubj.name:"General")+"\". Responde en espanol rioplatense con Markdown.";
+    var sys="Sos docente evaluador experto. Materia: \""+(curSubj?curSubj.name:"General")+"\". Responde en espanol neutro (tuteo, sin voseo) con Markdown.";
     var usr="Corregi el siguiente trabajo usando la rubrica provista.\n\n## RUBRICA:\n"+corrR+"\n\n## TRABAJO:\n"+corrW+"\n\nEvalua cada criterio de la rubrica de forma justificada (por que esa calificacion, basandote en el trabajo), da una calificacion final coherente con esa evaluacion, y escribÃ­ una devolucion para el alumno que reconozca lo bueno y le marque con claridad y en tono constructivo que puede mejorar y como. Se concreto y util, no generico."+instruccionRigor(corrRigor);
     try{var r=await callClaude(sys,[{role:"user",content:usr}],4000);setCorrResult(r);}
     catch(e){setCorrResult(msgError(e));}
@@ -2366,7 +2396,7 @@ async function loadChatDoc(file){
           ):(
             <div>
               <label style={lbl}>NUEVA CLAVE</label>
-              <input style={Object.assign({},inp,{marginBottom:20})} type="password" value={newPassword} onChange={function(e){setNewPassword(e.target.value);}} placeholder="Minimo 6 caracteres"/>
+              <input style={Object.assign({},inp,{marginBottom:20})} type="password" value={newPassword} onChange={function(e){setNewPassword(e.target.value);}} placeholder="Mínimo 6 caracteres"/>
               <Btn st={{width:"100%",justifyContent:"center",fontSize:14,padding:"11px 20px"}} disabled={resetLoading||newPassword.length<6} onClick={async function(){
                 setResetLoading(true);
                 var result=await supabase.auth.updateUser({password:newPassword});
@@ -2392,7 +2422,7 @@ async function loadChatDoc(file){
         </div>
         <div style={card}>
           <label style={lbl}>CLAVE</label>
-          <input style={Object.assign({},inp,{marginBottom:20})} type="password" value={newPassword} onChange={function(e){setNewPassword(e.target.value);}} placeholder="Minimo 6 caracteres" autoFocus/>
+          <input style={Object.assign({},inp,{marginBottom:20})} type="password" value={newPassword} onChange={function(e){setNewPassword(e.target.value);}} placeholder="Mínimo 6 caracteres" autoFocus/>
           <Btn st={{width:"100%",justifyContent:"center",fontSize:14,padding:"11px 20px"}} disabled={resetLoading||newPassword.length<6} onClick={async function(){
             setResetLoading(true);
             var result=await supabase.auth.updateUser({password:newPassword,data:{needs_password:false}});
@@ -2592,7 +2622,7 @@ async function loadChatDoc(file){
             if(daysLeft<=0) return null;
             return (
               <div style={{background:C.accentBg,border:"1px solid "+C.accent,borderRadius:4,padding:"10px 16px",marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <span style={{fontSize:13,color:C.accent}}>{"Periodo de prueba: "+daysLeft+" dia"+(daysLeft===1?"":"s")+" restante"+(daysLeft===1?"":"s")}</span>
+                <span style={{fontSize:13,color:C.accent}}>{"Período de prueba: "+daysLeft+" día"+(daysLeft===1?"":"s")+" restante"+(daysLeft===1?"":"s")}</span>
                 <button style={{background:C.accent,border:"none",borderRadius:4,padding:"5px 14px",cursor:"pointer",fontWeight:700,fontSize:12,fontFamily:"Quicksand,sans-serif",color:"#fff"}} onClick={function(){setView("pricing");}}>
                   <i className="ti ti-credit-card" style={{fontSize:12,marginRight:4}}/>Ver planes
                 </button>
@@ -2616,7 +2646,7 @@ async function loadChatDoc(file){
                </div>
               </div>
               <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:12,marginBottom:20}}>
-                {[{l:"Materias",v:subjects.length,i:"ti-books",c:C.blue},{l:"Biblioteca",v:library.length,i:"ti-folder",c:C.green},{l:"Banco",v:bank.length,i:"ti-database",c:C.accent},{l:"Biblioteca Publica",v:publicLib.length,i:"ti-world",c:C.purple}].map(function(x){
+                {[{l:"Materias",v:subjects.length,i:"ti-books",c:C.blue},{l:"Biblioteca",v:library.length,i:"ti-folder",c:C.green},{l:"Banco",v:bank.length,i:"ti-database",c:C.accent},{l:"Biblioteca Pública",v:publicLib.length,i:"ti-world",c:C.purple}].map(function(x){
                   return (
                     <div key={x.l} style={Object.assign({},card,{marginBottom:0})}>
                       <i className={"ti "+x.i} style={{fontSize:22,marginBottom:8,color:x.c,display:"block"}}/>
@@ -2686,7 +2716,7 @@ async function loadChatDoc(file){
                   {GEN_TYPES.map(function(g){
                     return (
                       <button key={g.id} style={{display:"flex",alignItems:"center",gap:9,width:"100%",padding:"8px 10px",borderRadius:4,border:"none",cursor:"pointer",marginBottom:3,background:genType===g.id?C.accentBg:"transparent",color:genType===g.id?C.accent:C.textMuted,textAlign:"left",fontFamily:"Quicksand,sans-serif",fontSize:13,borderLeft:genType===g.id?"2px solid "+C.accent:"2px solid transparent"}}
-                        onClick={function(){setGenType(g.id);setGenResult("");setGenSaved(false);setGenErr("");setMakeCodeUrl(null);setActImgUrl(null);setGenDocText("");setGenDocName("");setGenEoeText("");setGenEoeName("");}}>
+                        onClick={function(){setGenType(g.id);setGenResult("");setGenSaved(false);setGenErr("");setMakeCodeUrl(null);setActImgUrl(null);setGenDocText("");setGenDocName("");setGenEoeText("");setGenEoeName("");setGenNee("");}}>
                         <i className={"ti "+g.icon} style={{fontSize:16}}/>
                         <span style={{fontWeight:genType===g.id?700:400}}>{g.label}</span>
                       </button>
@@ -2701,7 +2731,7 @@ async function loadChatDoc(file){
                   </select>
                   <label style={lbl}>DIFICULTAD</label>
                   <div style={{display:"flex",gap:5}}>
-                    {["Basico","Intermedio","Avanzado"].map(function(d){
+                    {["Básico","Intermedio","Avanzado"].map(function(d){
                       return <button key={d} style={{flex:1,padding:"6px 3px",borderRadius:4,border:"1px solid "+(genDiff===d?C.accent:C.border),background:genDiff===d?C.accentBg:"transparent",color:genDiff===d?C.accent:C.textMuted,cursor:"pointer",fontSize:11,fontWeight:genDiff===d?700:400,fontFamily:"Quicksand,sans-serif"}} onClick={function(){setGenDiff(d);}}>{d}</button>;
                     })}
                   </div>
@@ -2723,7 +2753,7 @@ async function loadChatDoc(file){
                     </div>
                   ):(
                     <div>
-                      <label style={lbl}>TEMA ESPECIFICO *</label>
+                      <label style={lbl}>TEMA ESPECÍFICO *</label>
                       <input style={Object.assign({},inp,{marginBottom:12})} value={genTopic} onChange={function(e){setGenTopic(e.target.value);}} placeholder="Ej: La Primera Guerra Mundial"/>
                       <label style={lbl}>INSTRUCCIONES ADICIONALES (opcional)</label>
                      <textarea style={Object.assign({},inp,{height:70,resize:"vertical",marginBottom:12})} value={genExtra} onChange={function(e){setGenExtra(e.target.value);}} placeholder="Ej: grupos de 4, enfoque por proyectos..."/>
@@ -2765,12 +2795,9 @@ async function loadChatDoc(file){
                       {genType==="adaptado"&&(
                         <div style={{marginBottom:18}}>
                           <label style={lbl}>TIPO DE NEE *</label>
-                          <select style={Object.assign({},sel,{width:"100%",marginBottom:12})} onChange={function(e){
-                            var nee=e.target.value;
-                            setGenExtra(nee?"NEE:"+nee:"");
-                          }}>
+                          <select style={Object.assign({},sel,{width:"100%",marginBottom:12})} value={genNee} onChange={function(e){ setGenNee(e.target.value); }}>
                             <option value="">Seleccionar necesidad educativa...</option>
-                            {["Dislexia","TDAH","TEA","Discapacidad Visual","Discapacidad Auditiva","Baja Vision","Altas Capacidades","Dificultades en Lectoescritura","Barreras Idiomaticas"].map(function(n){
+                            {["Dislexia","TDAH","TEA","Discapacidad Visual","Discapacidad Auditiva","Baja Visión","Altas Capacidades","Dificultades en Lectoescritura","Barreras Idiomáticas"].map(function(n){
                               return <option key={n} value={n}>{n}</option>;
                             })}
                           </select>
@@ -3302,7 +3329,7 @@ async function loadChatDoc(file){
                   <div style={Object.assign({},card,{textAlign:"center",padding:"56px 24px",color:C.textDim})}>
                     <i className="ti ti-checklist" style={{fontSize:44,display:"block",marginBottom:12,color:C.textDim}}/>
                     <h3 style={{color:C.textMuted,marginBottom:8}}>La correccion aparecera aqui</h3>
-                   <p style={{fontSize:13}}>Evaluacion por criterio - Calificacion - Fortalezas - Mejoras - Devolucion</p>
+                   <p style={{fontSize:13}}>Evaluación por criterio · Calificación · Fortalezas · Mejoras · Devolución</p>
                   </div>
                 )}
               </div>
@@ -3538,7 +3565,7 @@ async function loadChatDoc(file){
                   <Btn st={{width:"100%",justifyContent:"center"}} disabled={seqLoading||!seqForm.topic.trim()||!curSubj} onClick={async function(){
                     setSeqLoading(true);setSeqStream("");
                     try{
-                      var sys="Sos experto en planificacion curricular y diseno de secuencias didacticas. Responde en espanol rioplatense con Markdown.";
+                      var sys="Sos experto en planificacion curricular y diseno de secuencias didacticas. Responde en espanol neutro (tuteo, sin voseo) con Markdown.";
                       var r=await callClaude(sys,[{role:"user",content:userSequence(seqForm.topic,seqForm.n_classes,seqForm.level||(curSubj?curSubj.level:""),curSubj,seqForm.extra)}],6000,false,function(partial){setSeqStream(partial);});
                       var seq={subject_id:curSid,subject_name:curSubj?curSubj.name:"",topic:seqForm.topic,level:seqForm.level||(curSubj?curSubj.level:""),n_classes:seqForm.n_classes,content:r};
                       var saved=await dbAddSequence(authUser.id,seq);
@@ -3745,7 +3772,7 @@ async function loadChatDoc(file){
             <div>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
                 <h2 style={{fontSize:19,fontWeight:700,color:C.text,margin:0,display:"flex",alignItems:"center",gap:8}}>
-                  <i className="ti ti-world" style={{fontSize:18,color:C.accent}}/>{"Biblioteca Publica ("+publicLib.length+")"}
+                  <i className="ti ti-world" style={{fontSize:18,color:C.accent}}/>{"Biblioteca Pública ("+publicLib.length+")"}
                 </h2>
                 <span style={{fontSize:13,color:C.textMuted}}>Contenido compartido por docentes de la plataforma</span>
               </div>
@@ -3887,7 +3914,7 @@ async function loadChatDoc(file){
                                 var members=(currentProject.project_members||[]).filter(function(m){return m.status==="active";});
                                 var materiasCtx=members.map(function(m){return m.subject_name;}).filter(Boolean).join(", ");
                                 var gt3=GEN_TYPES.find(function(g){return g.id===(projectGenResult.type||"actividad");});
-                                var sys="Sos experto en proyectos interdisciplinarios. Materia del docente: "+(curSubj?curSubj.name:"General")+". Materias colaboradoras: "+materiasCtx+". Responde en espanol rioplatense con Markdown.";
+                                var sys="Sos experto en proyectos interdisciplinarios. Materia del docente: "+(curSubj?curSubj.name:"General")+". Materias colaboradoras: "+materiasCtx+". Responde en espanol neutro (tuteo, sin voseo) con Markdown.";
                                 var paisP=(authUser.user_metadata&&authUser.user_metadata.pais)||"AR";
                                 var usr=userGen(projectGenResult.type||"actividad",projectGenResult.topic,"Intermedio","Proyecto interdisciplinario que conecta: "+(curSubj?curSubj.name:"")+(materiasCtx?" con "+materiasCtx:""),curSubj,null,paisP);
                                 var r=await callClaude(sys,[{role:"user",content:usr}]);
