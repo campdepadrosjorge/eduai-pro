@@ -577,7 +577,7 @@ async function dbCreateTrial(userId, trialDays) {
     var userName = (user && user.user_metadata && user.user_metadata.name) || "";
     var userEmail = user ? user.email : "";
     if (userEmail) {
-      fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:userEmail,name:userName})}).catch(function(){});
+      authHeaders().then(function(_h){ return fetch("/api/send-welcome",{method:"POST",headers:_h,body:JSON.stringify({email:userEmail,name:userName})}); }).catch(function(){});
     }
   } catch(e) {}
 }
@@ -732,11 +732,9 @@ function InstitucionalPanel({authUser,onBack}) {
     try{
       var res=await fetch("/api/subscribe-institucional",{
         method:"POST",
-        headers:{"Content-Type":"application/json"},
+        headers:await authHeaders(),
         body:JSON.stringify({
           institution_name:colegio,
-          payer_email:authUser.email,
-          user_id:authUser.id,
           docentes:docentes,
           directivos:directivos,
         }),
@@ -879,7 +877,7 @@ function PricingPanel({authUser}) {
     }
     setLoading(plan.id);setError("");
     try {
-      var res=await fetch("/api/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({plan_id:plan.id,user_email:authUser.email,user_name:(authUser.user_metadata&&authUser.user_metadata.name)||"",user_id:authUser.id})});
+      var res=await fetch("/api/subscribe",{method:"POST",headers:await authHeaders(),body:JSON.stringify({plan_id:plan.id})});
       var data=await res.json();
       if(!res.ok) throw new Error(data.error);
       window.open(data.init_point,"_blank");
@@ -1897,7 +1895,7 @@ useEffect(function(){
           }
           // Si NO tiene suscripcion o tiene TRIAL, intentar activar institucional primero.
           if(!sub || sub.is_trial){
-            fetch("/api/activar-institucional",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:authUser.id})})
+            authHeaders().then(function(_h){ return fetch("/api/activar-institucional",{method:"POST",headers:_h,body:JSON.stringify({})}); })
               .then(function(r){return r.json();})
               .then(function(act){
                 if(act && act.activated){

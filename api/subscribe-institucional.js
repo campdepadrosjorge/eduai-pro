@@ -1,3 +1,4 @@
+import { requireUser } from "./_auth.js";
 // api/subscribe-institucional.js
 // Crea una suscripción institucional con PRECIO DINÁMICO en MercadoPago.
 // El colegio elige cuántas cuentas docente/directivo quiere; el precio se
@@ -60,9 +61,11 @@ export default async function handler(req, res) {
 
   if (req.method !== "POST") return res.status(405).end();
 
+  var caller = await requireUser(req, res);
+  if (!caller) return;
   var institutionName = req.body.institution_name;
-  var payerEmail = req.body.payer_email;
-  var userId = req.body.user_id;
+  var payerEmail = caller.email;
+  var userId = caller.id;
   var qDocentes = parseInt(req.body.docentes) || 0;
   var qDirectivos = parseInt(req.body.directivos) || 0;
 

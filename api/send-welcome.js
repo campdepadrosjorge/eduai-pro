@@ -1,6 +1,9 @@
+import { requireUser } from "./_auth.js";
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
+  var caller = await requireUser(req, res);
+  if (!caller) return;
   var { email, name } = req.body;
 
   if (!email) return res.status(400).json({ error: "Email requerido" });

@@ -1,5 +1,9 @@
+import { requireUser } from "./_auth.js";
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
+
+  var caller = await requireUser(req, res);
+  if (!caller) return;
 
   var base64 = req.body.base64;
   var instruccion = req.body.instruccion;
@@ -7,7 +11,7 @@ export default async function handler(req, res) {
   if (!base64) return res.status(400).json({ error: "PDF requerido" });
   if (!instruccion) return res.status(400).json({ error: "Instrucción requerida" });
 
-  var sistema = "Sos un asesor experto en gestión educativa que ayuda a equipos directivos a entender y gestionar trámites administrativos a partir de la normativa oficial que te comparten. Trabajás con la resolución o normativa que el directivo te adjunta, sin asumir normativa de ninguna jurisdicción en particular: te basás únicamente en el documento provisto. Sos claro, concreto y práctico. Respondés en español con formato Markdown. Si el documento no contiene la información necesaria para lo solicitado, lo decís claramente en lugar de inventar.";
+  var sistema = "Eres un asesor experto en gestión educativa que ayuda a equipos directivos a entender y gestionar trámites administrativos a partir de la normativa oficial que te comparten. Trabajas con la resolución o normativa que el directivo adjunta, sin asumir normativa de ninguna jurisdicción en particular: te basas únicamente en el documento provisto. Eres claro, concreto y práctico. Respondes en español neutro (tuteo, sin voseo) con formato Markdown. Si el documento no contiene la información necesaria para lo solicitado, lo dices claramente en lugar de inventar.";
 
   try {
     var claudeRes = await fetch("https://api.anthropic.com/v1/messages", {

@@ -1,3 +1,4 @@
+import { requireUser } from "./_auth.js";
 // api/subscribe.js
 // Usa el init_point del plan (que funciona para el checkout) y le agrega
 // el external_reference con el userId para que el webhook vincule al usuario
@@ -5,9 +6,11 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
+  var caller = await requireUser(req, res);
+  if (!caller) return;
   var planId = req.body.plan_id;
-  var userEmail = req.body.user_email;
-  var userId = req.body.user_id;
+  var userEmail = caller.email;
+  var userId = caller.id;
 
   if (!planId || !userEmail) {
     return res.status(400).json({ error: "plan_id y user_email son requeridos" });
