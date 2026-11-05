@@ -887,7 +887,7 @@ function PricingPanel({authUser}) {
   async function cancelSubscription(){
     setCancelLoading(true);setError("");
     try {
-      var res=await fetch("/api/cancelar-suscripcion",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:authUser.id})});
+      var res=await fetch("/api/cancelar-suscripcion",{method:"POST",headers:await authHeaders(),body:JSON.stringify({})});
       var data=await res.json();
       if(!res.ok) throw new Error(data.error);
       setCancelDone(true);
