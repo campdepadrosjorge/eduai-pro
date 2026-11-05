@@ -845,15 +845,15 @@ function preciosPais(pais){ return PRECIOS[pais] || PRECIOS.AR; }
 function msgPago(e){
   var m=(e&&e.message?e.message:String(e||"")).toLowerCase();
   if(m.indexOf("rate_limit")>=0||m.indexOf("rate limit")>=0||m.indexOf("too many")>=0||m.indexOf("429")>=0){
-    return "MercadoPago está recibiendo muchas solicitudes en este momento. Esperá un minuto y volvé a intentar.";
+    return "MercadoPago está recibiendo muchas solicitudes en este momento. Espera un minuto y vuelve a intentar.";
   }
   if(m.indexOf("no se encontro")>=0||m.indexOf("no se encontró")>=0){
     return "No encontramos una suscripción activa para cancelar.";
   }
   if(m.indexOf("no autenticado")>=0||m.indexOf("401")>=0){
-    return "Tu sesión expiró. Cerrá sesión y volvé a entrar.";
+    return "Tu sesión expiró. Cierra sesión y vuelve a entrar.";
   }
-  if(!m){ return "No se pudo completar la operación. Probá de nuevo en unos minutos."; }
+  if(!m){ return "No se pudo completar la operación. Prueba de nuevo en unos minutos."; }
   return "No se pudo completar la operación: "+(e&&e.message?e.message:m);
 }
 
